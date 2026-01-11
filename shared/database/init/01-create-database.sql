@@ -1,0 +1,1 @@
+-- Script de base de datos real del sistema INT Bienes

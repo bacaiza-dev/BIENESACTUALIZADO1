@@ -1,0 +1,497 @@
+/* =============================================
+   CONFIGURACIÓN RESPONSIVE PARA TODOS LOS DISPOSITIVOS
+   ============================================= */
+
+/* Variables CSS para breakpoints */
+:root {
+  /* Breakpoints */
+  --xs: 0px;
+  --sm: 576px;
+  --md: 768px;
+  --lg: 992px;
+  --xl: 1200px;
+  --xxl: 1400px;
+  
+  /* Espaciado responsivo */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+  
+  /* Tipografía responsiva */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  
+  /* Contenedor responsivo */
+  --container-padding: 1rem;
+  --container-max-width: 1200px;
+}
+
+/* =============================================
+   CONTENEDOR PRINCIPAL RESPONSIVO
+   ============================================= */
+
+.container-responsive {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding-left: var(--container-padding);
+  padding-right: var(--container-padding);
+}
+
+/* =============================================
+   GRID SYSTEM RESPONSIVO
+   ============================================= */
+
+.grid-responsive {
+  display: grid;
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+/* Grid para móviles (1 columna) */
+.grid-responsive {
+  grid-template-columns: 1fr;
+}
+
+/* Grid para tablets (2 columnas) */
+@media (min-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-responsive.grid-1 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Grid para desktop (3+ columnas) */
+@media (min-width: 992px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .grid-responsive.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .grid-responsive.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* =============================================
+   TARJETAS RESPONSIVAS
+   ============================================= */
+
+.card-responsive {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-responsive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tarjetas en móviles */
+@media (max-width: 767px) {
+  .card-responsive {
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+}
+
+/* =============================================
+   BOTONES RESPONSIVOS
+   ============================================= */
+
+.btn-responsive {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: 44px; /* Mínimo para touch */
+}
+
+/* Botones en móviles */
+@media (max-width: 767px) {
+  .btn-responsive {
+    width: 100%;
+    padding: var(--spacing-md);
+    font-size: var(--font-size-lg);
+    min-height: 48px;
+  }
+}
+
+/* =============================================
+   FORMULARIOS RESPONSIVOS
+   ============================================= */
+
+.form-responsive {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group-responsive {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-group-responsive label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-weight: 500;
+  color: #374151;
+  font-size: var(--font-size-sm);
+}
+
+.form-input-responsive {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: var(--font-size-base);
+  transition: border-color 0.2s ease;
+  min-height: 44px;
+}
+
+.form-input-responsive:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Inputs en móviles */
+@media (max-width: 767px) {
+  .form-input-responsive {
+    padding: var(--spacing-md);
+    font-size: var(--font-size-lg);
+    min-height: 48px;
+  }
+}
+
+/* =============================================
+   TABLAS RESPONSIVAS
+   ============================================= */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.table-responsive th,
+.table-responsive td {
+  padding: var(--spacing-sm);
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table-responsive th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Tablas en móviles - formato de tarjetas */
+@media (max-width: 767px) {
+  .table-responsive {
+    display: block;
+  }
+  
+  .table-responsive table,
+  .table-responsive thead,
+  .table-responsive tbody,
+  .table-responsive th,
+  .table-responsive td,
+  .table-responsive tr {
+    display: block;
+  }
+  
+  .table-responsive thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .table-responsive tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: white;
+  }
+  
+  .table-responsive td {
+    border: none;
+    padding: var(--spacing-xs) 0;
+    position: relative;
+    padding-left: 50%;
+    white-space: nowrap;
+  }
+  
+  .table-responsive td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+/* =============================================
+   NAVEGACIÓN RESPONSIVA
+   ============================================= */
+
+.nav-responsive {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.nav-responsive .nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.nav-responsive .nav-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.nav-responsive .nav-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: var(--font-size-xl);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+}
+
+/* Navegación en móviles */
+@media (max-width: 767px) {
+  .nav-responsive .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    flex-direction: column;
+    padding: var(--spacing-md);
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .nav-responsive .nav-menu.active {
+    display: flex;
+  }
+  
+  .nav-responsive .nav-mobile-toggle {
+    display: block;
+  }
+}
+
+/* =============================================
+   MODAL/DIALOG RESPONSIVO
+   ============================================= */
+
+.modal-responsive {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-md);
+  z-index: 1000;
+}
+
+.modal-responsive .modal-content {
+  background: white;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  position: relative;
+}
+
+/* Modal en móviles */
+@media (max-width: 767px) {
+  .modal-responsive {
+    padding: var(--spacing-sm);
+  }
+  
+  .modal-responsive .modal-content {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+}
+
+/* =============================================
+   UTILIDADES RESPONSIVAS
+   ============================================= */
+
+/* Ocultar elementos en diferentes tamaños */
+.hidden-xs { display: none !important; }
+.hidden-sm { display: none !important; }
+.hidden-md { display: none !important; }
+.hidden-lg { display: none !important; }
+.hidden-xl { display: none !important; }
+
+@media (min-width: 576px) {
+  .hidden-xs { display: initial !important; }
+  .visible-xs { display: none !important; }
+}
+
+@media (min-width: 768px) {
+  .hidden-sm { display: initial !important; }
+  .visible-sm { display: none !important; }
+}
+
+@media (min-width: 992px) {
+  .hidden-md { display: initial !important; }
+  .visible-md { display: none !important; }
+}
+
+@media (min-width: 1200px) {
+  .hidden-lg { display: initial !important; }
+  .visible-lg { display: none !important; }
+}
+
+/* Texto responsivo */
+.text-responsive {
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .text-responsive {
+    font-size: var(--font-size-lg);
+    line-height: 1.6;
+  }
+}
+
+/* Espaciado responsivo */
+.p-responsive { padding: var(--spacing-md); }
+.m-responsive { margin: var(--spacing-md); }
+.gap-responsive { gap: var(--spacing-md); }
+
+@media (max-width: 767px) {
+  .p-responsive { padding: var(--spacing-sm); }
+  .m-responsive { margin: var(--spacing-sm); }
+  .gap-responsive { gap: var(--spacing-sm); }
+}
+
+/* =============================================
+   MODO OSCURO RESPONSIVO
+   ============================================= */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1f2937;
+    --text-color: #f9fafb;
+    --border-color: #374151;
+    --card-bg: #374151;
+  }
+  
+  .card-responsive {
+    background: var(--card-bg);
+    color: var(--text-color);
+  }
+  
+  .form-input-responsive {
+    background: var(--card-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+  }
+  
+  .table-responsive th {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+  }
+}
+
+/* =============================================
+   ACCESIBILIDAD Y TOUCH
+   ============================================= */
+
+/* Asegurar que los elementos táctiles sean lo suficientemente grandes */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mejorar el contraste para accesibilidad */
+.high-contrast {
+  color: #000;
+  background: #fff;
+  border: 2px solid #000;
+}
+
+/* Reducir movimiento para usuarios que lo prefieren */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =============================================
+   PRINT STYLES
+   ============================================= */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-full-width {
+    width: 100% !important;
+  }
+  
+  .card-responsive {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+  }
+}

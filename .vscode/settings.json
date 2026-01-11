@@ -1,0 +1,33 @@
+{
+  "git.ignoreLimitWarning": true,
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+  "css.customData": [".vscode/css_custom_data.json"],
+  "tailwindCSS.includeLanguages": {
+    "vue": "html",
+    "vue-html": "html"
+  },
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    "ui"
+  ],
+  "tailwindCSS.experimental.classRegex": [
+    ["tw`([^`]*)", "'([^']*)'"],
+    ["tw\\('([^']*)'\\)", "'([^']*)'"],
+    ["tw\\(\"([^\"]*)\"\\)", "\"([^\"]*)\""],
+    ["tw`([^`]*)`", "([^`]*)"]
+  ],
+  "files.associations": {
+    "*.vue": "vue"
+  },
+  "emmet.includeLanguages": {
+    "vue-html": "html",
+    "vue": "html"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  }
+}

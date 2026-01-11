@@ -1,0 +1,23 @@
+{
+  "name": "INTBIENES",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue",
+  "id": "com.intbienes.app",
+  "defaultProject": "app",
+  "projects": {
+    "app": {
+      "name": "intbienes",
+      "integrations": {
+        "capacitor": {}
+      },
+      "type": "vue",
+      "root": ""
+    }
+  },
+  "hooks": {
+    "build:before": "npm run lint",
+    "capacitor:build:before": "npm run build"
+  }
+}

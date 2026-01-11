@@ -1,0 +1,290 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Función para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para verificar si el usuario es administrador
+    function isAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.role == 'administrador';
+    }
+    
+    // Función para verificar si el usuario es custodio
+    function isCustodio() {
+      return isAuthenticated() && 
+             (request.auth.token.role == 'custodio' || 
+              request.auth.token.role == 'administrador');
+    }
+    
+    // Función para verificar si el usuario es propietario del archivo
+    function isOwner(userId) {
+      return isAuthenticated() && 
+             request.auth.uid == userId;
+    }
+    
+    // Función para verificar el tipo de archivo permitido
+    function isValidImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Función para verificar el tamaño del archivo (máximo 10MB)
+    function isValidFileSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Función para verificar el nombre del archivo
+    function isValidFileName() {
+      return request.resource.name.matches('^[a-zA-Z0-9._-]+$');
+    }
+    
+    // Reglas para imágenes de bienes
+    match /bienes/{bienId}/imagenes/{imagenId} {
+      allow read: if isAuthenticated();
+      allow create: if isCustodio() && 
+                     isValidImageType() && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow update: if isCustodio() && 
+                     isValidImageType() && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow delete: if isCustodio();
+    }
+    
+    // Reglas para documentos de bienes
+    match /bienes/{bienId}/documentos/{documentoId} {
+      allow read: if isAuthenticated();
+      allow create: if isCustodio() && 
+                     request.resource.contentType.matches('application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document') && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow update: if isCustodio() && 
+                     request.resource.contentType.matches('application/pdf|application/msword|application/vnd.openxmlformats-officedocument.wordprocessingml.document') && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow delete: if isCustodio();
+    }
+    
+    // Reglas para avatares de usuarios
+    match /usuarios/{userId}/avatar/{avatarId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && 
+                     isValidImageType() && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow update: if isOwner(userId) && 
+                     isValidImageType() && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // Reglas para reportes
+    match /reportes/{reporteId}/{archivoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                     request.resource.contentType.matches('application/pdf|application/vnd.ms-excel|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow update: if isAuthenticated() && 
+                     request.resource.contentType.matches('application/pdf|application/vnd.ms-excel|application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && 
+                     isValidFileSize() && 
+                     isValidFileName();
+      allow delete: if isAdmin();
+    }
+    
+    // Reglas para backups del sistema
+    match /backups/{backupId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para archivos temporales
+    match /temp/{userId}/{archivoId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Reglas para plantillas
+    match /plantillas/{plantillaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para logos e imágenes del sistema
+    match /sistema/{tipo}/{archivoId} {
+      allow read: if true; // Público para lectura
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de auditoría
+    match /auditoria/{auditId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Solo lectura para administradores
+    }
+    
+    // Reglas para archivos de configuración
+    match /configuracion/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de caché
+    match /cache/{cacheId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reglas para archivos de sincronización
+    match /sync/{userId}/{archivoId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Reglas para archivos de notificaciones
+    match /notificaciones/{notificacionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Reglas para archivos de logs
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para archivos de métricas
+    match /metricas/{metricaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de tareas programadas
+    match /tareas/{tareaId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para archivos de alertas
+    match /alertas/{alertaId} {
+      allow read: if isAuthenticated();
+      allow create: if isCustodio();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Reglas para archivos de mensajes
+    match /mensajes/{mensajeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de preferencias
+    match /preferencias/{userId}/{archivoId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // Reglas para archivos de dispositivos
+    match /dispositivos/{dispositivoId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reglas para archivos de tokens
+    match /tokens/{tokenId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reglas para archivos de sesiones
+    match /sesiones/{sessionId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Reglas para archivos de estadísticas
+    match /estadisticas/{estadisticaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de plantillas de reportes
+    match /plantillas-reportes/{plantillaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de exportación
+    match /exportaciones/{exportacionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Reglas para archivos de importación
+    match /importaciones/{importacionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Reglas para archivos de respaldo
+    match /respaldo/{respaldoId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para archivos de migración
+    match /migracion/{migracionId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para archivos de actualización
+    match /actualizaciones/{actualizacionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de documentación
+    match /documentacion/{documentoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de capacitación
+    match /capacitacion/{capacitacionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de ayuda
+    match /ayuda/{ayudaId} {
+      allow read: if true; // Público para lectura
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de tutoriales
+    match /tutoriales/{tutorialId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de manuales
+    match /manuales/{manualId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de políticas
+    match /politicas/{politicaId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de términos y condiciones
+    match /terminos/{terminoId} {
+      allow read: if true; // Público para lectura
+      allow write: if isAdmin();
+    }
+    
+    // Reglas para archivos de privacidad
+    match /privacidad/{privacidadId} {
+      allow read: if true; // Público para lectura
+      allow write: if isAdmin();
+    }
+  }
+} 

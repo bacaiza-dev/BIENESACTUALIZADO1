@@ -1,0 +1,120 @@
+{
+  "name": "intbienes-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:check": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "serve": "vite --host",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx --fix --ignore-path .gitignore",
+    "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "type-check": "vue-tsc --noEmit",
+    "mobile:build": "npm run build && npx cap sync",
+    "mobile:android": "npx cap run android",
+    "mobile:ios": "npx cap run ios",
+    "mobile:sync": "npx cap sync",
+    "mobile:open:android": "npx cap open android",
+    "mobile:open:ios": "npx cap open ios",
+    "analyze": "npx vite-bundle-analyzer"
+  },
+  "dependencies": {
+    "@capacitor/android": "^5.7.8",
+    "@capacitor/app": "^5.0.0",
+    "@capacitor/camera": "^5.0.10",
+    "@capacitor/core": "^5.7.8",
+    "@capacitor/device": "^5.0.8",
+    "@capacitor/filesystem": "^5.2.2",
+    "@capacitor/haptics": "^5.0.8",
+    "@capacitor/ios": "^5.7.8",
+    "@capacitor/keyboard": "^5.0.9",
+    "@capacitor/network": "^5.0.8",
+    "@capacitor/preferences": "^5.0.8",
+    "@capacitor/status-bar": "^5.0.8",
+    "@ionic/pwa-elements": "^3.2.2",
+    "@ionic/vue": "^7.8.6",
+    "@ionic/vue-router": "^7.8.6",
+    "@types/qrcode": "^1.5.5",
+    "@vueuse/components": "^11.2.0",
+    "@vueuse/core": "^11.2.0",
+    "axios": "^1.7.8",
+    "boxicons": "^2.1.4",
+    "chart.js": "^4.5.0",
+    "firebase": "^10.14.1",
+    "idb": "^7.1.1",
+    "jsqr": "^1.4.0",
+    "lodash-es": "^4.17.21",
+    "pinia": "^3.0.3",
+    "qrcode": "^1.5.4",
+    "socket.io-client": "^4.8.1",
+    "sweetalert2": "^11.14.5",
+    "vue": "^3.5.17",
+    "vue-chartjs": "^5.3.1",
+    "vue-draggable-plus": "^0.5.3",
+    "vue-i18n": "^10.0.4",
+    "vue-multiselect": "^3.1.0",
+    "vue-qrcode-reader": "^5.7.2",
+    "vue-router": "^4.0.3",
+    "vue-toastification": "^2.0.0-rc.5",
+    "vue3-perfect-scrollbar": "^2.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.1",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "@types/node": "^24.0.14",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@vitejs/plugin-vue": "^5.0.3",
+    "@vue/eslint-config-prettier": "^9.0.0",
+    "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.20.1",
+    "postcss": "^8.4.35",
+    "prettier": "^3.2.5",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.8.3",
+    "vite": "^5.1.0",
+    "vue-tsc": "^3.0.1"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true,
+      "browser": true,
+      "es2022": true
+    },
+    "extends": [
+      "plugin:vue/vue3-essential",
+      "eslint:recommended",
+      "@vue/eslint-config-prettier"
+    ],
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "rules": {
+      "vue/multi-word-component-names": "off",
+      "no-unused-vars": "warn"
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
+  "description": "Frontend del Sistema de Gestión de Bienes Institucionales",
+  "keywords": [
+    "vue",
+    "capacitor",
+    "hybrid",
+    "bienes",
+    "institucionales"
+  ],
+  "author": "Instituto Nelson Torres",
+  "license": "ISC"
+}

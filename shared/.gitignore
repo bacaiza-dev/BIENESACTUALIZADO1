@@ -1,0 +1,32 @@
+.DS_Store
+node_modules
+/dist
+
+
+# local env files
+.env.local
+.env.*.local
+
+# Database configuration (contains sensitive credentials)
+scripts/db-config.json
+**/db-config.json
+
+# Database backups
+*_backup.sql
+backup_*.sql
+bienes_backup_*.sql
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

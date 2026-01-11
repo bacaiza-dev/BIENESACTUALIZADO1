@@ -1,0 +1,358 @@
+/* ==========================================
+   SISTEMA DE VARIABLES INSTITUCIONALES
+   ========================================== */
+
+:root {
+  /* — Colores institucionales (base) — */
+  --institutional-red: #ed1c24;
+  --institutional-black: #111111;
+  --institutional-white: #ffffff;
+
+  /* — Gradientes institucionales — */
+  --gradient-primary: linear-gradient(135deg, var(--institutional-red), #b30f1b);
+  --gradient-secondary: linear-gradient(135deg, var(--institutional-black), #2c2c2c);
+  --gradient-hero: linear-gradient(135deg, #f5f5f5 0%, #ffffff 50%, var(--institutional-red) 100%);
+
+  /* — Gradientes complementarios — */
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --danger-gradient: linear-gradient(135deg, var(--institutional-red), #b30f1b);
+
+  /* — Tonos para fondos, tarjetas y texto — */
+  --bg-primary: var(--institutional-white);
+  --bg-secondary: var(--institutional-white);
+  --bg-tertiary: var(--institutional-white);
+  --card-bg: var(--institutional-white);
+  --surface-bg: var(--institutional-white);
+  --modal-bg: var(--institutional-white);
+  --header-bg: var(--institutional-white);
+
+  --border-color: #e0e0e0;
+  --border-light: #f0f0f0;
+
+  --text-primary: var(--institutional-black);
+  --text-secondary: var(--institutional-black);
+  --text-tertiary: #666666;
+  --text-light: #888888;
+  --text-muted: #999999;
+
+  --white: var(--institutional-white);
+  --black: var(--institutional-black);
+
+  /* — Sistema de sombras — */
+  --shadow-glow: 0 0 20px rgba(237, 28, 36, 0.2);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-floating: 0 20px 40px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 25px 50px rgba(0, 0, 0, 0.15);
+
+  /* — Bordes y esquinas — */
+  --border-radius: 16px;
+  --border-radius-large: 24px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
+  --border-radius-xl: 20px;
+
+  /* — Sistema de transiciones — */
+  --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-fast: all 0.2s ease;
+  --transition-medium: all 0.3s ease;
+  --transition-slow: all 0.5s ease;
+
+  /* — Espaciado reutilizable — */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 1rem; /* 16px */
+  --spacing-lg: 1.5rem; /* 24px */
+  --spacing-xl: 2rem; /* 32px */
+  --spacing-2xl: 2.5rem; /* 40px */
+  --spacing-3xl: 3rem; /* 48px */
+
+  /* — Sistema tipográfico — */
+  --font-base: 'Open Sans', sans-serif;
+  --font-heading: 'Montserrat', sans-serif;
+  --font-mono: 'Fira Code', 'Consolas', monospace;
+
+  /* — Tamaños de fuente — */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+  --font-size-4xl: 2.25rem; /* 36px */
+
+  /* — Pesos de fuente — */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* — Alturas de línea — */
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.75;
+  --line-height-loose: 2;
+
+  /* — Z-index para capas — */
+  --z-dropdown: 1000;
+  --z-sticky: 1010;
+  --z-fixed: 1020;
+  --z-modal-backdrop: 1030;
+  --z-modal: 1040;
+  --z-popover: 1050;
+  --z-tooltip: 1060;
+  --z-toast: 1070;
+
+  /* — Breakpoints para responsive — */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* — Colores de estado — */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: var(--institutional-red);
+  --color-info: #3b82f6;
+
+  /* — Colores de estado con opacidad — */
+  --color-success-light: rgba(16, 185, 129, 0.1);
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+  --color-error-light: rgba(237, 28, 36, 0.1);
+  --color-info-light: rgba(59, 130, 246, 0.1);
+
+  /* — Colores neutros extendidos — */
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+
+  /* — Configuración de animaciones — */
+  --animation-duration-fast: 150ms;
+  --animation-duration-base: 300ms;
+  --animation-duration-slow: 500ms;
+  --animation-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --animation-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --animation-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* — Configuración de diseño — */
+  --max-width-xs: 20rem; /* 320px */
+  --max-width-sm: 24rem; /* 384px */
+  --max-width-md: 28rem; /* 448px */
+  --max-width-lg: 32rem; /* 512px */
+  --max-width-xl: 36rem; /* 576px */
+  --max-width-2xl: 42rem; /* 672px */
+  --max-width-3xl: 48rem; /* 768px */
+  --max-width-4xl: 56rem; /* 896px */
+  --max-width-5xl: 64rem; /* 1024px */
+  --max-width-6xl: 72rem; /* 1152px */
+  --max-width-7xl: 80rem; /* 1280px */
+  --max-width-full: 100%;
+
+  /* — Configuración para formularios — */
+  --input-border-color: var(--border-color);
+  --input-border-color-focus: var(--institutional-red);
+  --input-border-color-error: var(--color-error);
+  --input-background: var(--institutional-white);
+  --input-background-focus: var(--institutional-white);
+  --input-background-disabled: #f8f8f8;
+  --input-text-color: var(--institutional-black);
+  --input-placeholder-color: #999999;
+
+  /* — Configuración para botones — */
+  --button-border-radius: var(--border-radius);
+  --button-padding-sm: var(--spacing-sm) var(--spacing-md);
+  --button-padding-md: var(--spacing-md) var(--spacing-lg);
+  --button-padding-lg: var(--spacing-lg) var(--spacing-xl);
+
+  /* Estados de botones */
+  --button-primary-bg: var(--gradient-primary);
+  --button-primary-text: var(--institutional-white);
+  --button-secondary-bg: var(--institutional-white);
+  --button-secondary-text: var(--institutional-black);
+  --button-secondary-border: var(--border-color);
+  --button-ghost-bg: transparent;
+  --button-ghost-text: var(--institutional-black);
+  --button-ghost-hover-bg: #f5f5f5;
+}
+
+/* ==========================================
+   UTILIDADES GLOBALES
+   ========================================== */
+
+/* Reset básico para componentes institucionales */
+.institutional-component {
+  font-family: var(--font-base);
+  line-height: var(--line-height-base);
+  color: var(--text-primary);
+}
+
+/* Clases de utilidad para tipografía */
+.text-institutional {
+  color: var(--institutional-red);
+}
+
+.text-primary {
+  color: var(--institutional-black);
+}
+
+.text-secondary {
+  color: var(--institutional-black);
+}
+
+.text-tertiary {
+  color: #666666;
+}
+
+.text-light {
+  color: #888888;
+}
+
+.text-muted {
+  color: #999999;
+}
+
+/* Clases de utilidad para fondos */
+.bg-institutional {
+  background: var(--gradient-primary);
+}
+
+.bg-white {
+  background: var(--institutional-white);
+}
+
+.bg-card {
+  background: var(--institutional-white);
+}
+
+.bg-surface {
+  background: var(--institutional-white);
+}
+
+.bg-modal {
+  background: var(--institutional-white);
+}
+
+.bg-header {
+  background: var(--institutional-white);
+}
+
+/* Clases de utilidad para sombras */
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-floating {
+  box-shadow: var(--shadow-floating);
+}
+
+.shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Clases de utilidad para botones */
+.btn-primary {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+.btn-secondary {
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  border: 1px solid var(--button-secondary-border);
+}
+
+.btn-ghost {
+  background: var(--button-ghost-bg);
+  color: var(--button-ghost-text);
+}
+
+.btn-ghost:hover {
+  background: var(--button-ghost-hover-bg);
+}
+
+/* Clases de utilidad para bordes */
+.border-light {
+  border-color: var(--border-light);
+}
+
+.border-default {
+  border-color: var(--border-color);
+}
+
+.border-institutional {
+  border-color: var(--institutional-red);
+}
+
+/* Clases de utilidad para transiciones */
+.transition-base {
+  transition: var(--transition);
+}
+
+.transition-fast {
+  transition: var(--transition-fast);
+}
+
+.transition-slow {
+  transition: var(--transition-slow);
+}
+
+/* ==========================================
+   CONFIGURACIÓN PARA MODO OSCURO (DESHABILITADO)
+   ========================================== */
+
+/* 
+NOTA: Modo oscuro intencionalmente deshabilitado para mantener
+la consistencia institucional con fondos blancos y letras negras.
+
+Si en el futuro se requiere modo oscuro, descomentar y ajustar:
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --card-bg: #1f2937;
+    --surface-bg: #111827;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --text-light: #9ca3af;
+    --border-color: #374151;
+  }
+}
+*/
+
+/* ==========================================
+   CONFIGURACIÓN PARA MOTION REDUCIDO
+   ========================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition: none;
+    --transition-fast: none;
+    --transition-medium: none;
+    --transition-slow: none;
+    --animation-duration-fast: 0.01ms;
+    --animation-duration-base: 0.01ms;
+    --animation-duration-slow: 0.01ms;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
