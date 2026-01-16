@@ -173,9 +173,7 @@
               <i class="bx bx-bell text-lg"></i>
             </div>
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900 dark:text-white">{{ alerta.tipo === 'mantenimiento' ? 'Mantenimiento
-                Requerido' : alerta.tipo === 'vencimiento' ? 'Próximo a Vencer' : alerta.tipo === 'baja' ? 'Proceso de
-                Baja' : 'Nueva Asignación' }}</h4>
+              <h4 class="font-medium text-gray-900 dark:text-white">{{ getTituloAlerta(alerta.tipo) }}</h4>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ alerta.mensaje }}</p>
               <div class="flex items-center space-x-2 mt-1">
                 <span class="text-xs px-2 py-1 rounded-full" :class="getAlertaStatusClass(alerta.tipo)">
@@ -352,6 +350,15 @@ const getTipoMantenimientoClass = (tipo: string): string => {
     emergencia: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   }
   return map[tipo] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+}
+
+const getTituloAlerta = (tipo: string): string => {
+  const map: Record<string, string> = {
+    mantenimiento: 'Mantenimiento Requerido',
+    vencimiento: 'Próximo a Vencer',
+    baja: 'Proceso de Baja',
+  }
+  return map[tipo] || 'Nueva Asignación'
 }
 
 const getAlertaIconClass = (tipo: string): string => {
