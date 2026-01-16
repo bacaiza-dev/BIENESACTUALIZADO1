@@ -1,13 +1,25 @@
 <template>
   <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between h-16 px-4 lg:px-6">
-      <!-- Mobile menu button -->
-      <button
-        @click="uiStore.toggleSidebar"
-        class="lg:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation"
-      >
-        <i class="bx bx-menu text-xl"></i>
-      </button>
+      <div class="flex items-center space-x-2">
+        <!-- Mobile menu button -->
+        <button
+          @click="uiStore.toggleSidebar"
+          class="lg:hidden p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation"
+          title="Menú"
+        >
+          <i class="bx bx-menu text-xl"></i>
+        </button>
+
+        <!-- Desktop sidebar toggle -->
+        <button
+          @click="uiStore.toggleSidebarCollapsed"
+          class="hidden lg:inline-flex p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 min-h-[44px] min-w-[44px] touch-manipulation"
+          :title="uiStore.sidebarCollapsed ? 'Mostrar menú' : 'Ocultar menú'"
+        >
+          <i :class="['bx text-xl', uiStore.sidebarCollapsed ? 'bx-menu-alt-right' : 'bx-menu-alt-left']"></i>
+        </button>
+      </div>
 
       <!-- Page title -->
       <div class="flex-1 lg:flex-none">
@@ -206,6 +218,7 @@ const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     Dashboard: 'Dashboard',
     DashboardUser: 'Mi Dashboard',
+    Busqueda: 'Búsqueda',
     BienesList: 'Bienes',
     BienDetail: 'Detalle del Bien',
     BienCreate: 'Crear Bien',
@@ -213,6 +226,7 @@ const pageTitle = computed(() => {
     UsuariosList: 'Usuarios',
     Profile: 'Mi Perfil',
     UbicacionesList: 'Ubicaciones',
+    SalasList: 'Salas',
     CategoriasList: 'Categorías',
     PeriodosList: 'Períodos Académicos',
     AlertasList: 'Alertas',
@@ -253,8 +267,8 @@ const toggleUserMenu = () => {
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     router.push({
-      name: 'BienesList',
-      query: { search: searchQuery.value },
+      name: 'Busqueda',
+      query: { q: searchQuery.value },
     })
   }
 }

@@ -1,8 +1,6 @@
 // src/stores/asignaciones.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+import apiClient from '@/api/client'
 
 export const useAsignacionesStore = defineStore('asignaciones', {
   state: () => ({
@@ -154,23 +152,25 @@ export const useAsignacionesStore = defineStore('asignaciones', {
           ),
         })
 
-        const response = await axios.get(`${API_BASE_URL}/asignaciones?${params}`)
+        const response = await apiClient.get(`/asignaciones?${params}`)
 
-        if (response.data.success) {
-          this.asignaciones = response.data.data
-          this.pagination = {
-            page: response.data.meta.page,
-            limit: response.data.meta.limit,
-            total: response.data.meta.total,
-            totalPages: response.data.meta.totalPages,
-          }
+        if (response.success) {
+          this.asignaciones = response.data
+          // Meta handling assuming it might be in response or data based on consistency
+           if (response.meta) {
+            this.pagination = {
+              page: response.meta.page,
+              limit: response.meta.limit,
+              total: response.meta.total,
+              totalPages: response.meta.totalPages,
+            }
+           }
           this.calcularMetricas()
         } else {
-          throw new Error(response.data.message || 'Error al cargar asignaciones')
+          throw new Error(response.message || 'Error al cargar asignaciones')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al cargar asignaciones'
+        this.error = error.message || 'Error al cargar asignaciones'
         this.asignaciones = []
       } finally {
         this.loading = false
@@ -182,16 +182,16 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/asignaciones/${id}`)
+        const response = await apiClient.get(`/asignaciones/${id}`)
 
-        if (response.data.success) {
-          this.currentAsignacion = response.data.data
-          return response.data.data
+        if (response.success) {
+          this.currentAsignacion = response.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar asignación')
+          throw new Error(response.message || 'Error al cargar asignación')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al cargar asignación'
+        this.error = error.message || 'Error al cargar asignación'
         throw error
       } finally {
         this.loading = false
@@ -203,18 +203,18 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/asignaciones`, asignacionData)
+        const response = await apiClient.post('/asignaciones', asignacionData)
 
-        if (response.data.success) {
+        if (response.success) {
           // Agregar la nueva asignación al estado
-          this.asignaciones.unshift(response.data.data)
+          this.asignaciones.unshift(response.data)
           this.calcularMetricas()
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al crear asignación')
+          throw new Error(response.message || 'Error al crear asignación')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al crear asignación'
+        this.error = error.message || 'Error al crear asignación'
         throw error
       } finally {
         this.loading = false
@@ -226,27 +226,26 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.put(`${API_BASE_URL}/asignaciones/${id}`, updates)
+        const response = await apiClient.put(`/asignaciones/${id}`, updates)
 
-        if (response.data.success) {
+        if (response.success) {
           // Actualizar la asignación en el estado
           const index = this.asignaciones.findIndex(asignacion => asignacion.id_asignacion === id)
           if (index !== -1) {
-            this.asignaciones[index] = { ...this.asignaciones[index], ...response.data.data }
+            this.asignaciones[index] = { ...this.asignaciones[index], ...response.data }
           }
 
           if (this.currentAsignacion?.id_asignacion === id) {
-            this.currentAsignacion = { ...this.currentAsignacion, ...response.data.data }
+            this.currentAsignacion = { ...this.currentAsignacion, ...response.data }
           }
 
           this.calcularMetricas()
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al actualizar asignación')
+          throw new Error(response.message || 'Error al actualizar asignación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al actualizar asignación'
+        this.error = error.message || 'Error al actualizar asignación'
         throw error
       } finally {
         this.loading = false
@@ -258,26 +257,25 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.put(
-          `${API_BASE_URL}/asignaciones/${id}/finalizar`,
+        const response = await apiClient.put(
+          `/asignaciones/${id}/finalizar`,
           datosFinalizacion
         )
 
-        if (response.data.success) {
+        if (response.success) {
           // Actualizar la asignación en el estado
           const index = this.asignaciones.findIndex(asignacion => asignacion.id_asignacion === id)
           if (index !== -1) {
-            this.asignaciones[index] = { ...this.asignaciones[index], ...response.data.data }
+            this.asignaciones[index] = { ...this.asignaciones[index], ...response.data }
           }
 
           this.calcularMetricas()
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al finalizar asignación')
+          throw new Error(response.message || 'Error al finalizar asignación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al finalizar asignación'
+        this.error = error.message || 'Error al finalizar asignación'
         throw error
       } finally {
         this.loading = false
@@ -289,22 +287,21 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.put(
-          `${API_BASE_URL}/asignaciones/${id}/transferir`,
+        const response = await apiClient.put(
+          `/asignaciones/${id}/transferir`,
           datosTransferencia
         )
 
-        if (response.data.success) {
+        if (response.success) {
           // Puede crear una nueva asignación y finalizar la actual
           await this.fetchAsignaciones()
           this.calcularMetricas()
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al transferir asignación')
+          throw new Error(response.message || 'Error al transferir asignación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al transferir asignación'
+        this.error = error.message || 'Error al transferir asignación'
         throw error
       } finally {
         this.loading = false
@@ -316,18 +313,15 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/usuarios/${idUsuario}/asignaciones`)
+        const response = await apiClient.get(`/usuarios/${idUsuario}/asignaciones`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar asignaciones del usuario')
+          throw new Error(response.message || 'Error al cargar asignaciones del usuario')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message ||
-          error.message ||
-          'Error al cargar asignaciones del usuario'
+        this.error = error.message || 'Error al cargar asignaciones del usuario'
         throw error
       } finally {
         this.loading = false
@@ -339,16 +333,15 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/bienes/${idBien}/historial-asignaciones`)
+        const response = await apiClient.get(`/bienes/${idBien}/historial-asignaciones`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar historial del bien')
+          throw new Error(response.message || 'Error al cargar historial del bien')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al cargar historial del bien'
+        this.error = error.message || 'Error al cargar historial del bien'
         throw error
       } finally {
         this.loading = false
@@ -360,25 +353,19 @@ export const useAsignacionesStore = defineStore('asignaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/asignaciones/${id}/acta/${tipoActa}`, {
+        const blob = await apiClient.get(`/asignaciones/${id}/acta/${tipoActa}`, {
           responseType: 'blob',
         })
 
-        // Crear URL para descarga
-        const url = window.URL.createObjectURL(new Blob([response.data]))
+        // Crea URL directo del blob
+        const url = window.URL.createObjectURL(new Blob([blob]))
         const link = document.createElement('a')
         link.href = url
 
-        // Obtener nombre del archivo desde headers o generar uno
-        const contentDisposition = response.headers['content-disposition']
-        let filename = `acta_${tipoActa}_asignacion_${id}.pdf`
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-          if (filenameMatch) {
-            filename = filenameMatch[1]
-          }
-        }
-
+        // Nombre genérico ya que headers no son fácilmente accesibles en el blob return directo de apiClient
+        // A menos que cambiemos apiClient par devolver full response con headers
+        const filename = `acta_${tipoActa}_asignacion_${id}.pdf`
+        
         link.setAttribute('download', filename)
         document.body.appendChild(link)
         link.click()
@@ -387,7 +374,7 @@ export const useAsignacionesStore = defineStore('asignaciones', {
 
         return true
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al generar acta'
+        this.error = error.message || 'Error al generar acta'
         throw error
       } finally {
         this.loading = false
@@ -396,10 +383,10 @@ export const useAsignacionesStore = defineStore('asignaciones', {
 
     async fetchMetricas() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/asignaciones/metricas`)
+        const response = await apiClient.get('/asignaciones/metricas')
 
-        if (response.data.success) {
-          this.metricas = response.data.data
+        if (response.success) {
+          this.metricas = response.data
         }
       } catch (error) {
         console.error('Error al cargar métricas:', error)

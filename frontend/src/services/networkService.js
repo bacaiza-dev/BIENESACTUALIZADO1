@@ -131,15 +131,15 @@ class NetworkService {
   async downloadLatestData() {
     try {
       // Descargar bienes
-      const bienesResponse = await apiClient.get('/bienes?limit=1000')
-      if (bienesResponse.data.success) {
-        await offlineStorage.saveBienes(bienesResponse.data.data)
+      const bienesResponse = await apiClient.get('/bienes')
+      if (bienesResponse.success) {
+        await offlineStorage.saveBienes(bienesResponse.data)
       }
 
       // Descargar usuarios
-      const usuariosResponse = await apiClient.get('/users?limit=1000')
-      if (usuariosResponse.data.success) {
-        await offlineStorage.saveUsuarios(usuariosResponse.data.data)
+      const usuariosResponse = await apiClient.get('/usuarios')
+      if (usuariosResponse.success) {
+        await offlineStorage.saveUsuarios(usuariosResponse.data)
       }
     } catch (error) {
       console.error('Error al descargar datos más recientes:', error)

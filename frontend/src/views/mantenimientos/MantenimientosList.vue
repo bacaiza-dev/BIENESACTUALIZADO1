@@ -18,19 +18,15 @@
             <span>{{ mantenimientosVencidos.length }} vencidos</span>
           </div>
         </div>
-        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-          <button
-            @click="exportarDatos"
-            class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
+        <div
+          class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          <button @click="exportarDatos"
+            class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
             <i class="bx bx-download text-lg"></i>
             <span class="hidden sm:inline">Exportar</span>
           </button>
-          <button
-            v-if="canCreateMaintenance"
-            @click="mostrarModalCrear = true"
-            class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
+          <button v-if="canCreateMaintenance" @click="mostrarModalCrear = true"
+            class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
             <i class="bx bx-plus-circle text-lg"></i>
             <span>Programar Mantenimiento</span>
           </button>
@@ -98,29 +94,16 @@
     </div>
 
     <!-- DataTable -->
-    <DataTableNew
-      title="Lista de Mantenimientos"
-      :data="mantenimientosFiltrados"
-      :columns="columns"
-      :loading="cargando"
-      :search-term="filtros.busqueda"
-      :page-size="filtros.limite"
-      :selectable="canEditMaintenance"
-      :has-actions="true"
+    <DataTable title="Lista de Mantenimientos" :data="mantenimientosFiltrados" :columns="columns" :loading="cargando"
+      :search-term="filtros.busqueda" :page-size="filtros.limite" :selectable="canEditMaintenance" :has-actions="true"
       empty-message="No hay mantenimientos registrados"
       search-placeholder="Buscar por bien, tipo de mantenimiento, responsable..."
-      @update:search-term="filtros.busqueda = $event"
-      @update:page-size="filtros.limite = $event"
-      @edit="editarMantenimiento"
-      @view="verMantenimiento"
-      @delete="eliminarMantenimiento"
-    >
+      @update:search-term="filtros.busqueda = $event" @update:page-size="filtros.limite = $event"
+      @edit="editarMantenimiento" @view="verMantenimiento" @delete="eliminarMantenimiento">
       <template #header-actions>
         <div class="flex items-center space-x-2">
-          <select
-            v-model="filtros.estado"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.estado"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todos los estados</option>
             <option value="programado">Programado</option>
             <option value="en_progreso">En Progreso</option>
@@ -128,20 +111,16 @@
             <option value="cancelado">Cancelado</option>
             <option value="vencido">Vencido</option>
           </select>
-          <select
-            v-model="filtros.tipo"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.tipo"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todos los tipos</option>
             <option value="preventivo">Preventivo</option>
             <option value="correctivo">Correctivo</option>
             <option value="predictivo">Predictivo</option>
             <option value="revision">Revisión</option>
           </select>
-          <button
-            @click="limpiarFiltros"
-            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-          >
+          <button @click="limpiarFiltros"
+            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">
             <i class="bx bx-refresh text-sm"></i>
             <span>Limpiar</span>
           </button>
@@ -179,7 +158,8 @@
       </template>
 
       <template #cell-fecha_limite="{ value }">
-        <span class="text-sm" :class="isVencido(value) ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-900 dark:text-white'">
+        <span class="text-sm"
+          :class="isVencido(value) ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-900 dark:text-white'">
           {{ formatDate(value) }}
           <i v-if="isVencido(value)" class="bx bx-time text-red-500 ml-1"></i>
         </span>
@@ -193,59 +173,42 @@
 
       <template #actions="{ item }">
         <div class="flex items-center space-x-2">
-          <button
-            @click="verMantenimiento(item)"
+          <button @click="verMantenimiento(item)"
             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
-            title="Ver detalles"
-          >
+            title="Ver detalles">
             <i class="bx bx-show text-lg"></i>
           </button>
-          <button
-            v-if="canEditMaintenance"
-            @click="editarMantenimiento(item)"
+          <button v-if="canEditMaintenance" @click="editarMantenimiento(item)"
             class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors"
-            title="Editar"
-          >
+            title="Editar">
             <i class="bx bx-edit text-lg"></i>
           </button>
-          <button
-            v-if="canCompleteMaintenance && item.estado === 'programado'"
-            @click="completarMantenimiento(item)"
+          <button v-if="canCompleteMaintenance && item.estado === 'programado'" @click="completarMantenimiento(item)"
             class="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900 rounded-lg transition-colors"
-            title="Marcar como completado"
-          >
+            title="Marcar como completado">
             <i class="bx bx-check text-lg"></i>
           </button>
-          <button
-            v-if="canDeleteMaintenance"
-            @click="eliminarMantenimiento(item)"
+          <button v-if="canDeleteMaintenance" @click="eliminarMantenimiento(item)"
             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-            title="Eliminar"
-          >
+            title="Eliminar">
             <i class="bx bx-trash text-lg"></i>
           </button>
         </div>
       </template>
-    </DataTableNew>
+    </DataTable>
 
     <!-- Modal de Crear/Editar Mantenimiento -->
-    <BaseModal
-      :show="mostrarModalCrear || mostrarModalEditar"
-      :title="mantenimientoActual ? 'Editar Mantenimiento' : 'Programar Mantenimiento'"
-      size="large"
-      @close="cerrarModal"
-    >
+    <BaseModal :show="mostrarModalCrear || mostrarModalEditar"
+      :title="mantenimientoActual ? 'Editar Mantenimiento' : 'Programar Mantenimiento'" size="large"
+      @close="cerrarModal">
       <form @submit.prevent="guardarMantenimiento" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Bien *
             </label>
-            <select
-              v-model="formulario.bien_id"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="formulario.bien_id" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
               <option value="">Selecciona un bien</option>
               <option v-for="bien in bienes" :key="bien.id" :value="bien.id">
                 {{ bien.nombre }} ({{ bien.codigo }})
@@ -257,11 +220,8 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tipo de Mantenimiento *
             </label>
-            <select
-              v-model="formulario.tipo"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="formulario.tipo" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
               <option value="">Selecciona el tipo</option>
               <option value="preventivo">Preventivo</option>
               <option value="correctivo">Correctivo</option>
@@ -275,13 +235,9 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Descripción *
           </label>
-          <textarea
-            v-model="formulario.descripcion"
-            required
-            rows="3"
+          <textarea v-model="formulario.descripcion" required rows="3"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Describe las actividades de mantenimiento a realizar"
-          ></textarea>
+            placeholder="Describe las actividades de mantenimiento a realizar"></textarea>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -289,26 +245,18 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha Programada *
             </label>
-            <input
-              v-model="formulario.fecha_programada"
-              type="date"
-              required
+            <input v-model="formulario.fecha_programada" type="date" required
               :min="new Date().toISOString().split('T')[0]"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            />
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Fecha Límite *
             </label>
-            <input
-              v-model="formulario.fecha_limite"
-              type="date"
-              required
+            <input v-model="formulario.fecha_limite" type="date" required
               :min="formulario.fecha_programada || new Date().toISOString().split('T')[0]"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            />
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
           </div>
         </div>
 
@@ -317,11 +265,8 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Responsable *
             </label>
-            <select
-              v-model="formulario.responsable_id"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="formulario.responsable_id" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
               <option value="">Selecciona el responsable</option>
               <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.id">
                 {{ usuario.nombre }} {{ usuario.apellido }}
@@ -335,62 +280,130 @@
             </label>
             <div class="relative">
               <span class="absolute left-3 top-2 text-gray-500">$</span>
-              <input
-                v-model.number="formulario.costo_estimado"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model.number="formulario.costo_estimado" type="number" step="0.01" min="0" placeholder="0.00"
+                class="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
         </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Prioridad
-          </label>
-          <select
-            v-model="formulario.prioridad"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-          >
-            <option value="baja">Baja</option>
-            <option value="media">Media</option>
-            <option value="alta">Alta</option>
-            <option value="critica">Crítica</option>
-          </select>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Prioridad
+            </label>
+            <select v-model="formulario.prioridad"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
+              <option value="baja">Baja</option>
+              <option value="media">Media</option>
+              <option value="alta">Alta</option>
+              <option value="critica">Crítica</option>
+            </select>
+          </div>
 
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Observaciones
-          </label>
-          <textarea
-            v-model="formulario.observaciones"
-            rows="2"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Observaciones adicionales"
-          ></textarea>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Observaciones
+            </label>
+            <textarea v-model="formulario.observaciones" rows="2"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
+              placeholder="Observaciones adicionales"></textarea>
+          </div>
         </div>
 
         <div class="flex justify-end space-x-3 pt-4">
-          <BaseButton
-            type="button"
-            variant="secondary"
-            @click="cerrarModal"
-          >
+          <BaseButton type="button" variant="secondary" @click="cerrarModal">
             Cancelar
           </BaseButton>
-          <BaseButton
-            type="submit"
-            variant="primary"
-            :loading="guardando"
-          >
+          <BaseButton type="submit" variant="primary" :loading="guardando">
             {{ guardando ? 'Guardando...' : (mantenimientoActual ? 'Actualizar' : 'Guardar') }}
           </BaseButton>
         </div>
       </form>
+    </BaseModal>
+
+    <!-- Modal de Detalle -->
+    <BaseModal :show="mostrarModalDetalle" title="Detalle del Mantenimiento" size="large" @close="cerrarModalDetalle">
+      <div v-if="mantenimientoDetalle" class="space-y-4">
+        <!-- Bien -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Bien</h3>
+          <p class="text-lg font-medium text-gray-900 dark:text-white">
+            {{ mantenimientoDetalle.bien?.nombre || 'N/A' }}
+          </p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Código: {{ mantenimientoDetalle.bien?.codigo || 'N/A' }}
+          </p>
+        </div>
+
+        <!-- Tipo y Estado -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Tipo</h3>
+            <span class="px-3 py-1 text-sm font-semibold rounded-full" :class="getTipoClass(mantenimientoDetalle.tipo)">
+              {{ getTipoLabel(mantenimientoDetalle.tipo) }}
+            </span>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Estado</h3>
+            <span class="px-3 py-1 text-sm font-semibold rounded-full"
+              :class="getEstadoClass(mantenimientoDetalle.estado)">
+              {{ getEstadoLabel(mantenimientoDetalle.estado) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Descripción</h3>
+          <p class="text-gray-900 dark:text-white">{{ mantenimientoDetalle.descripcion }}</p>
+        </div>
+
+        <!-- Fechas -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Fecha Programada</h3>
+            <p class="text-gray-900 dark:text-white">{{ formatDate(mantenimientoDetalle.fecha_programada) }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Fecha Límite</h3>
+            <p :class="isVencido(mantenimientoDetalle.fecha_limite) ? 'text-red-600' : 'text-gray-900 dark:text-white'">
+              {{ formatDate(mantenimientoDetalle.fecha_limite) }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Responsable y Costo -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Responsable</h3>
+            <p class="text-gray-900 dark:text-white">
+              {{ mantenimientoDetalle.responsable?.nombre }} {{ mantenimientoDetalle.responsable?.apellido }}
+            </p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Costo Estimado</h3>
+            <p class="text-green-600 font-semibold">{{ formatCurrency(mantenimientoDetalle.costo_estimado) }}</p>
+          </div>
+        </div>
+
+        <!-- Prioridad y Observaciones -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Prioridad</h3>
+            <p class="text-gray-900 dark:text-white capitalize">{{ mantenimientoDetalle.prioridad }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">Observaciones</h3>
+            <p class="text-gray-900 dark:text-white">{{ mantenimientoDetalle.observaciones || 'Sin observaciones' }}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-4">
+          <BaseButton variant="secondary" @click="cerrarModalDetalle">
+            Cerrar
+          </BaseButton>
+        </div>
+      </div>
     </BaseModal>
   </div>
 </template>
@@ -401,9 +414,10 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
 import { useAuth } from '@/composables/useAuth'
-import DataTableNew from '@/components/shared/DataTableNew.vue'
+import DataTable from '@/components/shared/DataTable.vue'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
+import apiClient from '@/api/client'
 import type { DataTableColumn, Asset, User } from '@/types'
 
 interface Mantenimiento {
@@ -436,7 +450,9 @@ const cargando = ref(false)
 const guardando = ref(false)
 const mostrarModalCrear = ref(false)
 const mostrarModalEditar = ref(false)
+const mostrarModalDetalle = ref(false)
 const mantenimientoActual = ref<Mantenimiento | null>(null)
+const mantenimientoDetalle = ref<Mantenimiento | null>(null)
 
 // Filtros
 const filtros = reactive({
@@ -465,20 +481,20 @@ const bienes = ref<Asset[]>([])
 const usuarios = ref<User[]>([])
 
 // Computadas
-const mantenimientosProgramados = computed(() => 
-  mantenimientos.value.filter(m => m.estado === 'programado')
+const mantenimientosProgramados = computed(() =>
+  mantenimientos.value.filter((m: Mantenimiento) => m.estado === 'programado')
 )
 
-const mantenimientosPendientes = computed(() => 
-  mantenimientos.value.filter(m => ['programado', 'en_progreso'].includes(m.estado))
+const mantenimientosPendientes = computed(() =>
+  mantenimientos.value.filter((m: Mantenimiento) => ['programado', 'en_progreso'].includes(m.estado))
 )
 
-const mantenimientosCompletados = computed(() => 
-  mantenimientos.value.filter(m => m.estado === 'completado')
+const mantenimientosCompletados = computed(() =>
+  mantenimientos.value.filter((m: Mantenimiento) => m.estado === 'completado')
 )
 
-const mantenimientosVencidos = computed(() => 
-  mantenimientos.value.filter(m => {
+const mantenimientosVencidos = computed(() =>
+  mantenimientos.value.filter((m: Mantenimiento) => {
     const fechaLimite = new Date(m.fecha_limite)
     const hoy = new Date()
     return fechaLimite < hoy && m.estado !== 'completado'
@@ -490,7 +506,7 @@ const mantenimientosFiltrados = computed(() => {
 
   if (filtros.busqueda) {
     const busqueda = filtros.busqueda.toLowerCase()
-    resultado = resultado.filter(m =>
+    resultado = resultado.filter((m: Mantenimiento) =>
       m.bien?.nombre?.toLowerCase().includes(busqueda) ||
       m.bien?.codigo?.toLowerCase().includes(busqueda) ||
       m.descripcion.toLowerCase().includes(busqueda) ||
@@ -499,11 +515,11 @@ const mantenimientosFiltrados = computed(() => {
   }
 
   if (filtros.estado) {
-    resultado = resultado.filter(m => m.estado === filtros.estado)
+    resultado = resultado.filter((m: Mantenimiento) => m.estado === filtros.estado)
   }
 
   if (filtros.tipo) {
-    resultado = resultado.filter(m => m.tipo === filtros.tipo)
+    resultado = resultado.filter((m: Mantenimiento) => m.tipo === filtros.tipo)
   }
 
   return resultado
@@ -523,19 +539,13 @@ const columns: DataTableColumn[] = [
 ]
 
 // Métodos
+// Métodos
 const cargarMantenimientos = async () => {
   cargando.value = true
   try {
-    const response = await fetch('/api/mantenimientos', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await apiClient.get('/mantenimientos')
 
-    if (!response.ok) throw new Error('Error al cargar mantenimientos')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       mantenimientos.value = data.data || []
     }
@@ -550,15 +560,9 @@ const cargarMantenimientos = async () => {
 
 const cargarBienes = async () => {
   try {
-    const response = await fetch('/api/bienes', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/bienes')
 
-    if (!response.ok) throw new Error('Error al cargar bienes')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       bienes.value = data.data || []
     }
@@ -570,15 +574,9 @@ const cargarBienes = async () => {
 
 const cargarUsuarios = async () => {
   try {
-    const response = await fetch('/api/usuarios', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/usuarios')
 
-    if (!response.ok) throw new Error('Error al cargar usuarios')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       usuarios.value = data.data || []
     }
@@ -589,7 +587,13 @@ const cargarUsuarios = async () => {
 }
 
 const verMantenimiento = (mantenimiento: Mantenimiento) => {
-  router.push(`/mantenimientos/${mantenimiento.id}`)
+  mantenimientoDetalle.value = mantenimiento
+  mostrarModalDetalle.value = true
+}
+
+const cerrarModalDetalle = () => {
+  mostrarModalDetalle.value = false
+  mantenimientoDetalle.value = null
 }
 
 const editarMantenimiento = (mantenimiento: Mantenimiento) => {
@@ -611,21 +615,12 @@ const editarMantenimiento = (mantenimiento: Mantenimiento) => {
 const completarMantenimiento = async (mantenimiento: Mantenimiento) => {
   if (confirm(`¿Marcar como completado el mantenimiento "${mantenimiento.descripcion}"?`)) {
     try {
-      const response = await fetch(`/api/mantenimientos/${mantenimiento.id}/completar`, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fecha_completado: new Date().toISOString(),
-          estado: 'completado'
-        })
+      const response = await apiClient.patch(`/mantenimientos/${mantenimiento.id}/completar`, {
+        fecha_completado: new Date().toISOString(),
+        estado: 'completado'
       })
 
-      if (!response.ok) throw new Error('Error al completar mantenimiento')
-
-      const data = await response.json()
+      const data = response
       if (data.success) {
         await cargarMantenimientos()
         toast.success('Mantenimiento marcado como completado')
@@ -640,18 +635,11 @@ const completarMantenimiento = async (mantenimiento: Mantenimiento) => {
 const eliminarMantenimiento = async (mantenimiento: Mantenimiento) => {
   if (confirm(`¿Estás seguro de eliminar el mantenimiento "${mantenimiento.descripcion}"?`)) {
     try {
-      const response = await fetch(`/api/mantenimientos/${mantenimiento.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
+      const response = await apiClient.delete(`/mantenimientos/${mantenimiento.id}`)
 
-      if (!response.ok) throw new Error('Error al eliminar mantenimiento')
-
-      const data = await response.json()
+      const data = response
       if (data.success) {
-        const index = mantenimientos.value.findIndex(m => m.id === mantenimiento.id)
+        const index = mantenimientos.value.findIndex((m: Mantenimiento) => m.id === mantenimiento.id)
         if (index > -1) {
           mantenimientos.value.splice(index, 1)
         }
@@ -667,31 +655,28 @@ const eliminarMantenimiento = async (mantenimiento: Mantenimiento) => {
 const guardarMantenimiento = async () => {
   guardando.value = true
   try {
-    const method = mantenimientoActual.value ? 'PUT' : 'POST'
-    const endpoint = mantenimientoActual.value 
-      ? `/api/mantenimientos/${mantenimientoActual.value.id}` 
-      : '/api/mantenimientos'
+    const endpoint = mantenimientoActual.value
+      ? `/mantenimientos/${mantenimientoActual.value.id}`
+      : '/mantenimientos'
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formulario,
-        bien_id: parseInt(formulario.bien_id),
-        responsable_id: parseInt(formulario.responsable_id),
-      }),
-    })
+    const payload = {
+      ...formulario,
+      bien_id: parseInt(formulario.bien_id),
+      responsable_id: parseInt(formulario.responsable_id),
+    }
 
-    if (!response.ok) throw new Error('Error al guardar mantenimiento')
+    let response;
+    if (mantenimientoActual.value) {
+      response = await apiClient.put(endpoint, payload)
+    } else {
+      response = await apiClient.post(endpoint, payload)
+    }
 
-    const data = await response.json()
+    const data = response
     if (data.success) {
       await cargarMantenimientos()
-      toast.success(mantenimientoActual.value 
-        ? 'Mantenimiento actualizado correctamente' 
+      toast.success(mantenimientoActual.value
+        ? 'Mantenimiento actualizado correctamente'
         : 'Mantenimiento programado correctamente'
       )
       cerrarModal()
@@ -733,15 +718,10 @@ const limpiarFiltros = () => {
 const exportarDatos = async () => {
   try {
     toast.info('Exportando datos...')
-    const response = await fetch('/api/mantenimientos/export', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/mantenimientos/export', { responseType: 'blob' })
 
-    if (!response.ok) throw new Error('Error al exportar datos')
-
-    const blob = await response.blob()
+    // response IS the blob because responseType is blob
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url

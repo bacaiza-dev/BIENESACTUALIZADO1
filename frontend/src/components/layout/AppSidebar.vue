@@ -1,26 +1,18 @@
 <template>
   <div>
     <!-- Mobile sidebar backdrop -->
-    <div
-      v-if="uiStore.sidebarOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-40"
-      @click="uiStore.closeSidebar"
-    />
+    <div v-if="uiStore.sidebarOpen" class="fixed inset-0 bg-black bg-opacity-50 lg:hidden z-40"
+      @click="uiStore.closeSidebar" />
 
     <!-- Sidebar -->
-    <div
-      :class="[
-        'fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 z-50 flex flex-col',
-        {
-          'translate-x-0': uiStore.sidebarOpen,
-          '-translate-x-full lg:translate-x-0': !uiStore.sidebarOpen,
-        },
-      ]"
-    >
+    <div :class="[
+      'fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 z-50 flex flex-col',
+      uiStore.sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+      uiStore.sidebarCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0',
+    ]">
       <!-- Logo -->
       <div
-        class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 px-4 flex-shrink-0"
-      >
+        class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 px-4 flex-shrink-0">
         <img src="@/assets/LogoINT.png" alt="INT Logo" class="h-8 w-auto" />
         <span class="ml-2 text-xl font-bold text-gray-800 dark:text-white truncate">INT Bienes</span>
       </div>
@@ -37,35 +29,26 @@
             <NavItem :to="{ name: 'DashboardUser' }" icon="bx-home-alt" label="Mi Dashboard" />
           </template>
 
+          <!-- Búsqueda -->
+          <NavItem :to="{ name: 'Busqueda' }" icon="bx-search" label="Búsqueda" />
+
           <!-- Bienes -->
           <NavGroup icon="bx-package" label="Bienes" :items="bienesItems" />
 
           <!-- Usuarios (Solo Admin) -->
-          <NavGroup
-            v-if="authStore.isAdmin"
-            icon="bx-user"
-            label="Usuarios"
-            :items="usuariosItems"
-          />
+          <NavGroup v-if="authStore.isAdmin" icon="bx-user" label="Usuarios" :items="usuariosItems" />
 
-          <!-- Configuración -->
-          <NavGroup icon="bx-cog" label="Configuración" :items="configuracionItems" />
+          <!-- Configuración (Solo Admin) -->
+          <NavGroup v-if="authStore.isAdmin" icon="bx-cog" label="Configuración" :items="configuracionItems" />
 
           <!-- Reportes (Solo Admin) -->
-          <NavGroup
-            v-if="authStore.isAdmin"
-            icon="bx-bar-chart-alt-2"
-            label="Reportes"
-            :items="reportesItems"
-          />
+          <NavGroup v-if="authStore.isAdmin" icon="bx-bar-chart-alt-2" label="Reportes" :items="reportesItems" />
 
           <!-- Mantenimiento (Solo Admin) -->
-          <NavGroup
-            v-if="authStore.isAdmin"
-            icon="bx-wrench"
-            label="Mantenimiento"
-            :items="mantenimientoItems"
-          />
+          <NavGroup v-if="authStore.isAdmin" icon="bx-wrench" label="Mantenimiento" :items="mantenimientoItems" />
+
+          <!-- Aulas por Custodio (Solo Usuario normal) -->
+          <NavItem v-if="!authStore.isAdmin" :to="{ name: 'AulasAsignadas' }" icon="bx-door-open" label="Mis Aulas" />
 
           <!-- Profile -->
           <NavItem :to="{ name: 'Profile' }" icon="bx-user-circle" label="Mi Perfil" />
@@ -77,10 +60,8 @@
 
       <!-- Logout Button -->
       <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-        <button
-          @click="handleLogout"
-          class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
-        >
+        <button @click="handleLogout"
+          class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
           <i class="bx bx-log-out mr-3 text-lg"></i>
           <span class="truncate">Cerrar Sesión</span>
         </button>
@@ -117,7 +98,11 @@ const usuariosItems = computed(() => [
 ])
 
 const configuracionItems = computed(() => {
-  const items = [{ to: { name: 'UbicacionesList' }, icon: 'bx-map', label: 'Ubicaciones' }]
+  const items = [
+    { to: { name: 'UbicacionesList' }, icon: 'bx-map', label: 'Ubicaciones' },
+    { to: { name: 'SalasList' }, icon: 'bx-building-house', label: 'Salas' },
+    { to: { name: 'AulasAsignadas' }, icon: 'bx-door-open', label: 'Aulas por Custodio' },
+  ]
 
   if (authStore.isAdmin) {
     items.push(

@@ -1,14 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div
-      class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6"
-    >
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1
-            class="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent"
-          >
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
             Mi Dashboard
           </h1>
           <p class="mt-2 text-gray-600 dark:text-gray-400">
@@ -21,15 +17,9 @@
           </div>
         </div>
         <div class="mt-4 sm:mt-0 flex items-center space-x-3">
-          <button
-            @click="cargarDatos"
-            :disabled="cargando"
-            class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50"
-          >
-            <i
-              :class="cargando ? 'bx bx-loader-alt animate-spin' : 'bx bx-refresh'"
-              class="text-lg"
-            ></i>
+          <button @click="cargarDatos" :disabled="cargando"
+            class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50">
+            <i :class="cargando ? 'bx bx-loader-alt animate-spin' : 'bx bx-refresh'" class="text-lg"></i>
             <span>{{ cargando ? 'Cargando...' : 'Actualizar' }}</span>
           </button>
         </div>
@@ -38,54 +28,24 @@
 
     <!-- Métricas del Usuario -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <MetricCard
-        title="Mis Bienes"
-        :value="metricas.misBienes"
-        :change="metricas.incrementoBienes"
-        change-type="neutral"
-        icon="bx-package"
-        color="blue"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Valor Total"
-        :value="formatCurrency(metricas.valorTotal)"
-        :change="metricas.incrementoValor"
-        change-type="neutral"
-        icon="bx-dollar-circle"
-        color="green"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Mantenimientos"
-        :value="metricas.mantenimientosPendientes"
-        :subtitle="`${metricas.mantenimientosVencidos} vencidos`"
-        icon="bx-wrench"
-        color="yellow"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Mis Alertas"
-        :value="metricas.alertasActivas"
-        :subtitle="`${metricas.alertasCriticas} críticas`"
-        icon="bx-bell"
-        color="red"
-        :loading="cargando"
-      />
+      <MetricCard title="Mis Bienes" :value="metricas.misBienes" :change="metricas.incrementoBienes"
+        change-type="neutral" icon="bx-package" color="blue" :loading="cargando" />
+      <MetricCard title="Valor Total" :value="formatCurrency(metricas.valorTotal)" :change="metricas.incrementoValor"
+        change-type="neutral" icon="bx-dollar-circle" color="green" :loading="cargando" />
+      <MetricCard title="Mantenimientos" :value="metricas.mantenimientosPendientes"
+        :subtitle="`${metricas.mantenimientosVencidos} vencidos`" icon="bx-wrench" color="yellow" :loading="cargando" />
+      <MetricCard title="Mis Alertas" :value="metricas.alertasActivas"
+        :subtitle="`${metricas.alertasCriticas} críticas`" icon="bx-bell" color="red" :loading="cargando" />
     </div>
 
     <!-- Mis Bienes Recientes -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Mis Bienes Recientes</h3>
-            <router-link
-              to="/bienes"
-              class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium"
-            >
+            <router-link to="/bienes"
+              class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 text-sm font-medium">
               Ver todos
             </router-link>
           </div>
@@ -107,14 +67,9 @@
             <p class="text-gray-500 dark:text-gray-400 mt-2">No tienes bienes asignados</p>
           </div>
           <div v-else class="space-y-4">
-            <div
-              v-for="bien in bienes.slice(0, 5)"
-              :key="bien.id"
-              class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <div
-                class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center"
-              >
+            <div v-for="bien in bienes.slice(0, 5)" :key="bien.id"
+              class="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center">
                 <i class="bx bx-package text-primary-600 dark:text-primary-400 text-xl"></i>
               </div>
               <div class="flex-1">
@@ -137,9 +92,7 @@
       </div>
 
       <!-- Próximos Mantenimientos -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
         <div class="p-6 border-b border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between">
             <h3 class="text-xl font-bold text-gray-900 dark:text-white">Próximos Mantenimientos</h3>
@@ -165,28 +118,20 @@
             <p class="text-gray-500 dark:text-gray-400 mt-2">No hay mantenimientos programados</p>
           </div>
           <div v-else class="space-y-4">
-            <div
-              v-for="mantenimiento in mantenimientos.slice(0, 5)"
-              :key="mantenimiento.id"
-              class="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
-              <div
-                class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center"
-              >
+            <div v-for="mantenimiento in mantenimientos.slice(0, 5)" :key="mantenimiento.id"
+              class="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
                 <i class="bx bx-wrench text-yellow-600 dark:text-yellow-400"></i>
               </div>
               <div class="flex-1">
                 <h4 class="font-medium text-gray-900 dark:text-white">
-                  {{ mantenimiento.tipo === 'preventivo' ? 'Mantenimiento Preventivo' : mantenimiento.tipo === 'correctivo' ? 'Mantenimiento Correctivo' : 'Mantenimiento Predictivo' }}
+                  {{ getTituloMantenimiento(mantenimiento.tipo) }}
                 </h4>
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                   {{ mantenimiento.bien?.nombre }}
                 </p>
                 <div class="flex items-center space-x-2 mt-1">
-                  <span
-                    class="text-xs px-2 py-1 rounded-full"
-                    :class="getTipoMantenimientoClass(mantenimiento.tipo)"
-                  >
+                  <span class="text-xs px-2 py-1 rounded-full" :class="getTipoMantenimientoClass(mantenimiento.tipo)">
                     {{ mantenimiento.tipo }}
                   </span>
                   <span class="text-xs text-gray-500 dark:text-gray-400">
@@ -201,9 +146,7 @@
     </div>
 
     <!-- Alertas Recientes -->
-    <div
-      class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
-    >
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700">
       <div class="p-6 border-b border-gray-200 dark:border-gray-700">
         <h3 class="text-xl font-bold text-gray-900 dark:text-white">Mis Alertas Recientes</h3>
       </div>
@@ -224,25 +167,18 @@
           <p class="text-gray-500 dark:text-gray-400 mt-2">No tienes alertas activas</p>
         </div>
         <div v-else class="space-y-4">
-          <div
-            v-for="alerta in alertas.slice(0, 3)"
-            :key="alerta.id"
-            class="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-          >
-            <div
-              class="w-10 h-10 rounded-lg flex items-center justify-center"
-              :class="getAlertaIconClass(alerta.tipo)"
-            >
+          <div v-for="alerta in alertas.slice(0, 3)" :key="alerta.id"
+            class="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center" :class="getAlertaIconClass(alerta.tipo)">
               <i class="bx bx-bell text-lg"></i>
             </div>
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900 dark:text-white">{{ alerta.tipo === 'mantenimiento' ? 'Mantenimiento Requerido' : alerta.tipo === 'vencimiento' ? 'Próximo a Vencer' : alerta.tipo === 'baja' ? 'Proceso de Baja' : 'Nueva Asignación' }}</h4>
+              <h4 class="font-medium text-gray-900 dark:text-white">{{ alerta.tipo === 'mantenimiento' ? 'Mantenimiento
+                Requerido' : alerta.tipo === 'vencimiento' ? 'Próximo a Vencer' : alerta.tipo === 'baja' ? 'Proceso de
+                Baja' : 'Nueva Asignación' }}</h4>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ alerta.mensaje }}</p>
               <div class="flex items-center space-x-2 mt-1">
-                <span
-                  class="text-xs px-2 py-1 rounded-full"
-                  :class="getAlertaStatusClass(alerta.tipo)"
-                >
+                <span class="text-xs px-2 py-1 rounded-full" :class="getAlertaStatusClass(alerta.tipo)">
                   {{ alerta.tipo }}
                 </span>
                 <span class="text-xs text-gray-500 dark:text-gray-400">
@@ -262,6 +198,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 import MetricCard from '@/components/shared/MetricCard.vue'
 import type { Asset, Maintenance, Alert } from '@/types'
 
@@ -303,7 +240,7 @@ const cargarDatos = async () => {
   try {
     // Cargar listas primero
     await Promise.all([cargarBienes(), cargarMantenimientos(), cargarAlertas()])
-    
+
     // Calcular métricas localmente ya que no hay endpoint específico
     calcularMetricas()
 
@@ -319,78 +256,70 @@ const cargarDatos = async () => {
 
 const calcularMetricas = () => {
   metricas.misBienes = bienes.value.length
-  metricas.valorTotal = bienes.value.reduce((total, bien) => total + (bien.valor || bien.valor_adquisicion || 0), 0)
-  metricas.mantenimientosPendientes = mantenimientos.value.filter(m => m.estado !== 'COMPLETADO').length
-  metricas.mantenimientosVencidos = mantenimientos.value.filter(m => m.estado !== 'COMPLETADO' && new Date(m.fecha_programada) < new Date()).length
-  metricas.alertasActivas = alertas.value.filter(a => a.estado === 'pendiente').length
-  metricas.alertasCriticas = alertas.value.filter(a => a.estado === 'pendiente' && a.prioridad === 'ALTA' || a.tipo_alerta === 'critica').length
+  // Calcular valor total asegurando que sea un número válido
+  metricas.valorTotal = bienes.value.reduce((total: number, bien: any) => {
+    const valor = parseFloat(bien.valor) || parseFloat(bien.valor_adquisicion) || 0
+    return total + (isNaN(valor) ? 0 : valor)
+  }, 0)
+  metricas.mantenimientosPendientes = mantenimientos.value.filter((m: any) =>
+    m.estado !== 'completado' && m.estado !== 'COMPLETADO'
+  ).length
+  metricas.mantenimientosVencidos = mantenimientos.value.filter((m: any) =>
+    m.estado !== 'completado' && m.estado !== 'COMPLETADO' && m.fecha_programada && new Date(m.fecha_programada) < new Date()
+  ).length
+  metricas.alertasActivas = alertas.value.filter((a: any) =>
+    a.estado === 'pendiente' || a.estado === 'PENDIENTE'
+  ).length
+  metricas.alertasCriticas = alertas.value.filter((a: any) =>
+    (a.estado === 'pendiente' || a.estado === 'PENDIENTE') &&
+    (a.prioridad === 'alta' || a.prioridad === 'ALTA' || a.prioridad === 'critica' || a.prioridad === 'CRITICA')
+  ).length
 }
 
 const cargarBienes = async () => {
   try {
-    const response = await fetch(`/api/bienes?responsable=${authStore.user?.id}`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
+    const response = await apiClient.get('/bienes', {
+      params: { responsable: authStore.user?.id }
     })
-
-    if (!response.ok) throw new Error('Error al cargar bienes')
-
-    const data = await response.json()
-    if (data.success) {
-      bienes.value = data.data
-    }
+    bienes.value = response.data || []
   } catch (error) {
     console.error('Error al cargar bienes:', error)
+    bienes.value = []
   }
 }
 
 const cargarMantenimientos = async () => {
   try {
-    const response = await fetch(`/api/mantenimientos?responsable=${authStore.user?.id}`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
+    const response = await apiClient.get('/mantenimientos', {
+      params: { responsable_id: authStore.user?.id }
     })
-
-    if (!response.ok) throw new Error('Error al cargar mantenimientos')
-
-    const data = await response.json()
-    if (data.success) {
-      mantenimientos.value = data.data
-    }
+    mantenimientos.value = response.data || []
   } catch (error) {
     console.error('Error al cargar mantenimientos:', error)
+    mantenimientos.value = []
   }
 }
 
 const cargarAlertas = async () => {
   try {
-    const response = await fetch(`/api/alertas?responsable=${authStore.user?.id}`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al cargar alertas')
-
-    const data = await response.json()
-    if (data.success) {
-      alertas.value = data.data
-    }
+    const response = await apiClient.get('/alertas')
+    alertas.value = response.data || []
   } catch (error) {
     console.error('Error al cargar alertas:', error)
+    alertas.value = []
   }
 }
 
 // Métodos de utilidad
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number | null | undefined) => {
+  const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0
+  if (isNaN(numValue)) return '$0 US$'
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(numValue)
 }
 
 const formatDate = (dateString: string) => {

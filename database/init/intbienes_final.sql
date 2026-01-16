@@ -384,7 +384,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'Jhonatan','Prueba','1728163484','jhonatan@intsuperior.edu.ec','$2b$10$wH6Qw1Qw1Qw1Qw1Qw1Qw1uQw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1',1,'ADMINISTRADOR','2025-07-04 22:36:08','2026-01-10 04:15:37'),(2,'Administrador','Sistema','1234567890','admin@intsuperior.edu.ec','$2b$12$5AGjCq9lxaaD47rArFQRm.3fxWV/ysWApaxAnxSkg7Zx/tMQu6Dte',1,'USUARIO','2025-07-04 22:48:44','2025-07-06 21:56:32');
+INSERT INTO `usuarios` VALUES (1,'Jhonatan','Prueba','1728163484','jhonatan.bano@intsuperior.edu.ec','$2b$10$wH6Qw1Qw1Qw1Qw1Qw1Qw1uQw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1Qw1',1,'ADMINISTRADOR','2025-07-04 22:36:08','2026-01-10 04:15:37'),(2,'Administrador','Sistema','1234567890','admin@intsuperior.edu.ec','$2b$12$5AGjCq9lxaaD47rArFQRm.3fxWV/ysWApaxAnxSkg7Zx/tMQu6Dte',1,'USUARIO','2025-07-04 22:48:44','2025-07-06 21:56:32');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

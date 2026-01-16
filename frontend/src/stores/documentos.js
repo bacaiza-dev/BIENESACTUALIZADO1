@@ -1,8 +1,6 @@
 // src/stores/documentos.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+import apiClient from '@/api/client'
 
 export const useDocumentosStore = defineStore('documentos', {
   state: () => ({
@@ -94,21 +92,23 @@ export const useDocumentosStore = defineStore('documentos', {
           ),
         })
 
-        const response = await axios.get(`${API_BASE_URL}/documentos?${params}`)
+        const response = await apiClient.get(`/documentos?${params}`)
 
-        if (response.data.success) {
-          this.documentos = response.data.data
-          this.pagination = {
-            page: response.data.meta.page,
-            limit: response.data.meta.limit,
-            total: response.data.meta.total,
-            totalPages: response.data.meta.totalPages,
+        if (response.success) {
+          this.documentos = response.data
+          if (response.meta) {
+              this.pagination = {
+                page: response.meta.page,
+                limit: response.meta.limit,
+                total: response.meta.total,
+                totalPages: response.meta.totalPages,
+              }
           }
         } else {
-          throw new Error(response.data.message || 'Error al cargar documentos')
+          throw new Error(response.message || 'Error al cargar documentos')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al cargar documentos'
+        this.error = error.message || 'Error al cargar documentos'
         this.documentos = []
       } finally {
         this.loading = false
@@ -120,16 +120,16 @@ export const useDocumentosStore = defineStore('documentos', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/documentos/${id}`)
+        const response = await apiClient.get(`/documentos/${id}`)
 
-        if (response.data.success) {
-          this.currentDocumento = response.data.data
-          return response.data.data
+        if (response.success) {
+          this.currentDocumento = response.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar documento')
+          throw new Error(response.message || 'Error al cargar documento')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al cargar documento'
+        this.error = error.message || 'Error al cargar documento'
         throw error
       } finally {
         this.loading = false
@@ -147,21 +147,21 @@ export const useDocumentosStore = defineStore('documentos', {
         formData.append('tipo_documento', documentoData.tipo_documento)
         formData.append('descripcion', documentoData.descripcion || '')
 
-        const response = await axios.post(`${API_BASE_URL}/documentos`, formData, {
+        const response = await apiClient.post('/documentos', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         })
 
-        if (response.data.success) {
+        if (response.success) {
           // Agregar el nuevo documento al estado
-          this.documentos.unshift(response.data.data)
-          return response.data.data
+          this.documentos.unshift(response.data)
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al subir documento')
+          throw new Error(response.message || 'Error al subir documento')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al subir documento'
+        this.error = error.message || 'Error al subir documento'
         throw error
       } finally {
         this.loading = false
@@ -173,26 +173,25 @@ export const useDocumentosStore = defineStore('documentos', {
       this.error = null
 
       try {
-        const response = await axios.put(`${API_BASE_URL}/documentos/${id}`, updates)
+        const response = await apiClient.put(`/documentos/${id}`, updates)
 
-        if (response.data.success) {
+        if (response.success) {
           // Actualizar el documento en el estado
           const index = this.documentos.findIndex(doc => doc.id_documento === id)
           if (index !== -1) {
-            this.documentos[index] = { ...this.documentos[index], ...response.data.data }
+            this.documentos[index] = { ...this.documentos[index], ...response.data }
           }
 
           if (this.currentDocumento?.id_documento === id) {
-            this.currentDocumento = { ...this.currentDocumento, ...response.data.data }
+            this.currentDocumento = { ...this.currentDocumento, ...response.data }
           }
 
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al actualizar documento')
+          throw new Error(response.message || 'Error al actualizar documento')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al actualizar documento'
+        this.error = error.message || 'Error al actualizar documento'
         throw error
       } finally {
         this.loading = false
@@ -204,9 +203,9 @@ export const useDocumentosStore = defineStore('documentos', {
       this.error = null
 
       try {
-        const response = await axios.delete(`${API_BASE_URL}/documentos/${id}`)
+        const response = await apiClient.delete(`/documentos/${id}`)
 
-        if (response.data.success) {
+        if (response.success) {
           // Remover el documento del estado
           this.documentos = this.documentos.filter(doc => doc.id_documento !== id)
 
@@ -216,10 +215,10 @@ export const useDocumentosStore = defineStore('documentos', {
 
           return true
         } else {
-          throw new Error(response.data.message || 'Error al eliminar documento')
+          throw new Error(response.message || 'Error al eliminar documento')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al eliminar documento'
+        this.error = error.message || 'Error al eliminar documento'
         throw error
       } finally {
         this.loading = false
@@ -231,24 +230,17 @@ export const useDocumentosStore = defineStore('documentos', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/documentos/${id}/download`, {
+        const blob = await apiClient.get(`/documentos/${id}/download`, {
           responseType: 'blob',
         })
 
         // Crear URL para descarga
-        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const url = window.URL.createObjectURL(new Blob([blob]))
         const link = document.createElement('a')
         link.href = url
 
-        // Obtener nombre del archivo desde headers
-        const contentDisposition = response.headers['content-disposition']
-        let filename = 'documento'
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/)
-          if (filenameMatch) {
-            filename = filenameMatch[1]
-          }
-        }
+        // Usar nombre genérico si no podemos acceder a headers fácilmente
+        const filename = `documento_${id}`
 
         link.setAttribute('download', filename)
         document.body.appendChild(link)
@@ -258,8 +250,7 @@ export const useDocumentosStore = defineStore('documentos', {
 
         return true
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al descargar documento'
+        this.error = error.message || 'Error al descargar documento'
         console.error('Error al descargar documento:', error)
         return false
       } finally {
@@ -272,16 +263,15 @@ export const useDocumentosStore = defineStore('documentos', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/bienes/${idBien}/documentos`)
+        const response = await apiClient.get(`/bienes/${idBien}/documentos`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar documentos del bien')
+          throw new Error(response.message || 'Error al cargar documentos del bien')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al cargar documentos del bien'
+        this.error = error.message || 'Error al cargar documentos del bien'
         console.error('Error al cargar documentos del bien:', error)
         return []
       } finally {

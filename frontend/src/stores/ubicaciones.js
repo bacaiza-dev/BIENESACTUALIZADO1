@@ -1,8 +1,6 @@
 // src/stores/ubicaciones.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
+import apiClient from '@/api/client'
 
 export const useUbicacionesStore = defineStore('ubicaciones', {
   state: () => ({
@@ -116,21 +114,25 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
           ),
         })
 
-        const response = await axios.get(`${API_BASE_URL}/ubicaciones?${params}`)
+        const response = await apiClient.get(`/ubicaciones?${params}`)
 
-        if (response.data.success) {
-          this.ubicaciones = response.data.data
-          this.pagination = {
-            page: response.data.meta.page,
-            limit: response.data.meta.limit,
-            total: response.data.meta.total,
-            totalPages: response.data.meta.totalPages,
+        if (response.success) {
+          this.ubicaciones = response.data
+          // Assuming meta is directly in the response structure based on typical API patterns
+          // Adjust if meta is inside data
+          if (response.meta) {
+            this.pagination = {
+              page: response.meta.page,
+              limit: response.meta.limit,
+              total: response.meta.total,
+              totalPages: response.meta.totalPages,
+            }
           }
         } else {
-          throw new Error(response.data.message || 'Error al cargar ubicaciones')
+          throw new Error(response.message || 'Error al cargar ubicaciones')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al cargar ubicaciones'
+        this.error = error.message || 'Error al cargar ubicaciones'
         this.ubicaciones = []
       } finally {
         this.loading = false
@@ -142,16 +144,16 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/ubicaciones/${id}`)
+        const response = await apiClient.get(`/ubicaciones/${id}`)
 
-        if (response.data.success) {
-          this.currentUbicacion = response.data.data
-          return response.data.data
+        if (response.success) {
+          this.currentUbicacion = response.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar ubicación')
+          throw new Error(response.message || 'Error al cargar ubicación')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al cargar ubicación'
+        this.error = error.message || 'Error al cargar ubicación'
         throw error
       } finally {
         this.loading = false
@@ -163,17 +165,16 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.post(`${API_BASE_URL}/ubicaciones`, ubicacionData)
+        const response = await apiClient.post('/ubicaciones', ubicacionData)
 
-        if (response.data.success) {
-          // Agregar la nueva ubicación al estado
-          this.ubicaciones.unshift(response.data.data)
-          return response.data.data
+        if (response.success) {
+          this.ubicaciones.unshift(response.data)
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al crear ubicación')
+          throw new Error(response.message || 'Error al crear ubicación')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al crear ubicación'
+        this.error = error.message || 'Error al crear ubicación'
         throw error
       } finally {
         this.loading = false
@@ -185,26 +186,24 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.put(`${API_BASE_URL}/ubicaciones/${id}`, updates)
+        const response = await apiClient.put(`/ubicaciones/${id}`, updates)
 
-        if (response.data.success) {
-          // Actualizar la ubicación en el estado
+        if (response.success) {
           const index = this.ubicaciones.findIndex(ubicacion => ubicacion.id_ubicacion === id)
           if (index !== -1) {
-            this.ubicaciones[index] = { ...this.ubicaciones[index], ...response.data.data }
+            this.ubicaciones[index] = { ...this.ubicaciones[index], ...response.data }
           }
 
           if (this.currentUbicacion?.id_ubicacion === id) {
-            this.currentUbicacion = { ...this.currentUbicacion, ...response.data.data }
+            this.currentUbicacion = { ...this.currentUbicacion, ...response.data }
           }
 
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al actualizar ubicación')
+          throw new Error(response.message || 'Error al actualizar ubicación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al actualizar ubicación'
+        this.error = error.message || 'Error al actualizar ubicación'
         throw error
       } finally {
         this.loading = false
@@ -216,10 +215,9 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.delete(`${API_BASE_URL}/ubicaciones/${id}`)
+        const response = await apiClient.delete(`/ubicaciones/${id}`)
 
-        if (response.data.success) {
-          // Remover la ubicación del estado
+        if (response.success) {
           this.ubicaciones = this.ubicaciones.filter(ubicacion => ubicacion.id_ubicacion !== id)
 
           if (this.currentUbicacion?.id_ubicacion === id) {
@@ -228,10 +226,10 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
 
           return true
         } else {
-          throw new Error(response.data.message || 'Error al eliminar ubicación')
+          throw new Error(response.message || 'Error al eliminar ubicación')
         }
       } catch (error) {
-        this.error = error.response?.data?.message || error.message || 'Error al eliminar ubicación'
+        this.error = error.message || 'Error al eliminar ubicación'
         throw error
       } finally {
         this.loading = false
@@ -250,17 +248,15 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/ubicaciones/${id}/bienes`)
+        const response = await apiClient.get(`/ubicaciones/${id}/bienes`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar bienes de la ubicación')
+          throw new Error(response.message || 'Error al cargar bienes de la ubicación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al cargar bienes de la ubicación'
-        console.error('Error al cargar bienes por ubicación:', error)
+        this.error = error.message || 'Error al cargar bienes de la ubicación'
         return []
       } finally {
         this.loading = false
@@ -272,19 +268,15 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.get(`${API_BASE_URL}/ubicaciones/${id}/historial`)
+        const response = await apiClient.get(`/ubicaciones/${id}/historial`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al cargar historial de la ubicación')
+          throw new Error(response.message || 'Error al cargar historial de la ubicación')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message ||
-          error.message ||
-          'Error al cargar historial de la ubicación'
-        console.error('Error al cargar historial de ubicación:', error)
+        this.error = error.message || 'Error al cargar historial de la ubicación'
         return []
       } finally {
         this.loading = false
@@ -363,27 +355,24 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.put(`${API_BASE_URL}/ubicaciones/batch/toggle`, {
+        const response = await apiClient.put('/ubicaciones/batch/toggle', {
           ids,
           activo,
         })
 
-        if (response.data.success) {
-          // Actualizar las ubicaciones en el estado
+        if (response.success) {
           ids.forEach(id => {
             const index = this.ubicaciones.findIndex(ubicacion => ubicacion.id_ubicacion === id)
             if (index !== -1) {
               this.ubicaciones[index].activo = activo
             }
           })
-
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al actualizar ubicaciones')
+          throw new Error(response.message || 'Error al actualizar ubicaciones')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al actualizar ubicaciones'
+        this.error = error.message || 'Error al actualizar ubicaciones'
         throw error
       } finally {
         this.loading = false
@@ -395,23 +384,20 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
       this.error = null
 
       try {
-        const response = await axios.delete(`${API_BASE_URL}/ubicaciones/batch`, {
+        const response = await apiClient.delete('/ubicaciones/batch', {
           data: { ids },
         })
 
-        if (response.data.success) {
-          // Remover las ubicaciones del estado
+        if (response.success) {
           this.ubicaciones = this.ubicaciones.filter(
             ubicacion => !ids.includes(ubicacion.id_ubicacion)
           )
-
-          return response.data.data
+          return response.data
         } else {
-          throw new Error(response.data.message || 'Error al eliminar ubicaciones')
+          throw new Error(response.message || 'Error al eliminar ubicaciones')
         }
       } catch (error) {
-        this.error =
-          error.response?.data?.message || error.message || 'Error al eliminar ubicaciones'
+        this.error = error.message || 'Error al eliminar ubicaciones'
         throw error
       } finally {
         this.loading = false
@@ -421,10 +407,10 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
     // Utilidades
     async checkUbicacionEnUso(id) {
       try {
-        const response = await axios.get(`${API_BASE_URL}/ubicaciones/${id}/en-uso`)
+        const response = await apiClient.get(`/ubicaciones/${id}/en-uso`)
 
-        if (response.data.success) {
-          return response.data.data
+        if (response.success) {
+          return response.data
         }
         return false
       } catch (error) {
@@ -433,12 +419,12 @@ export const useUbicacionesStore = defineStore('ubicaciones', {
     },
 
     async generarCodigoQR(id) {
-      const response = await axios.get(`${API_BASE_URL}/ubicaciones/${id}/qr`, {
+      const response = await apiClient.get(`/ubicaciones/${id}/qr`, {
         responseType: 'blob',
       })
 
-      // Crear URL para descarga
-      const url = window.URL.createObjectURL(new Blob([response.data]))
+      // Correctly handle blob response using window.URL
+      const url = window.URL.createObjectURL(new Blob([response]))
       const link = document.createElement('a')
       link.href = url
       link.setAttribute('download', `qr_ubicacion_${id}.png`)

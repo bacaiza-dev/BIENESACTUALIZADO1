@@ -1,14 +1,10 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div
-      class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6"
-    >
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1
-            class="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent"
-          >
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
             Gestión de Bienes
           </h1>
           <p class="mt-2 text-gray-600 dark:text-gray-400">
@@ -20,21 +16,39 @@
             <span>{{ bienesActivos.length }} activos</span>
           </div>
         </div>
-        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-          <button
-            @click="exportarDatos"
-            class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            title="Exportar datos a Excel"
-          >
-            <i class="bx bx-download text-lg"></i>
-            <span class="hidden sm:inline">Exportar</span>
-          </button>
-          <button
-            v-if="canCreateAsset"
-            @click="mostrarModalCrear = true"
+        <div
+          class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          <div class="relative">
+            <button @click="mostrarMenuExportar = !mostrarMenuExportar"
+              class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              title="Exportar datos">
+              <i class="bx bx-download text-lg"></i>
+              <span class="hidden sm:inline">Exportar</span>
+              <i class="bx bx-chevron-down text-sm"></i>
+            </button>
+            <!-- Menú desplegable -->
+            <div v-if="mostrarMenuExportar"
+              class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50">
+              <button @click="exportarPDF"
+                class="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-xl">
+                <i class="bx bxs-file-pdf text-red-500 text-xl"></i>
+                <span>Exportar PDF</span>
+              </button>
+              <button @click="exportarExcel"
+                class="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="bx bxs-file-export text-green-500 text-xl"></i>
+                <span>Exportar Excel</span>
+              </button>
+              <button @click="exportarCSV"
+                class="w-full flex items-center space-x-3 px-4 py-3 text-left text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-b-xl">
+                <i class="bx bx-spreadsheet text-blue-500 text-xl"></i>
+                <span>Exportar CSV</span>
+              </button>
+            </div>
+          </div>
+          <button v-if="canCreateAsset" @click="mostrarModalCrear = true"
             class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            title="Crear nuevo bien institucional"
-          >
+            title="Crear nuevo bien institucional">
             <i class="bx bx-plus-circle text-lg"></i>
             <span>Nuevo Bien</span>
           </button>
@@ -43,40 +57,32 @@
     </div>
 
     <!-- Mobile Filters Panel -->
-    <div
-      v-if="mostrarFiltrosMobile"
-      class="lg:hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4"
-    >
+    <div v-if="mostrarFiltrosMobile"
+      class="lg:hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtros</h3>
-        <button
-          @click="mostrarFiltrosMobile = false"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
+        <button @click="mostrarFiltrosMobile = false"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <i class="bx bx-x text-xl"></i>
         </button>
       </div>
-      
+
       <div class="grid grid-cols-1 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
-          <select
-            v-model="filtros.categoria"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.categoria"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todas las categorías</option>
             <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
               {{ categoria.nombre }}
             </option>
           </select>
         </div>
-        
+
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
-          <select
-            v-model="filtros.estado"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.estado"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todos los estados</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
@@ -84,31 +90,25 @@
             <option value="baja">De baja</option>
           </select>
         </div>
-        
+
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
-          <select
-            v-model="filtros.ubicacion"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.ubicacion"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todas las ubicaciones</option>
             <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
               {{ ubicacion.nombre }}
             </option>
           </select>
         </div>
-        
+
         <div class="flex space-x-2">
-          <button
-            @click="limpiarFiltros"
-            class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-          >
+          <button @click="limpiarFiltros"
+            class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">
             Limpiar
           </button>
-          <button
-            @click="mostrarFiltrosMobile = false"
-            class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm"
-          >
+          <button @click="mostrarFiltrosMobile = false"
+            class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm">
             Aplicar
           </button>
         </div>
@@ -116,73 +116,49 @@
     </div>
 
     <!-- DataTable -->
-    <DataTable
-      title="Lista de Bienes"
-      :data="bienes"
-      :columns="columns"
-      :loading="cargando"
-      :search-term="filtros.busqueda"
-      :page-size="filtros.limite"
-      :show-q-r="true"
-      :selectable="canEditAsset"
-      :has-actions="true"
-      empty-message="No hay bienes registrados"
-      search-placeholder="Buscar por código, nombre, responsable..."
-      @update:search-term="filtros.busqueda = $event"
-      @update:page-size="filtros.limite = $event"
-      @edit="editarBien"
-      @view="verBien"
-      @delete="eliminarBien"
-      @selection-change="bienesSeleccionados = $event"
-    >
+    <DataTable title="Lista de Bienes" :data="bienes" :columns="columns" :loading="cargando"
+      :search-term="filtros.busqueda" :page-size="filtros.limite" :selectable="canEditAsset" :has-actions="true"
+      empty-message="No hay bienes registrados" search-placeholder="Buscar por código, nombre, responsable..."
+      @update:search-term="filtros.busqueda = $event" @update:page-size="filtros.limite = $event" @edit="editarBien"
+      @view="verBien" @delete="eliminarBien" @selection-change="bienesSeleccionados = $event">
       <template #header-actions>
         <!-- Desktop filters -->
         <div class="hidden lg:flex items-center space-x-2">
-          <select
-            v-model="filtros.categoria"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.categoria"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todas las categorías</option>
             <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
               {{ categoria.nombre }}
             </option>
           </select>
-          <select
-            v-model="filtros.estado"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.estado"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todos los estados</option>
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
             <option value="mantenimiento">Mantenimiento</option>
             <option value="baja">De baja</option>
           </select>
-          <select
-            v-model="filtros.ubicacion"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.ubicacion"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todas las ubicaciones</option>
             <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
               {{ ubicacion.nombre }}
             </option>
           </select>
-          <button
-            @click="limpiarFiltros"
+          <button @click="limpiarFiltros"
             class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-            title="Limpiar todos los filtros"
-          >
+            title="Limpiar todos los filtros">
             <i class="bx bx-refresh text-sm"></i>
             <span>Limpiar</span>
           </button>
         </div>
-        
+
         <!-- Mobile filters button -->
         <div class="lg:hidden">
-          <button
-            @click="mostrarFiltrosMobile = !mostrarFiltrosMobile"
+          <button @click="mostrarFiltrosMobile = !mostrarFiltrosMobile"
             class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-            :title="mostrarFiltrosMobile ? 'Ocultar filtros' : 'Mostrar filtros'"
-          >
+            :title="mostrarFiltrosMobile ? 'Ocultar filtros' : 'Mostrar filtros'">
             <i :class="mostrarFiltrosMobile ? 'bx bx-filter-alt' : 'bx bx-filter'" class="text-lg"></i>
             <span>Filtros</span>
           </button>
@@ -210,9 +186,7 @@
 
       <template #cell-responsable_completo="{ value }">
         <div class="flex items-center space-x-2">
-          <div
-            class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"
-          >
+          <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
             <i class="bx bx-user text-primary-600 dark:text-primary-400"></i>
           </div>
           <span class="text-sm font-medium text-gray-900 dark:text-gray-200">{{ value || 'Sin asignar' }}</span>
@@ -221,27 +195,24 @@
 
       <template #actions="{ item }">
         <div class="flex items-center space-x-2">
-          <button
-            @click="verBien(item)"
+          <button @click="generarQR(item)"
+            class="p-2 text-purple-600 hover:text-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900 rounded-lg transition-colors"
+            title="Generar QR">
+            <i class="bx bx-qr text-lg"></i>
+          </button>
+          <button @click="verBien(item)"
             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
-            title="Ver detalles"
-          >
+            title="Ver detalles">
             <i class="bx bx-show text-lg"></i>
           </button>
-          <button
-            v-if="canEditAsset"
-            @click="editarBien(item)"
+          <button v-if="canEditAsset" @click="editarBien(item)"
             class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors"
-            title="Editar"
-          >
+            title="Editar">
             <i class="bx bx-edit text-lg"></i>
           </button>
-          <button
-            v-if="canDeleteAsset"
-            @click="eliminarBien(item)"
+          <button v-if="canDeleteAsset" @click="eliminarBien(item)"
             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-            title="Eliminar"
-          >
+            title="Eliminar">
             <i class="bx bx-trash text-lg"></i>
           </button>
         </div>
@@ -249,21 +220,16 @@
     </DataTable>
 
     <!-- Modal de Crear/Editar Bien -->
-    <div
-      v-if="mostrarModalCrear || mostrarModalEditar"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
+    <div v-if="mostrarModalCrear || mostrarModalEditar"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-      >
+        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
             {{ bienActual ? 'Editar Bien' : 'Nuevo Bien' }}
           </h2>
-          <button
-            @click="cerrarModal"
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
+          <button @click="cerrarModal"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <i class="bx bx-x text-2xl"></i>
           </button>
         </div>
@@ -274,23 +240,15 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Código Institucional
               </label>
-              <input
-                v-model="formulario.codigo_institucional"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.codigo_institucional" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Código SENESCYT
               </label>
-              <input
-                v-model="formulario.codigo_senescyt"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.codigo_senescyt" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
 
@@ -298,23 +256,16 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nombre del Bien
             </label>
-            <input
-              v-model="formulario.nombre"
-              type="text"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            />
+            <input v-model="formulario.nombre" type="text" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Descripción
             </label>
-            <textarea
-              v-model="formulario.descripcion"
-              rows="3"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            ></textarea>
+            <textarea v-model="formulario.descripcion" rows="3"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"></textarea>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -322,31 +273,22 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Marca
               </label>
-              <input
-                v-model="formulario.marca"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.marca" type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Modelo
               </label>
-              <input
-                v-model="formulario.modelo"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.modelo" type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Número de Serie
               </label>
-              <input
-                v-model="formulario.serie"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.serie" type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
 
@@ -355,11 +297,8 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Categoría
               </label>
-              <select
-                v-model="formulario.categoria_id"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              >
+              <select v-model="formulario.categoria_id" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Selecciona una categoría</option>
                 <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
                   {{ categoria.nombre }}
@@ -370,10 +309,8 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Ubicación
               </label>
-              <select
-                v-model="formulario.ubicacion_id"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              >
+              <select v-model="formulario.ubicacion_id"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Selecciona una ubicación</option>
                 <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
                   {{ ubicacion.nombre }}
@@ -384,11 +321,8 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estado
               </label>
-              <select
-                v-model="formulario.estado"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              >
+              <select v-model="formulario.estado" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="activo">Activo</option>
                 <option value="inactivo">Inactivo</option>
                 <option value="mantenimiento">Mantenimiento</option>
@@ -402,25 +336,15 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Valor de Adquisición
               </label>
-              <input
-                v-model.number="formulario.valor_adquisicion"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model.number="formulario.valor_adquisicion" type="number" step="0.01" min="0" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha de Adquisición
               </label>
-              <input
-                v-model="formulario.fecha_adquisicion"
-                type="date"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.fecha_adquisicion" type="date" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
 
@@ -429,30 +353,22 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Color
               </label>
-              <input
-                v-model="formulario.color"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.color" type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Material
               </label>
-              <input
-                v-model="formulario.material"
-                type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              />
+              <input v-model="formulario.material" type="text"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Responsable
               </label>
-              <select
-                v-model="formulario.responsable_id"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              >
+              <select v-model="formulario.responsable_id"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
                 <option value="">Sin responsable</option>
                 <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.id">
                   {{ usuario.nombres }} {{ usuario.apellidos }}
@@ -465,31 +381,19 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Observaciones
             </label>
-            <textarea
-              v-model="formulario.observaciones"
-              rows="3"
+            <textarea v-model="formulario.observaciones" rows="3"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Cualquier observación adicional sobre el bien..."
-            ></textarea>
+              placeholder="Cualquier observación adicional sobre el bien..."></textarea>
           </div>
 
           <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="cerrarModal"
-              class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-            >
+            <button type="button" @click="cerrarModal"
+              class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
               Cancelar
             </button>
-            <button
-              type="submit"
-              :disabled="guardando"
-              class="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50"
-            >
-              <i
-                :class="guardando ? 'bx bx-loader-alt animate-spin' : 'bx bx-save'"
-                class="text-lg"
-              ></i>
+            <button type="submit" :disabled="guardando"
+              class="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50">
+              <i :class="guardando ? 'bx bx-loader-alt animate-spin' : 'bx bx-save'" class="text-lg"></i>
               <span>{{ guardando ? 'Guardando...' : 'Guardar' }}</span>
             </button>
           </div>
@@ -498,22 +402,15 @@
     </div>
 
     <!-- Modal de código QR -->
-    <div
-      v-if="mostrarModalQR"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="cerrarModalQR"
-    >
-      <div
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4"
-      >
+    <div v-if="mostrarModalQR" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="cerrarModalQR">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
             Código QR del Bien
           </h2>
-          <button
-            @click="cerrarModalQR"
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          >
+          <button @click="cerrarModalQR"
+            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <i class="bx bx-x text-2xl"></i>
           </button>
         </div>
@@ -522,7 +419,7 @@
           <div class="bg-white p-4 rounded-lg border inline-block">
             <div id="qr-code" class="w-48 h-48 mx-auto"></div>
           </div>
-          
+
           <div class="space-y-2">
             <p class="text-sm text-gray-600 dark:text-gray-400">
               Código: <span class="font-mono">{{ qrActual.codigo }}</span>
@@ -533,17 +430,13 @@
           </div>
 
           <div class="flex space-x-3">
-            <button
-              @click="descargarQR"
-              class="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-            >
+            <button @click="descargarQR"
+              class="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors">
               <i class="bx bx-download"></i>
               <span>Descargar</span>
             </button>
-            <button
-              @click="imprimirQR"
-              class="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-            >
+            <button @click="imprimirQR"
+              class="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors">
               <i class="bx bx-printer"></i>
               <span>Imprimir</span>
             </button>
@@ -564,6 +457,7 @@ import DataTable from '@/components/shared/DataTable.vue'
 import QRCode from 'qrcode'
 import apiClient from '@/api/client'
 import type { Asset, DataTableColumn, Category, Location, User } from '@/types'
+import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/exportUtils'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -576,6 +470,7 @@ const guardando = ref(false)
 const mostrarModalCrear = ref(false)
 const mostrarModalEditar = ref(false)
 const mostrarFiltrosMobile = ref(false)
+const mostrarMenuExportar = ref(false)
 const bienActual = ref<Asset | null>(null)
 const bienesSeleccionados = ref<(string | number)[]>([])
 const mostrarModalQR = ref(false)
@@ -617,7 +512,7 @@ const ubicaciones = ref<Location[]>([])
 const usuarios = ref<User[]>([])
 
 // Computadas
-const bienesActivos = computed(() => bienes.value.filter(bien => bien.estado === 'activo'))
+const bienesActivos = computed(() => bienes.value.filter((bien: Asset) => bien.estado === 'activo'))
 
 // Columnas de la tabla
 const columns: DataTableColumn[] = [
@@ -642,24 +537,18 @@ const cargarBienes = async () => {
     const response = await apiClient.get('/bienes')
     if (response.success && response.data) {
       // Si la respuesta es paginada, usar response.data.data, sino usar response.data directamente
-      const bienesData = Array.isArray(response.data) ? response.data : response.data.data || []
-      
+      const bienesData = Array.isArray(response.data) ? response.data : (response.data as any)?.data || []
+
       // Agregar campos calculados para mejor búsqueda y visualización
-      bienes.value = bienesData.map(bien => ({
+      bienes.value = bienesData.map((bien: any) => ({
         ...bien,
-        responsable_completo: bien.responsable ? 
-          `${bien.responsable.nombre || ''} ${bien.responsable.apellido || ''}`.trim() || 
+        responsable_completo: bien.responsable ?
+          `${bien.responsable.nombre || ''} ${bien.responsable.apellido || ''}`.trim() ||
           'Sin asignar' : 'Sin asignar',
-        categoria: {
-          ...bien.categoria,
-          nombre: bien.categoria?.nombre || bien.categoria_nombre || 'Sin categoría'
-        },
-        ubicacion: {
-          ...bien.ubicacion,
-          nombre: bien.ubicacion?.nombre || bien.ubicacion_nombre || 'Sin ubicación'
-        }
+        categoria: bien.categoria || { id: bien.categoria_id || 0, nombre: 'Sin categoría' },
+        ubicacion: bien.ubicacion || { id: bien.ubicacion_id || 0, nombre: 'Sin ubicación' },
       }))
-      
+
       toast.success('Bienes cargados correctamente')
     } else {
       throw new Error(response.message || 'Error al cargar bienes')
@@ -704,18 +593,13 @@ const eliminarBien = async (bien: Asset) => {
   if (confirm(`¿Estás seguro de eliminar el bien "${bien.nombre}"?`)) {
     try {
       const response = await apiClient.delete(`/bienes/${bien.id}`)
+      if (!response.success) throw new Error(response.message || 'Error al eliminar bien')
 
-      if (!response.success) throw new Error('Error al eliminar bien')
-
-      if (response.success) {
-        const index = bienes.value.findIndex(b => b.id === bien.id)
-        if (index > -1) {
-          bienes.value.splice(index, 1)
-        }
-        toast.success('Bien eliminado correctamente')
-      } else {
-        throw new Error(data.message || 'Error al eliminar bien')
+      const index = bienes.value.findIndex((b: Asset) => b.id === bien.id)
+      if (index > -1) {
+        bienes.value.splice(index, 1)
       }
+      toast.success('Bien eliminado correctamente')
     } catch (error) {
       toast.error('Error al eliminar el bien')
     }
@@ -725,26 +609,29 @@ const eliminarBien = async (bien: Asset) => {
 const guardarBien = async () => {
   guardando.value = true
   try {
-    const method = bienActual.value ? 'PUT' : 'POST'
-    const endpoint = bienActual.value ? `/api/bienes/${bienActual.value.id}` : '/api/bienes'
+    const endpoint = bienActual.value ? `/bienes/${bienActual.value.id}` : '/bienes'
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    let response
+    if (bienActual.value) {
+      response = await apiClient.put(endpoint, {
         ...formulario,
         categoria_id: parseInt(formulario.categoria_id),
         ubicacion_id: formulario.ubicacion_id ? parseInt(formulario.ubicacion_id) : null,
         responsable_id: formulario.responsable_id ? parseInt(formulario.responsable_id) : null,
-      }),
-    })
+      })
+    } else {
+      response = await apiClient.post(endpoint, {
+        ...formulario,
+        categoria_id: parseInt(formulario.categoria_id),
+        ubicacion_id: formulario.ubicacion_id ? parseInt(formulario.ubicacion_id) : null,
+        responsable_id: formulario.responsable_id ? parseInt(formulario.responsable_id) : null,
+      })
+    }
 
-    if (!response.ok) throw new Error('Error al guardar bien')
+    // apiClient returns unwrapped data due to our client.ts
+    const data = response
 
-    const data = await response.json()
+    // const data = await response.json() // removed
     if (data.success) {
       if (bienActual.value) {
         // Recargar datos para obtener información actualizada
@@ -800,50 +687,70 @@ const limpiarFiltros = () => {
   })
 }
 
-const exportarDatos = async () => {
+// Columnas para exportación
+const exportColumns = [
+  { key: 'codigo_institucional', label: 'Código Institucional' },
+  { key: 'codigo_senescyt', label: 'Código SENESCYT' },
+  { key: 'nombre', label: 'Nombre' },
+  { key: 'categoria.nombre', label: 'Categoría' },
+  { key: 'ubicacion.nombre', label: 'Ubicación' },
+  { key: 'estado', label: 'Estado' },
+  { key: 'marca', label: 'Marca' },
+  { key: 'modelo', label: 'Modelo' },
+  { key: 'serie', label: 'Serie' },
+  { key: 'valor_adquisicion', label: 'Valor ($)' },
+  { key: 'responsable_completo', label: 'Responsable' },
+  { key: 'fecha_adquisicion', label: 'Fecha Adquisición' },
+]
+
+const exportarPDF = async () => {
+  mostrarMenuExportar.value = false
+  toast.info('Generando PDF...')
   try {
-    toast.info('Exportando datos...')
-
-    // Crear archivo Excel con los datos actuales
-    const datosExportar = bienes.value.map(bien => ({
-      'Código Institucional': bien.codigo_institucional,
-      'Código SENESCYT': bien.codigo_senescyt,
-      'Nombre': bien.nombre,
-      'Descripción': bien.descripcion,
-      'Marca': bien.marca,
-      'Modelo': bien.modelo,
-      'Serie': bien.serie,
-      'Categoría': bien.categoria?.nombre || 'Sin categoría',
-      'Ubicación': bien.ubicacion?.nombre || 'Sin ubicación',
-      'Estado': bien.estado,
-      'Valor Adquisición': bien.valor_adquisicion,
-      'Responsable': bien.responsable_completo,
-      'Fecha Adquisición': bien.fecha_adquisicion ? new Date(bien.fecha_adquisicion).toLocaleDateString() : '',
-      'Observaciones': bien.observaciones
-    }))
-
-    // Crear CSV
-    const headers = Object.keys(datosExportar[0] || {})
-    const csvContent = [
-      headers.join(','),
-      ...datosExportar.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
-    ].join('\n')
-
-    // Descargar archivo
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    link.setAttribute('href', url)
-    link.setAttribute('download', `bienes_${new Date().toISOString().split('T')[0]}.csv`)
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    toast.success('Datos exportados correctamente')
+    await exportToPDF({
+      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
+      title: 'Lista de Bienes Institucionales',
+      columns: exportColumns,
+      data: bienes.value
+    })
+    toast.success('PDF generado correctamente')
   } catch (error) {
-    console.error('Error al exportar:', error)
-    toast.error('Error al exportar los datos')
+    console.error('Error al exportar PDF:', error)
+    toast.error('Error al generar el PDF')
+  }
+}
+
+const exportarExcel = async () => {
+  mostrarMenuExportar.value = false
+  toast.info('Generando Excel...')
+  try {
+    await exportToExcel({
+      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
+      title: 'Lista de Bienes Institucionales',
+      columns: exportColumns,
+      data: bienes.value
+    })
+    toast.success('Excel generado correctamente')
+  } catch (error) {
+    console.error('Error al exportar Excel:', error)
+    toast.error('Error al generar el Excel')
+  }
+}
+
+const exportarCSV = async () => {
+  mostrarMenuExportar.value = false
+  toast.info('Generando CSV...')
+  try {
+    await exportToCSV({
+      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
+      title: 'Lista de Bienes Institucionales',
+      columns: exportColumns,
+      data: bienes.value
+    })
+    toast.success('CSV generado correctamente')
+  } catch (error) {
+    console.error('Error al exportar CSV:', error)
+    toast.error('Error al generar el CSV')
   }
 }
 
@@ -874,74 +781,28 @@ const showQRModal = (item: Asset) => {
   generarQR(item)
 }
 
+const generarEtiqueta = (bien: Asset) => {
+  // Lógica para generar etiqueta
+}
 const generarQR = async (bien: Asset) => {
   try {
-    // Crear información completa del bien para el QR
-    const informacionBien = {
-      nombre: bien.nombre,
-      codigo_institucional: bien.codigo_institucional,
-      codigo_senescyt: bien.codigo_senescyt,
-      categoria: bien.categoria_nombre || 'No especificada',
-      ubicacion: bien.ubicacion_nombre || 'No asignada',
-      responsable: bien.responsable_nombre ? `${bien.responsable_nombre} ${bien.responsable_apellido || ''}`.trim() : 'No asignado',
-      estado: bien.estado,
-      valor: bien.valor_adquisicion ? `$${bien.valor_adquisicion.toFixed(2)}` : 'No especificado',
-      fecha_adquisicion: bien.fecha_adquisicion || 'No especificada'
-    }
-
-    // Crear el texto del QR con toda la información
-    const textoQR = `
-BIEN INSTITUCIONAL
+    // Crear texto del QR simplificado
+    const textoQR = `=== INT BIENES ===
+Código: ${bien.codigo_institucional || 'N/A'}
+SENESCYT: ${bien.codigo_senescyt || 'N/A'}
+Nombre: ${bien.nombre || 'N/A'}
+Categoría: ${bien.categoria?.nombre || 'N/A'}
+Ubicación: ${bien.ubicacion?.nombre || 'N/A'}
+Responsable: ${bien.responsable ? `${bien.responsable.nombre || ''} ${bien.responsable.apellido || ''}`.trim() : 'N/A'}
 ==================
-Nombre: ${informacionBien.nombre}
-Código Inst.: ${informacionBien.codigo_institucional}
-Código SENESCYT: ${informacionBien.codigo_senescyt}
-Categoría: ${informacionBien.categoria}
-Ubicación: ${informacionBien.ubicacion}
-Responsable: ${informacionBien.responsable}
-Estado: ${informacionBien.estado}
-Valor: ${informacionBien.valor}
-Fecha Adq.: ${informacionBien.fecha_adquisicion}
-==================
-Ver detalles: ${window.location.origin}/bienes/${bien.id}
-`.trim()
+${window.location.origin}/bienes/${bien.id}`
 
-    if (bien.codigo_qr) {
-      // Mostrar QR existente con información actualizada
-      qrActual.value = {
-        codigo: bien.codigo_qr,
-        url: textoQR
-      }
-      mostrarModalQR.value = true
-      return
+    // Generar QR directamente sin llamar al backend
+    qrActual.value = {
+      codigo: bien.codigo_institucional,
+      url: textoQR
     }
-
-    // Generar nuevo QR con información completa
-    const response = await fetch(`/api/bienes/${bien.id}/qr`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contenido_qr: textoQR
-      })
-    })
-
-    if (!response.ok) throw new Error('Error al generar código QR')
-
-    const data = await response.json()
-    if (data.success) {
-      bien.codigo_qr = data.codigo_qr
-      qrActual.value = {
-        codigo: data.codigo_qr,
-        url: textoQR
-      }
-      mostrarModalQR.value = true
-      toast.success('Código QR generado correctamente')
-    } else {
-      throw new Error(data.message || 'Error al generar código QR')
-    }
+    mostrarModalQR.value = true
   } catch (error) {
     console.error('Error al generar QR:', error)
     toast.error('Error al generar el código QR')
@@ -956,10 +817,10 @@ const generarCodigoQRVisual = async (texto: string) => {
       console.error('Container qr-code no encontrado')
       return
     }
-    
+
     // Limpiar container
     qrContainer.innerHTML = ''
-    
+
     // Crear canvas y generar QR
     const canvas = document.createElement('canvas')
     await QRCode.toCanvas(canvas, texto, {
@@ -971,7 +832,7 @@ const generarCodigoQRVisual = async (texto: string) => {
       },
       errorCorrectionLevel: 'M'
     })
-    
+
     qrContainer.appendChild(canvas)
   } catch (error) {
     console.error('Error al generar QR visual:', error)
@@ -1095,7 +956,7 @@ const cargarUsuarios = async () => {
 
 // Lifecycle
 // Watcher para generar QR visual cuando se muestra el modal
-watch([mostrarModalQR, qrActual], async ([modalVisible, qrData]) => {
+watch([mostrarModalQR, qrActual], async ([modalVisible, qrData]: [boolean, { codigo: string; url: string } | null]) => {
   if (modalVisible && qrData) {
     await nextTick()
     await generarCodigoQRVisual(qrData.url)

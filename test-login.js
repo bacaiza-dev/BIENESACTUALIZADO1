@@ -73,12 +73,12 @@ async function runTests() {
   // Probar emails institucionales con credenciales incorrectas
   console.log('\n🔒 Probando emails institucionales con contraseñas incorrectas:');
   await testLogin('admin@intsuperior.edu.ec', 'password_incorrecto');
-  await testLogin('jhonatan@intsuperior.edu.ec', 'password_incorrecto');
+  await testLogin('jhonatan.bano@intsuperior.edu.ec', 'password_incorrecto');
   
   console.log('\n✅ Probando emails institucionales válidos:');
   console.log('NOTA: Las contraseñas exactas deben ser configuradas en la base de datos');
   await testLogin('admin@intsuperior.edu.ec', 'admin123');
-  await testLogin('jhonatan@intsuperior.edu.ec', 'jhonatan123');
+  await testLogin('jhonatan.bano@intsuperior.edu.ec', 'jhonatan123');
   
   console.log('\n📊 RESULTADOS:');
   console.log('==============');

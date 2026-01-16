@@ -403,6 +403,7 @@
 import { ref, computed } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
+import apiClient from '@/api/client'
 
 // Composables
 const toast = useToast()
@@ -600,30 +601,26 @@ const contactSupport = () => {
 const sendSupportMessage = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/v1/support/message', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${authStore.token}`,
-      },
-      body: JSON.stringify({
+    const response = await apiClient.post('/support/message', {
         ...supportForm.value,
         userId: authStore.user?.id,
         userEmail: authStore.user?.email,
-      }),
     })
 
-    if (!response.ok) throw new Error('Error al enviar mensaje')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       toast.success('Mensaje enviado exitosamente. Te contactaremos pronto.')
       supportForm.value = { subject: '', message: '' }
     } else {
       throw new Error(data.message || 'Error al enviar mensaje')
     }
-  } catch (error) {
-    toast.error('Error al enviar el mensaje. Intenta nuevamente.')
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+        toast.info('Funcionalidad de soporte (backend) no implementada aún. Enviando por email...')
+        // Fallback behavior if needed, or just info
+    } else {
+        toast.error('Error al enviar el mensaje. Intenta nuevamente.')
+    }
   } finally {
     loading.value = false
   }

@@ -506,7 +506,7 @@ const loadUserProfile = async () => {
         email: userData.email,
       }
     } else {
-      throw new Error(data.message || 'Error al cargar perfil')
+      throw new Error(response.message || 'Error al cargar perfil')
     }
   } catch (error) {
     console.error('Error loading user profile:', error)
@@ -664,9 +664,9 @@ const changePassword = async () => {
     } else {
       throw new Error(response.message || 'Error al cambiar la contraseña')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error changing password:', error)
-    toast.error(error.message || 'Error al cambiar la contraseña')
+    toast.error(error?.message || 'Error al cambiar la contraseña')
   } finally {
     changingPassword.value = false
   }
@@ -712,22 +712,4 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-/* Custom scrollbar for dark mode */
-.dark ::-webkit-scrollbar {
-  width: 8px;
-}
-
-.dark ::-webkit-scrollbar-track {
-  background: #374151;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: #6b7280;
-  border-radius: 4px;
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
-}
-</style>
+<style scoped src="./Profile.style.scoped.css"></style>

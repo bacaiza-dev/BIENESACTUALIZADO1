@@ -276,40 +276,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Animaciones personalizadas */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Efectos de hover adicionales */
-.hover-lift:hover {
-  transform: translateY(-5px);
-}
-
-/* Gradientes personalizados */
-.gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Animaciones suaves */
-.transition-all {
-  transition: all 0.3s ease;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-</style>
+<style scoped src="./InicioView.style.scoped.css"></style>

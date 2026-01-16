@@ -1,0 +1,63 @@
+
+/* Animaciones suaves */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Efectos hover */
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Estilo para enlaces activos */
+.router-link-active {
+  color: #2563eb;
+}
+
+/* Animaciones para el menú móvil */
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+/* Sombras suaves */
+.shadow-soft {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optimizaciones para móviles */
+@media (max-width: 768px) {
+
+  /* Mejorar rendimiento táctil */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Optimizar scrolling */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+  }
+}

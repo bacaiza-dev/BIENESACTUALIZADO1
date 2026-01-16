@@ -467,6 +467,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 import type { Category } from '@/types'
 
 // Stores
@@ -507,15 +508,9 @@ const form = ref({
 const loadCategorias = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/categorias', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/categorias')
+    const data = response
 
-    if (!response.ok) throw new Error('Error al cargar categorías')
-
-    const data = await response.json()
     if (data.success) {
       categorias.value = data.data.map((cat: any) => ({
         ...cat,
@@ -541,17 +536,17 @@ const filteredCategorias = computed(() => {
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase()
     result = result.filter(
-      c =>
+      (c: Category) =>
         c.nombre.toLowerCase().includes(search) ||
         (c.codigo && c.codigo.toLowerCase().includes(search)) ||
         (c.descripcion && c.descripcion.toLowerCase().includes(search))
     )
   }
   if (filters.value.estado) {
-    result = result.filter(c => c.estado === filters.value.estado)
+    result = result.filter((c: Category) => c.estado === filters.value.estado)
   }
   if (filters.value.tipo) {
-    result = result.filter(c => c.tipo === filters.value.tipo)
+    result = result.filter((c: Category) => c.tipo === filters.value.tipo)
   }
   return result
 })
@@ -640,24 +635,15 @@ const editCategoria = (categoria: Category) => {
 const toggleCategoriaStatus = async (categoria: Category) => {
   try {
     const newStatus = categoria.estado === 'activo' ? 'inactivo' : 'activo'
-    const response = await fetch(`/api/categorias/${categoria.id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        nombre: categoria.nombre,
-        descripcion: categoria.descripcion,
-        activo: newStatus === 'activo',
-      }),
+    const response = await apiClient.put(`/categorias/${categoria.id}`, {
+      nombre: categoria.nombre,
+      descripcion: categoria.descripcion,
+      activo: newStatus === 'activo',
     })
 
-    if (!response.ok) throw new Error('Error al cambiar estado')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
-      const index = categorias.value.findIndex(c => c.id === categoria.id)
+      const index = categorias.value.findIndex((c: Category) => c.id === categoria.id)
       if (index !== -1) {
         categorias.value[index].estado = newStatus
       }
@@ -673,18 +659,10 @@ const toggleCategoriaStatus = async (categoria: Category) => {
 const deleteCategoria = async (id: number) => {
   if (confirm('¿Estás seguro de que quieres eliminar esta categoría?')) {
     try {
-      const response = await fetch(`/api/categorias/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
-
-      if (!response.ok) throw new Error('Error al eliminar categoría')
-
-      const data = await response.json()
+      const response = await apiClient.delete(`/categorias/${id}`)
+      const data = response
       if (data.success) {
-        categorias.value = categorias.value.filter(c => c.id !== id)
+        categorias.value = categorias.value.filter((c: Category) => c.id !== id)
         toast.success('Categoría eliminada correctamente')
       } else {
         throw new Error(data.message || 'Error al eliminar categoría')
@@ -697,30 +675,23 @@ const deleteCategoria = async (id: number) => {
 
 const saveCategoria = async () => {
   try {
-    const method = showEditModal.value ? 'PUT' : 'POST'
-    const endpoint = showEditModal.value
-      ? `/api/categorias/${form.value.id}`
-      : '/api/categorias'
+    const payload = {
+      nombre: form.value.nombre,
+      descripcion: form.value.descripcion,
+      activo: form.value.estado === 'activo',
+    }
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        nombre: form.value.nombre,
-        descripcion: form.value.descripcion,
-        activo: form.value.estado === 'activo',
-      }),
-    })
+    let response
+    if (showEditModal.value && form.value.id) {
+      response = await apiClient.put(`/categorias/${form.value.id}`, payload)
+    } else {
+      response = await apiClient.post('/categorias', payload)
+    }
 
-    if (!response.ok) throw new Error('Error al guardar categoría')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       if (showEditModal.value) {
-        const index = categorias.value.findIndex(c => c.id === form.value.id)
+        const index = categorias.value.findIndex((c: Category) => c.id === form.value.id)
         if (index !== -1) {
           // Recargar datos para obtener información actualizada
           await loadCategorias()

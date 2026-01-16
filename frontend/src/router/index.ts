@@ -45,6 +45,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, roles: ['Usuario', 'Administrador'] },
   },
   {
+    path: '/busqueda',
+    name: 'Busqueda',
+    component: () => import('@/views/busqueda/BusquedaView.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador', 'Usuario'] },
+  },
+  {
     path: '/bienes',
     name: 'BienesList',
     component: () => import('@/views/bienes/BienesList.vue'),
@@ -90,6 +96,24 @@ const routes: RouteRecordRaw[] = [
     path: '/ubicaciones',
     name: 'UbicacionesList',
     component: () => import('@/views/otros/UbicacionesList.vue'),
+    meta: { requiresAuth: true, roles: ['Administrador', 'Usuario'] },
+  },
+  {
+    path: '/salas',
+    name: 'SalasList',
+    component: () => import('@/views/otros/UbicacionesList.vue'),
+    props: {
+      title: 'Gestión de Salas',
+      description: 'Administra aulas y laboratorios del sistema',
+      createLabel: 'Nueva Sala',
+      allowedTipos: ['aula', 'laboratorio'],
+    },
+    meta: { requiresAuth: true, roles: ['Administrador', 'Usuario'] },
+  },
+  {
+    path: '/aulas-asignadas',
+    name: 'AulasAsignadas',
+    component: () => import('@/views/espacios/AulasAsignadasList.vue'),
     meta: { requiresAuth: true, roles: ['Administrador', 'Usuario'] },
   },
   {

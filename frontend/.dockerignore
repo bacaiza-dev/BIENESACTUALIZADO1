@@ -66,8 +66,7 @@ docker-compose*
 # Development files
 .eslintrc*
 .prettierrc*
-tsconfig*.json
-vite.config.*
+# Keep build-critical config files (vite/tsconfig) inside the Docker build context.
 vitest.config.*
 
 # Temporary files

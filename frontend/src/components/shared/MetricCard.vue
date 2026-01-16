@@ -8,7 +8,7 @@
         class="p-3 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
         :class="iconColorClasses"
       >
-        <i :class="icon" class="text-2xl"></i>
+        <i :class="'bx ' + icon" class="text-2xl"></i>
       </div>
       <div class="ml-4 flex-1">
         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ title }}</p>
@@ -61,7 +61,7 @@ const formattedValue = computed(() => {
 })
 
 const iconColorClasses = computed(() => {
-  const colorMap = {
+  const colorMap: Record<NonNullable<Props['color']>, string> = {
     blue: 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400',
     green: 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400',
     yellow: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400',
@@ -69,7 +69,8 @@ const iconColorClasses = computed(() => {
     purple: 'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400',
     primary: 'bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400',
   }
-  return colorMap[props.color] || colorMap.primary
+  const color = (props.color ?? 'primary') as NonNullable<Props['color']>
+  return colorMap[color] || colorMap.primary
 })
 
 const changeIcon = computed(() => {

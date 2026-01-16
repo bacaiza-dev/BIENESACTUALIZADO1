@@ -133,8 +133,26 @@
                   </span>
                 </div>
                 <div class="detail-item">
+                  <span class="label">Categoría:</span>
+                  <span class="value">
+                    {{ lastResult.bien.categoria?.nombre || lastResult.bien.categoria || 'Sin categoría' }}
+                  </span>
+                </div>
+                <div class="detail-item">
                   <span class="label">Ubicación:</span>
-                  <span class="value">{{ lastResult.bien.ubicacion || 'No asignada' }}</span>
+                  <span class="value">
+                    {{ lastResult.bien.ubicacion?.nombre || lastResult.bien.ubicacion || 'No asignada' }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Responsable:</span>
+                  <span class="value">
+                    {{
+                      lastResult.bien.responsable
+                        ? `${lastResult.bien.responsable.nombre || ''} ${lastResult.bien.responsable.apellido || ''}`.trim()
+                        : lastResult.bien.responsable_completo || 'Sin asignar'
+                    }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -184,95 +202,82 @@ import { useRouter } from 'vue-router'
 import { useDevice } from '@/composables/useDevice'
 import { useToast } from 'vue-toastification'
 import { Capacitor } from '@capacitor/core'
+import { BarcodeScanner } from '@capacitor-community/barcode-scanner'
+import apiClient from '@/api/client'
 
 const router = useRouter()
 const toast = useToast()
 const { isMobile, isTablet, isAndroid, isIOS, isNative } = useDevice()
 
-// Estado del scanner
+// State
+const video = ref<HTMLVideoElement | null>(null)
+const cameraArea = ref<HTMLDivElement | null>(null)
 const isScanning = ref(false)
-const cameraAvailable = ref(false)
-const flashAvailable = ref(false)
-const flashEnabled = ref(false)
 const isOnline = ref(navigator.onLine)
-const lastResult = ref(null)
+const lastResult = ref<any>(null)
+const flashEnabled = ref(false)
+const flashAvailable = ref(false)
+const cameraAvailable = ref(true)
 
-// Referencias
-const video = ref<HTMLVideoElement>()
-const cameraArea = ref<HTMLElement>()
-
-// Stream de la cámara
+// Media stream reference
 let mediaStream: MediaStream | null = null
 let scanInterval: number | null = null
 
 // Computed
 const isCompatibleDevice = computed(() => {
-  return (isMobile.value || isTablet.value) && (isAndroid.value || isIOS.value)
+  return isMobile.value || isTablet.value || !Capacitor.isNativePlatform()
 })
 
-// Métodos principales
+// Initialize scanner
 const initializeScanner = async () => {
   try {
-    if (!isCompatibleDevice.value) {
-      toast.warning('Scanner QR solo disponible en dispositivos móviles Android/iOS')
-      return
-    }
+    // Check camera availability
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const videoDevices = devices.filter(device => device.kind === 'videoinput')
+    cameraAvailable.value = videoDevices.length > 0
 
-    // Verificar disponibilidad de cámara
+    // Check flash availability (only on native)
     if (isNative.value) {
-      cameraAvailable.value = true
-      flashAvailable.value = true
-    } else if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      cameraAvailable.value = true
-      flashAvailable.value = false
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        const track = stream.getVideoTracks()[0]
+        const capabilities = track.getCapabilities() as any
+        flashAvailable.value = !!capabilities.torch
+        track.stop()
+      } catch (e) {
+        flashAvailable.value = false
+      }
     }
-
-    console.log('📱 Scanner QR inicializado:', {
-      compatible: isCompatibleDevice.value,
-      native: isNative.value,
-      camera: cameraAvailable.value,
-      flash: flashAvailable.value
-    })
   } catch (error) {
     console.error('Error initializing scanner:', error)
-    toast.error('Error inicializando el scanner')
+    cameraAvailable.value = false
   }
 }
 
+// Start scanning based on platform
 const startScanning = async () => {
-  try {
-    if (!isCompatibleDevice.value) {
-      toast.error('Scanner no compatible con este dispositivo')
-      return
-    }
-
-    if (isNative.value) {
-      await startNativeScanning()
-    } else {
-      await startWebScanning()
-    }
-
-    isScanning.value = true
-    toast.success('Escaneo iniciado')
-  } catch (error) {
-    console.error('Error starting scan:', error)
-    toast.error('Error al iniciar el escaneo')
+  isScanning.value = true
+  
+  if (isNative.value) {
+    await startNativeScanning()
+  } else {
+    await startWebScanning()
   }
 }
+
 
 const startNativeScanning = async () => {
   try {
-    // BarcodeScanner plugin no instalado - usar implementación web
-    console.log('BarcodeScanner nativo no disponible, usando implementación web')
-    await startWebScanning()
-    return
+    const status = await BarcodeScanner.checkPermission({ force: true });
     
-    // Código comentado - requiere plugin @capacitor-community/barcode-scanner
-    /*
     if (status.granted) {
-      BarcodeScanner.hideBackground()
+      await BarcodeScanner.hideBackground()
+      document.body.classList.add('qr-scanner-active')
+      
       const result = await BarcodeScanner.startScan()
-      BarcodeScanner.showBackground()
+      
+      document.body.classList.remove('qr-scanner-active')
+      await BarcodeScanner.showBackground()
       
       if (result.hasContent) {
         await handleQRResult(result.content)
@@ -280,10 +285,10 @@ const startNativeScanning = async () => {
     } else {
       toast.error('Se requieren permisos de cámara')
     }
-    */
   } catch (error) {
     console.error('Error with native scanner:', error)
-    // Fallback a web scanner
+    document.body.classList.remove('qr-scanner-active')
+    // Fallback a web scanner if native fails
     await startWebScanning()
   }
 }
@@ -357,15 +362,17 @@ const handleQRResult = async (qrCode: string) => {
         const { Haptics, ImpactStyle } = await import('@capacitor/haptics')
         await Haptics.impact({ style: ImpactStyle.Medium })
       } catch (error) {
-        console.log('Haptics not available')
+        if (import.meta.env.DEV) console.log('Haptics not available')
       }
     }
 
     // Buscar bien en la base de datos
-    const bien = await searchBien(qrCode)
+    const identifier = extractBienIdentifier(qrCode)
+    const bien = await searchBien(qrCode, identifier)
     
     const result = {
-      code: qrCode,
+      code: identifier.codigo || (identifier.id ? `BIEN-${identifier.id}` : qrCode),
+      raw: qrCode,
       bien,
       timestamp: Date.now(),
       synced: isOnline.value
@@ -376,23 +383,62 @@ const handleQRResult = async (qrCode: string) => {
     // Guardar en localStorage para persistencia
     localStorage.setItem('last_qr_scan', JSON.stringify(result))
     
-    toast.success(`QR escaneado: ${qrCode.substring(0, 20)}...`)
+    toast.success(`QR escaneado: ${(result.code || '').substring(0, 30)}...`)
   } catch (error) {
     console.error('Error handling QR result:', error)
-    toast.error('Error procesando el código QR')
+    toast.error('Error procesando el codigo QR')
   }
 }
 
-const searchBien = async (qrCode: string) => {
+const extractBienIdentifier = (qrText: string): { id?: number; codigo?: string } => {
+  const text = (qrText || '').trim()
+
+  // URL directo
+  try {
+    const url = new URL(text)
+    const match = url.pathname.match(/\/bienes\/(\d+)/)
+    if (match) return { id: Number(match[1]) }
+  } catch {
+    // ignore
+  }
+
+  // URL embebida
+  const urlMatch = text.match(/URL:\s*(https?:\/\/\S+)/i)
+  if (urlMatch?.[1]) {
+    try {
+      const url = new URL(urlMatch[1])
+      const match = url.pathname.match(/\/bienes\/(\d+)/)
+      if (match) return { id: Number(match[1]) }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Código institucional embebido (CÓDIGO/CODIGO)
+  const codigoMatch = text.match(/C.DIGO:\s*([^\n\r]+)/i)
+  if (codigoMatch?.[1]) return { codigo: codigoMatch[1].trim() }
+
+  // SENESCYT como fallback
+  const senescytMatch = text.match(/SENESCYT:\s*([^\n\r]+)/i)
+  if (senescytMatch?.[1]) {
+    const sen = senescytMatch[1].trim()
+    if (sen && sen.toUpperCase() !== 'N/A') return { codigo: sen }
+  }
+
+  const token = text.split(/\s+/)[0]
+  return { codigo: token || text }
+}
+
+const searchBien = async (qrCode: string, identifier?: { id?: number; codigo?: string }) => {
   try {
     if (!isOnline.value) {
       // Búsqueda offline
       const bienesCache = localStorage.getItem('bienes_cache')
       if (bienesCache) {
         const bienes = JSON.parse(bienesCache)
+        const codigo = identifier?.codigo || ''
         return bienes.find((bien: any) => 
-          bien.codigo_institucional === qrCode ||
-          bien.codigo_senescyt === qrCode ||
+          (codigo && (bien.codigo_institucional === codigo || bien.codigo_senescyt === codigo)) ||
           qrCode.includes(bien.codigo_institucional)
         )
       }
@@ -400,9 +446,16 @@ const searchBien = async (qrCode: string) => {
     }
 
     // Búsqueda online
-    const response = await fetch(`/api/bienes/search?codigo=${encodeURIComponent(qrCode)}`)
-    const data = await response.json()
-    
+    if (identifier?.id) {
+      const response = await apiClient.get(`/bienes/${identifier.id}`)
+      const data = response
+      return data.success ? data.data : null
+    }
+
+    const codigo = identifier?.codigo || qrCode
+    const response = await apiClient.get(`/bienes/search?codigo=${encodeURIComponent(codigo)}`)
+    const data = response
+
     return data.success && data.data.length > 0 ? data.data[0] : null
   } catch (error) {
     console.error('Error searching bien:', error)
@@ -414,7 +467,7 @@ const stopScanning = () => {
   isScanning.value = false
   
   if (mediaStream) {
-    mediaStream.getTracks().forEach(track => track.stop())
+    mediaStream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
     mediaStream = null
   }
   
@@ -430,12 +483,12 @@ const toggleFlash = async () => {
   try {
     if (isNative.value && mediaStream) {
       const track = mediaStream.getVideoTracks()[0]
-      const capabilities = track.getCapabilities()
+      const capabilities = track.getCapabilities() as any
       
       if (capabilities.torch) {
         flashEnabled.value = !flashEnabled.value
         await track.applyConstraints({
-          advanced: [{ torch: flashEnabled.value }]
+          advanced: [{ torch: flashEnabled.value } as any]
         })
       }
     }
@@ -479,238 +532,6 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-.qr-scanner-view {
-  @apply min-h-screen bg-gray-50 dark:bg-gray-900;
-}
+<style src="./QRScannerView.style1.css"></style>
 
-.mobile-header {
-  @apply flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10;
-}
-
-.back-button {
-  @apply p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors;
-}
-
-.title {
-  @apply text-xl font-bold text-gray-900 dark:text-white;
-}
-
-.header-actions {
-  @apply flex items-center space-x-2;
-}
-
-.flash-button {
-  @apply p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50;
-}
-
-.flash-button.active {
-  @apply bg-yellow-100 text-yellow-600 border border-yellow-300;
-}
-
-.compatibility-warning {
-  @apply flex items-center justify-center min-h-[50vh] p-8;
-}
-
-.warning-content {
-  @apply text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700;
-}
-
-.scanner-container {
-  @apply flex flex-col h-screen;
-}
-
-.camera-area {
-  @apply relative flex-1 bg-black overflow-hidden;
-}
-
-.camera-video {
-  @apply w-full h-full object-cover;
-}
-
-.camera-video.flash-on {
-  filter: brightness(1.2) contrast(1.1);
-}
-
-.scanner-overlay {
-  @apply absolute inset-0 flex flex-col items-center justify-center;
-}
-
-.scanner-frame {
-  @apply relative w-64 h-64 mb-8;
-}
-
-.corner {
-  @apply absolute w-6 h-6 border-4 border-white;
-}
-
-.corner.top-left {
-  @apply top-0 left-0 border-r-0 border-b-0;
-}
-
-.corner.top-right {
-  @apply top-0 right-0 border-l-0 border-b-0;
-}
-
-.corner.bottom-left {
-  @apply bottom-0 left-0 border-r-0 border-t-0;
-}
-
-.corner.bottom-right {
-  @apply bottom-0 right-0 border-l-0 border-t-0;
-}
-
-.scan-line {
-  @apply absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-0 transition-all duration-1000;
-}
-
-.scan-line.active {
-  @apply opacity-100;
-  animation: scan 2s linear infinite;
-}
-
-@keyframes scan {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(256px); }
-}
-
-.scanner-instructions {
-  @apply text-center text-white;
-}
-
-.scanning-indicator {
-  @apply flex items-center justify-center mt-4 space-x-2;
-}
-
-.pulse {
-  @apply w-3 h-3 bg-green-400 rounded-full animate-pulse;
-}
-
-.scanner-idle {
-  @apply absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75;
-}
-
-.idle-content {
-  @apply text-center text-white;
-}
-
-.scanner-controls {
-  @apply p-6 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700;
-}
-
-.scan-button, .stop-button {
-  @apply w-full flex items-center justify-center space-x-3 py-4 rounded-xl font-semibold text-lg transition-all duration-200 disabled:opacity-50;
-}
-
-.scan-button {
-  @apply bg-blue-600 text-white hover:bg-blue-700 active:scale-95;
-}
-
-.stop-button {
-  @apply bg-red-600 text-white hover:bg-red-700 active:scale-95;
-}
-
-.last-result {
-  @apply p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700;
-}
-
-.result-card {
-  @apply bg-gray-50 dark:bg-gray-700 rounded-xl p-4 space-y-4;
-}
-
-.result-header {
-  @apply flex items-center justify-between;
-}
-
-.result-title {
-  @apply font-semibold text-gray-900 dark:text-white;
-}
-
-.clear-button {
-  @apply p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded;
-}
-
-.qr-code {
-  @apply font-mono text-sm bg-gray-100 dark:bg-gray-600 p-3 rounded-lg border text-gray-900 dark:text-white;
-}
-
-.bien-info {
-  @apply space-y-3;
-}
-
-.bien-name {
-  @apply font-semibold text-gray-900 dark:text-white;
-}
-
-.bien-details {
-  @apply space-y-2;
-}
-
-.detail-item {
-  @apply flex justify-between items-center;
-}
-
-.label {
-  @apply text-sm text-gray-600 dark:text-gray-400;
-}
-
-.value {
-  @apply text-sm font-medium text-gray-900 dark:text-white;
-}
-
-.status {
-  @apply px-2 py-1 rounded-full text-xs font-semibold uppercase;
-}
-
-.status.activo {
-  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
-}
-
-.status.inactivo {
-  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200;
-}
-
-.no-bien-found {
-  @apply flex items-center space-x-2 text-yellow-600 dark:text-yellow-400;
-}
-
-.result-actions {
-  @apply flex space-x-3 pt-4 border-t border-gray-200 dark:border-gray-600;
-}
-
-.btn-primary, .btn-secondary {
-  @apply flex-1 flex items-center justify-center space-x-2 py-3 rounded-lg font-medium transition-all duration-200;
-}
-
-.btn-primary {
-  @apply bg-blue-600 text-white hover:bg-blue-700;
-}
-
-.btn-secondary {
-  @apply bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-600 dark:text-white dark:hover:bg-gray-500;
-}
-
-.connectivity-status {
-  @apply flex items-center justify-center space-x-2 py-2 px-4 text-sm;
-  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200;
-}
-
-.connectivity-status.offline {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200;
-}
-
-.sync-indicator {
-  @apply flex items-center space-x-1 ml-4 text-xs opacity-75;
-}
-
-/* Safe area support para iOS */
-@supports (padding: max(0px)) {
-  .mobile-header {
-    padding-top: max(env(safe-area-inset-top), 1rem);
-  }
-  
-  .scanner-controls {
-    padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
-  }
-}
-</style>
+<style scoped src="./QRScannerView.style2.scoped.css"></style>

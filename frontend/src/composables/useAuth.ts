@@ -50,6 +50,19 @@ export function useAuth() {
   const canExportData = computed(() => hasRole('Administrador'))
   const canImportData = computed(() => hasRole('Administrador'))
 
+  const canCreateAssignment = computed(() => hasRole('Administrador'))
+  const canEditAssignment = computed(() => hasRole('Administrador'))
+  const canDeleteAssignment = computed(() => hasRole('Administrador'))
+
+  const canCreateMaintenance = computed(() => hasRole('Administrador'))
+  const canEditMaintenance = computed(() => hasRole('Administrador'))
+  const canDeleteMaintenance = computed(() => hasRole('Administrador'))
+  const canCompleteMaintenance = computed(() => hasRole('Administrador'))
+
+  const canUploadDocuments = computed(() => hasRole('Administrador'))
+  const canEditDocuments = computed(() => hasRole('Administrador'))
+  const canDeleteDocuments = computed(() => hasRole('Administrador'))
+
   return {
     user,
     isAuthenticated,
@@ -71,5 +84,15 @@ export function useAuth() {
     canViewReports,
     canExportData,
     canImportData,
+    canCreateAssignment,
+    canEditAssignment,
+    canDeleteAssignment,
+    canCreateMaintenance,
+    canEditMaintenance,
+    canDeleteMaintenance,
+    canCompleteMaintenance,
+    canUploadDocuments,
+    canEditDocuments,
+    canDeleteDocuments,
   }
 }

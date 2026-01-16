@@ -1,6 +1,7 @@
+// src/stores/categorias.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import apiClient from '@/api/client'
 
 interface Categoria {
   id_categoria: number
@@ -34,8 +35,6 @@ interface ValidationResult {
   errors: string[]
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1'
-
 export const useCategoriasStore = defineStore('categorias', () => {
   const categorias = ref<Categoria[]>([])
   const loading = ref(false)
@@ -61,29 +60,29 @@ export const useCategoriasStore = defineStore('categorias', () => {
     if (filters.value.search) {
       const term = filters.value.search.toLowerCase()
       filtered = filtered.filter(
-        categoria =>
+        (categoria: Categoria) =>
           categoria.nombre_categoria?.toLowerCase().includes(term) ||
           categoria.descripcion?.toLowerCase().includes(term)
       )
     }
 
     if (filters.value.activo !== null) {
-      filtered = filtered.filter(categoria => categoria.activo === filters.value.activo)
+      filtered = filtered.filter((categoria: Categoria) => categoria.activo === filters.value.activo)
     }
 
     return filtered
   })
 
   const categoriasActivas = computed(() => {
-    return categorias.value.filter(categoria => categoria.activo)
+    return categorias.value.filter((categoria: Categoria) => categoria.activo)
   })
 
   const totalCategorias = computed(() => categorias.value.length)
 
   const categoriasParaSelect = computed((): CategoriaForSelect[] => {
     return categorias.value
-      .filter(categoria => categoria.activo)
-      .map(categoria => ({
+      .filter((categoria: Categoria) => categoria.activo)
+      .map((categoria: Categoria) => ({
         value: categoria.id_categoria,
         label: categoria.nombre_categoria,
         descripcion: categoria.descripcion,
@@ -104,21 +103,23 @@ export const useCategoriasStore = defineStore('categorias', () => {
         ),
       })
 
-      const response = await axios.get(`${API_BASE_URL}/categorias?${params}`)
+      const response = await apiClient.get(`/categorias?${params}`)
 
-      if (response.data.success) {
-        categorias.value = response.data.data
-        pagination.value = {
-          page: response.data.meta.page,
-          limit: response.data.meta.limit,
-          total: response.data.meta.total,
-          totalPages: response.data.meta.totalPages,
+      if (response.success) {
+        categorias.value = response.data
+        if (response.meta) {
+          pagination.value = {
+            page: response.meta.page,
+            limit: response.meta.limit,
+            total: response.meta.total,
+            totalPages: response.meta.totalPages,
+          }
         }
       } else {
-        throw new Error(response.data.message || 'Error al cargar categorías')
+        throw new Error(response.message || 'Error al cargar categorías')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al cargar categorías'
+      error.value = err.message || 'Error al cargar categorías'
       categorias.value = []
     } finally {
       loading.value = false
@@ -130,16 +131,16 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/categorias/${id}`)
+      const response = await apiClient.get(`/categorias/${id}`)
 
-      if (response.data.success) {
-        currentCategoria.value = response.data.data
-        return response.data.data
+      if (response.success) {
+        currentCategoria.value = response.data
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al cargar categoría')
+        throw new Error(response.message || 'Error al cargar categoría')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al cargar categoría'
+      error.value = err.message || 'Error al cargar categoría'
       throw err
     } finally {
       loading.value = false
@@ -151,16 +152,16 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/categorias`, categoriaData)
+      const response = await apiClient.post('/categorias', categoriaData)
 
-      if (response.data.success) {
-        categorias.value.unshift(response.data.data)
-        return response.data.data
+      if (response.success) {
+        categorias.value.unshift(response.data)
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al crear categoría')
+        throw new Error(response.message || 'Error al crear categoría')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al crear categoría'
+      error.value = err.message || 'Error al crear categoría'
       throw err
     } finally {
       loading.value = false
@@ -172,24 +173,24 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/categorias/${id}`, updates)
+      const response = await apiClient.put(`/categorias/${id}`, updates)
 
-      if (response.data.success) {
-        const index = categorias.value.findIndex(categoria => categoria.id_categoria === id)
+      if (response.success) {
+        const index = categorias.value.findIndex((categoria: Categoria) => categoria.id_categoria === id)
         if (index !== -1) {
-          categorias.value[index] = { ...categorias.value[index], ...response.data.data }
+          categorias.value[index] = { ...categorias.value[index], ...response.data }
         }
 
         if (currentCategoria.value?.id_categoria === id) {
-          currentCategoria.value = { ...currentCategoria.value, ...response.data.data }
+          currentCategoria.value = { ...currentCategoria.value, ...response.data }
         }
 
-        return response.data.data
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al actualizar categoría')
+        throw new Error(response.message || 'Error al actualizar categoría')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al actualizar categoría'
+      error.value = err.message || 'Error al actualizar categoría'
       throw err
     } finally {
       loading.value = false
@@ -201,10 +202,10 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.delete(`${API_BASE_URL}/categorias/${id}`)
+      const response = await apiClient.delete(`/categorias/${id}`)
 
-      if (response.data.success) {
-        categorias.value = categorias.value.filter(categoria => categoria.id_categoria !== id)
+      if (response.success) {
+        categorias.value = categorias.value.filter((categoria: Categoria) => categoria.id_categoria !== id)
 
         if (currentCategoria.value?.id_categoria === id) {
           currentCategoria.value = null
@@ -212,10 +213,10 @@ export const useCategoriasStore = defineStore('categorias', () => {
 
         return true
       } else {
-        throw new Error(response.data.message || 'Error al eliminar categoría')
+        throw new Error(response.message || 'Error al eliminar categoría')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al eliminar categoría'
+      error.value = err.message || 'Error al eliminar categoría'
       throw err
     } finally {
       loading.value = false
@@ -223,7 +224,7 @@ export const useCategoriasStore = defineStore('categorias', () => {
   }
 
   const toggleActivoCategoria = async (id: number) => {
-    const categoria = categorias.value.find(c => c.id_categoria === id)
+    const categoria = categorias.value.find((c: Categoria) => c.id_categoria === id)
     if (!categoria) return
 
     return updateCategoria(id, { activo: !categoria.activo })
@@ -234,15 +235,15 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/categorias/${id}/bienes`)
+      const response = await apiClient.get(`/categorias/${id}/bienes`)
 
-      if (response.data.success) {
-        return response.data.data
+      if (response.success) {
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al cargar bienes de la categoría')
+        throw new Error(response.message || 'Error al cargar bienes de la categoría')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al cargar bienes de la categoría'
+      error.value = err.message || 'Error al cargar bienes de la categoría'
       throw err
     } finally {
       loading.value = false
@@ -304,25 +305,25 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.put(`${API_BASE_URL}/categorias/batch/toggle`, {
+      const response = await apiClient.put('/categorias/batch/toggle', {
         ids,
         activo,
       })
 
-      if (response.data.success) {
-        ids.forEach(id => {
-          const index = categorias.value.findIndex(categoria => categoria.id_categoria === id)
+        if (response.success) {
+          ids.forEach(id => {
+          const index = categorias.value.findIndex((categoria: Categoria) => categoria.id_categoria === id)
           if (index !== -1) {
             categorias.value[index].activo = activo
           }
         })
 
-        return response.data.data
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al actualizar categorías')
+        throw new Error(response.message || 'Error al actualizar categorías')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al actualizar categorías'
+      error.value = err.message || 'Error al actualizar categorías'
       throw err
     } finally {
       loading.value = false
@@ -334,21 +335,21 @@ export const useCategoriasStore = defineStore('categorias', () => {
     error.value = null
 
     try {
-      const response = await axios.delete(`${API_BASE_URL}/categorias/batch`, {
+      const response = await apiClient.delete('/categorias/batch', {
         data: { ids },
       })
 
-      if (response.data.success) {
+      if (response.success) {
         categorias.value = categorias.value.filter(
-          categoria => !ids.includes(categoria.id_categoria)
+          (categoria: Categoria) => !ids.includes(categoria.id_categoria)
         )
 
-        return response.data.data
+        return response.data
       } else {
-        throw new Error(response.data.message || 'Error al eliminar categorías')
+        throw new Error(response.message || 'Error al eliminar categorías')
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || err.message || 'Error al eliminar categorías'
+      error.value = err.message || 'Error al eliminar categorías'
       throw err
     } finally {
       loading.value = false
@@ -358,10 +359,10 @@ export const useCategoriasStore = defineStore('categorias', () => {
   // Utilidades
   const checkCategoriaEnUso = async (id: number): Promise<boolean> => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/categorias/${id}/en-uso`)
+      const response = await apiClient.get<boolean>(`/categorias/${id}/en-uso`)
 
-      if (response.data.success) {
-        return response.data.data
+      if (response.success) {
+        return response.data as boolean
       }
       return false
     } catch (_error) {

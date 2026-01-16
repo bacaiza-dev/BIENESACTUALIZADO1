@@ -28,7 +28,15 @@ class ApiClient {
       config => {
         // Asegurar que headers existe
         if (!config.headers) {
-          config.headers = {}
+          config.headers = {} as any
+        }
+
+        // Si es FormData, dejar que el navegador/axios establezca el Content-Type con boundary
+        const maybeAnyConfig = config as any
+        const isFormData =
+          typeof FormData !== 'undefined' && maybeAnyConfig.data && maybeAnyConfig.data instanceof FormData
+        if (isFormData || (config.headers as any)['Content-Type'] === undefined) {
+          delete (config.headers as any)['Content-Type']
         }
         
         // Agregar token de localStorage si existe
@@ -96,7 +104,7 @@ class ApiClient {
     }
   }
 
-  public async get<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.client.get<ApiResponse<T>>(url, config)
       return response.data
@@ -105,7 +113,7 @@ class ApiClient {
     }
   }
 
-  public async post<T>(
+  public async post<T = any>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig
@@ -118,7 +126,7 @@ class ApiClient {
     }
   }
 
-  public async put<T>(
+  public async put<T = any>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig
@@ -131,7 +139,7 @@ class ApiClient {
     }
   }
 
-  public async patch<T>(
+  public async patch<T = any>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig
@@ -144,7 +152,7 @@ class ApiClient {
     }
   }
 
-  public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
       const response = await this.client.delete<ApiResponse<T>>(url, config)
       return response.data

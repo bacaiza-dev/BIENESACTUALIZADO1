@@ -1,69 +1,30 @@
-version: '3.8'
-
+version: '3.9'
 services:
-  # Base de datos MySQL para desarrollo
-  mysql:
-    image: mysql:8.0
-    container_name: intbienes_mysql_dev
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: intbienes
-      MYSQL_USER: intuser
-      MYSQL_PASSWORD: intpass
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_dev_data:/var/lib/mysql
-      - ./database/init/01-intbienes.sql:/docker-entrypoint-initdb.d/01-init.sql
-    networks:
-      - intbienes_dev_network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-padmin"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # Backend API en modo desarrollo
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: intbienes_backend_dev
-    restart: unless-stopped
-    environment:
-      NODE_ENV: development
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_USER: root
-      DB_PASSWORD: admin
-      DB_NAME: intbienes
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      PORT: 3000
-      FRONTEND_URL: http://localhost:3001
-      CORS_ORIGIN: http://localhost:3001
-    ports:
-      - "3000:3000"
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    command: ["npm","run","dev"]
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '5173:5173'
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - VITE_API_URL=http://backend:3000
     depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - intbienes_dev_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-networks:
-  intbienes_dev_network:
-    driver: bridge
-
-volumes:
-  mysql_dev_data:
-    driver: local
+      - backend
+    command: ["npm","run","dev"]

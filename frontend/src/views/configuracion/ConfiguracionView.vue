@@ -520,190 +520,152 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, reactive } from 'vue'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/auth'
+import { useUIStore } from '@/stores/ui'
+import apiClient from '@/api/client'
 
 // Composables
 const toast = useToast()
 const authStore = useAuthStore()
+const uiStore = useUIStore()
 
 // Estado del componente
 const loading = ref(false)
-const activeSection = ref('general')
-const originalSettings = ref()
+const saving = ref(false)
+const activeTab = ref('general')
 
-// Secciones de configuración
-const sections = [
-  { id: 'general', title: 'General', icon: '⚙️' },
-  { id: 'bienes', title: 'Bienes', icon: '📦' },
-  { id: 'notifications', title: 'Notificaciones', icon: '🔔' },
-  { id: 'security', title: 'Seguridad', icon: '🔒' },
-  { id: 'backup', title: 'Backup', icon: '💾' },
-]
-
-// Configuraciones
-const settings = ref({
+// Configuración
+const settings = reactive({
   general: {
-    institutionName: 'Instituto Superior Tecnológico Nelson Torres',
-    senescytCode: 'INT-2024',
-    currency: 'USD',
-    timezone: 'America/Guayaquil',
-    address: '',
+    nombreInstitucion: 'Unidad Educativa Teodoro Wolf',
+    direccion: 'Av. Principal 123',
+    telefono: '042-123456',
+    email: 'contacto@teodorowolf.edu.ec',
+    sitioWeb: 'www.teodorowolf.edu.ec',
+    moneda: 'USD',
   },
   bienes: {
-    codePrefix: 'INT-',
-    defaultUsefulLife: 5,
-    minValueForRegistry: 50.0,
-    depreciationMethod: 'lineal',
-    autoGenerateQR: true,
-    validateUniqueSerial: true,
+    prefijoCodigo: 'UE-TW',
+    formatoCodigo: 'PREFIJO-AÑO-CONSECUTIVO',
+    depreciacionAutomatica: true,
+    vidaUtilDefecto: 5,
+    notificarGarantia: 30, // días antes
   },
-  notifications: {
-    emailEnabled: true,
-    maintenanceAlerts: true,
-    depreciationAlerts: true,
-    maintenanceDaysBefore: 30,
-    adminEmail: '',
+  notificaciones: {
+    emailMantenimiento: true,
+    emailAsignacion: true,
+    emailAlertas: true,
+    diasAnticipacion: 3,
   },
-  security: {
-    require2FA: false,
-    auditLog: true,
-    sessionTimeout: 120,
-    maxLoginAttempts: 5,
+  seguridad: {
+    longitudMinimaPassword: 8,
+    requerirMayusculas: true,
+    requerirNumeros: true,
+    requerirEspeciales: true,
+    tiempoSesion: 60, // minutos
+    intentosMaximos: 3,
   },
   backup: {
-    autoBackup: true,
-    frequency: 'daily',
-    retentionDays: 30,
+    frecuencia: 'semanal',
+    hora: '00:00',
+    retencion: 30, // días
+    ultimoBackup: '2024-01-14 00:00:00',
+    estado: 'completado',
   },
-})
-
-// Computed
-const hasChanges = computed(() => {
-  return JSON.stringify(settings.value) !== JSON.stringify(originalSettings.value)
 })
 
 // Métodos
 const loadSettings = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/v1/settings', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al cargar configuraciones')
-
-    const data = await response.json()
-    if (data.success) {
-      settings.value = { ...settings.value, ...data.data }
-      originalSettings.value = JSON.parse(JSON.stringify(settings.value))
+    const response = await apiClient.get('/settings')
+    const data = response
+    // Update settings with data from server if exists
+    if (data.success && data.data) {
+        // Merge recursively or property by property
+        Object.assign(settings, data.data)
     }
-  } catch (error) {
-    toast.error('Error al cargar las configuraciones')
+  } catch (err: any) {
+    const error = err as any
+    if (error.response?.status === 404) {
+        // Endpoint not found, use defaults and don't error loudly
+        console.warn('Endpoint /settings no encontrado, usando configuración por defecto.')
+    } else {
+        toast.error('Error al cargar la configuración')
+    }
   } finally {
     loading.value = false
   }
 }
 
 const saveAllSettings = async () => {
-  loading.value = true
+  saving.value = true
   try {
-    const response = await fetch('/api/v1/settings', {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(settings.value),
-    })
-
-    if (!response.ok) throw new Error('Error al guardar configuraciones')
-
-    const data = await response.json()
+    const response = await apiClient.post('/settings', settings)
+    const data = response
     if (data.success) {
-      originalSettings.value = JSON.parse(JSON.stringify(settings.value))
-      toast.success('Configuraciones guardadas exitosamente')
+        toast.success('Configuración guardada correctamente')
     } else {
-      throw new Error(data.message || 'Error al guardar configuraciones')
+        throw new Error(data.message || 'Error al guardar')
     }
-  } catch (error) {
-    toast.error('Error al guardar las configuraciones')
+  } catch (error: any) {
+     if (error.response?.status === 404) {
+         toast.info('La persistencia de configuración no está implementada en el backend aún.')
+     } else {
+        toast.error('Error al guardar la configuración')
+     }
   } finally {
-    loading.value = false
+    saving.value = false
   }
 }
 
 const createManualBackup = async () => {
-  loading.value = true
   try {
-    const response = await fetch('/api/v1/backup/create', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al crear backup')
-
-    const data = await response.json()
-    if (data.success) {
-      toast.success('Backup creado exitosamente')
+    toast.info('Iniciando respaldo manual...')
+    const response = await apiClient.post('/backup')
+    if (response.success) {
+      settings.backup.ultimoBackup = new Date().toISOString() // Update UI
+      toast.success('Respaldo completado correctamente')
     } else {
-      throw new Error(data.message || 'Error al crear backup')
+      throw new Error(response.message || 'Error en respaldo')
     }
-  } catch (error) {
-    toast.error('Error al crear el backup')
-  } finally {
-    loading.value = false
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+         toast.error('Funcionalidad de respaldo no disponible en el servidor.')
+    } else {
+        toast.error('Error al crear el respaldo')
+    }
   }
 }
 
 const downloadBackup = async () => {
   try {
-    const response = await fetch('/api/v1/backup/latest', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al descargar backup')
-
-    const blob = await response.blob()
+    const response = await apiClient.get('/backup/download', { responseType: 'blob' })
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `backup-${new Date().toISOString().split('T')[0]}.sql`
+    link.setAttribute('download', `backup_${new Date().toISOString().split('T')[0]}.sql`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-
-    toast.success('Backup descargado exitosamente')
-  } catch (error) {
-    toast.error('Error al descargar el backup')
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+         toast.error('Descarga de respaldo no disponible.')
+    } else {
+        toast.error('Error al descargar el respaldo')
+    }
   }
+}
+
+const toggleDarkMode = () => {
+  uiStore.toggleDarkMode()
 }
 
 // Lifecycle
 onMounted(() => {
   loadSettings()
 })
-
-// Watchers
-watch(
-  settings,
-  () => {
-    // Auto-save después de 3 segundos de inactividad
-    // clearTimeout(autoSaveTimeout)
-    // autoSaveTimeout = setTimeout(() => {
-    //   if (hasChanges.value) {
-    //     saveAllSettings()
-    //   }
-    // }, 3000)
-  },
-  { deep: true }
-)
 </script>

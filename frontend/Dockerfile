@@ -18,8 +18,8 @@ RUN apk add --no-cache \
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN rm -f package-lock.json && npm install && npm cache clean --force
+# Instalar dependencias de manera reproducible
+RUN npm ci && npm cache clean --force
 
 # Copiar código fuente
 COPY . .

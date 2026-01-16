@@ -194,7 +194,7 @@ const manejarRedireccion = async () => {
   
   // Verificar si el usuario tiene roles
   if (authStore.roles && authStore.roles.length > 0) {
-    const userRoles = authStore.roles.map(r => r.nombre)
+    const userRoles = authStore.roles.map((r: any) => r.nombre)
     
     let targetRoute = 'DashboardUser' // Default fallback
     
@@ -229,7 +229,7 @@ const iniciarSesion = async () => {
 
   try {
     const credentials: LoginRequest = {
-      email: formulario.email,
+      email: formulario.email.trim().toLowerCase(),
       password: formulario.password,
     }
     
@@ -242,7 +242,12 @@ const iniciarSesion = async () => {
     await manejarRedireccion()
     
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Error al iniciar sesión'
+    const errorMessage =
+      error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string'
+        ? String((error as any).message)
+        : error instanceof Error
+          ? error.message
+          : 'Error al iniciar sesión'
     mensajeError.value = errorMessage
     toast.error(mensajeError.value)
   } finally {
@@ -297,6 +302,4 @@ onMounted(async () => {
 // )
 </script>
 
-<style scoped>
-/* Estilos adicionales si son necesarios */
-</style>
+<style scoped src="./LoginView.style.scoped.css"></style>

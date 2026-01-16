@@ -244,21 +244,3 @@ export interface DataTableProps {
   // Configuration
   config?: TableConfig
 }
-
-export default {
-  TableColumn,
-  TableState,
-  TableConfig,
-  TableLoadParams,
-  TableLoadResponse,
-  TableAction,
-  TableBulkAction,
-  TableFilter,
-  TableExportOptions,
-  TablePaginationInfo,
-  StatusBadgeConfig,
-  DEFAULT_STATUS_CONFIG,
-  TableEvent,
-  TableEmit,
-  DataTableProps
-}

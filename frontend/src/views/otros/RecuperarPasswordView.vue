@@ -226,6 +226,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 
 // Composables
 const router = useRouter()
@@ -246,34 +247,33 @@ const requestPasswordReset = async () => {
   loading.value = true
 
   try {
-    const response = await fetch('/api/v1/auth/forgot-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: form.value.email,
-      }),
+    const response = await apiClient.post('/auth/forgot-password', {
+      email: form.value.email,
     })
 
-    const data = await response.json()
+    const data = response
 
-    if (response.ok && data.success) {
+    if (data.success) {
       step.value = 2
       startCountdown()
       toast.success('Enlace de recuperación enviado exitosamente')
     } else {
       throw new Error(data.message || 'Error al procesar la solicitud')
     }
-  } catch (error: unknown) {
+  } catch (error: any) {
     // Manejo de errores específicos
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
     if (errorMessage.includes('not found') || errorMessage.includes('no encontrado')) {
+       // For security it's better not to reveal if email exists, but following existing logic:
       toast.error('No existe una cuenta asociada a este correo electrónico')
     } else if (errorMessage.includes('rate limit') || errorMessage.includes('límite')) {
       toast.error('Has enviado demasiadas solicitudes. Intenta más tarde')
     } else {
-      toast.error('Error al enviar el enlace de recuperación')
+        if (error.response?.status === 404) {
+             toast.info('Funcionalidad de recuperación (backend) no implementada aún.')
+        } else {
+            toast.error('Error al enviar el enlace de recuperación')
+        }
     }
   } finally {
     loading.value = false

@@ -260,7 +260,10 @@ const authenticateToken = async (req, res, next) => {
 
       // Verificar que el usuario aún existe
       const [rows] = await db.query(
-        'SELECT id_usuario, nombres, apellidos, rol, activo FROM usuarios WHERE id_usuario = ? AND activo = 1',
+        `SELECT u.id_usuario, u.nombres, u.apellidos, u.activo, r.nombre_rol as rol
+         FROM usuarios u
+         LEFT JOIN roles r ON u.rol_id = r.id_rol
+         WHERE u.id_usuario = ? AND u.activo = 1`,
         [user.id]
       )
 
@@ -279,7 +282,8 @@ const authenticateToken = async (req, res, next) => {
 
 // Middleware para verificar rol de administrador
 const requireAdmin = (req, res, next) => {
-  if (req.user.rol !== 'administrador') {
+  const roleName = req.user.rol || ''
+  if (roleName.toLowerCase() !== 'administrador') {
     return res.status(403).json({ error: 'Acceso solo para administradores' })
   }
   next()

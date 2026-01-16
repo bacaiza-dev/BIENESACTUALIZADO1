@@ -6,6 +6,7 @@ import router from './router'
 
 // Importar estilos
 import './assets/styles/main.css'
+import 'boxicons/css/boxicons.min.css'
 
 // Importar Toast (compatible con Tailwind)
 import Toast from 'vue-toastification'

@@ -108,7 +108,7 @@ export function useDataTable(
 
   const isAllSelected = computed(() => {
     return paginatedData.value.length > 0 &&
-      paginatedData.value.every(item =>
+      paginatedData.value.every((item: any) =>
         state.selectedItems.includes(getItemId(item))
       )
   })
@@ -221,7 +221,7 @@ export function useDataTable(
   }
 
   const selectAll = () => {
-    paginatedData.value.forEach(item => {
+    paginatedData.value.forEach((item: any) => {
       const id = getItemId(item)
       if (!state.selectedItems.includes(id)) {
         state.selectedItems.push(id)
@@ -230,7 +230,7 @@ export function useDataTable(
   }
 
   const deselectAll = () => {
-    paginatedData.value.forEach(item => {
+    paginatedData.value.forEach((item: any) => {
       const id = getItemId(item)
       const index = state.selectedItems.indexOf(id)
       if (index > -1) {
@@ -316,7 +316,7 @@ export function useDataTable(
   }
 
   const getSelectedItems = () => {
-    return data.value.filter(item =>
+    return data.value.filter((item: any) =>
       state.selectedItems.includes(getItemId(item))
     )
   }
@@ -379,6 +379,3 @@ export function useDataTable(
     serverSide
   }
 }
-
-// Type exports
-export type { TableColumn, TableState, TableConfig }

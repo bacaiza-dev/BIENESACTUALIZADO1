@@ -29,7 +29,7 @@
           type="text"
           :placeholder="searchPlaceholder"
           class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          @input="$emit('update:searchTerm', $event.target.value)"
+          @input="$emit('update:searchTerm', ($event.target as HTMLInputElement).value)"
         />
         <div v-if="searchTerm" class="absolute inset-y-0 right-0 pr-3 flex items-center">
           <button
@@ -48,7 +48,7 @@
       <div class="md:col-start-3 lg:col-start-4">
         <select
           :value="pageSize"
-          @change="$emit('update:pageSize', Number($event.target.value))"
+          @change="$emit('update:pageSize', Number(($event.target as HTMLSelectElement).value))"
           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         >
           <option v-for="size in pageSizes" :key="size" :value="size">

@@ -32,7 +32,7 @@
               Volver
             </button>
             <button
-              @click="saveBien"
+              @click="openConfirmModal"
               :disabled="!isFormValid"
               class="inline-flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors min-h-[44px] touch-manipulation"
             >
@@ -54,7 +54,7 @@
     <!-- Formulario principal -->
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <form @submit.prevent="saveBien" class="p-6 space-y-6">
+        <form @submit.prevent="openConfirmModal" class="p-6 space-y-6">
           <!-- Información Básica -->
           <div>
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -91,19 +91,38 @@
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Clase de Bien *
+                </label>
+                <input
+                  v-model="form.clase_de_bien"
+                  list="clasesBienOptions"
+                  type="text"
+                  required
+                  placeholder="Ej: EQUIPO DE COMPUTO"
+                  class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white min-h-[44px] text-base touch-manipulation"
+                  :class="{ 'border-red-500': errors.clase_de_bien }"
+                />
+                <datalist id="clasesBienOptions">
+                  <option v-for="c in clasesBienOptions" :key="c" :value="c" />
+                </datalist>
+                <p v-if="errors.clase_de_bien" class="mt-1 text-sm text-red-600">
+                  {{ errors.clase_de_bien }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Categoría *
                 </label>
-                <select
-                  v-model="form.categoria"
-                  required
-                  class="w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white min-h-[44px] text-base touch-manipulation"
-                  :class="{ 'border-red-500': errors.categoria }"
-                >
-                  <option value="">Seleccionar categoría</option>
-                  <option v-for="cat in categorias" :key="cat.id" :value="cat.id">
-                    {{ cat.nombre }}
-                  </option>
-                </select>
+                <VueMultiselect
+                  v-model="selectedCategoria"
+                  :options="categorias"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :show-labels="false"
+                  placeholder="Buscar categoría..."
+                  label="nombre"
+                  track-by="id"
+                />
                 <p v-if="errors.categoria" class="mt-1 text-sm text-red-600">
                   {{ errors.categoria }}
                 </p>
@@ -139,17 +158,16 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Ubicación *
                 </label>
-                <select
-                  v-model="form.ubicacion"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  :class="{ 'border-red-500': errors.ubicacion }"
-                >
-                  <option value="">Seleccionar ubicación</option>
-                  <option v-for="ub in ubicaciones" :key="ub.id" :value="ub.id">
-                    {{ ub.nombre }}
-                  </option>
-                </select>
+                <VueMultiselect
+                  v-model="selectedUbicacion"
+                  :options="ubicaciones"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :show-labels="false"
+                  placeholder="Buscar ubicación..."
+                  label="nombre"
+                  track-by="id"
+                />
                 <p v-if="errors.ubicacion" class="mt-1 text-sm text-red-600">
                   {{ errors.ubicacion }}
                 </p>
@@ -158,17 +176,17 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Responsable *
                 </label>
-                <select
-                  v-model="form.responsable"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                  :class="{ 'border-red-500': errors.responsable }"
-                >
-                  <option value="">Seleccionar responsable</option>
-                  <option v-for="user in usuarios" :key="user.id" :value="user.id">
-                    {{ user.nombre }} {{ user.apellido }}
-                  </option>
-                </select>
+                <VueMultiselect
+                  v-model="selectedResponsable"
+                  :options="usuarios"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :show-labels="false"
+                  placeholder="Buscar responsable..."
+                  label="nombre"
+                  track-by="id"
+                  :custom-label="({ nombre, apellido }) => `${nombre} ${apellido}`"
+                />
                 <p v-if="errors.responsable" class="mt-1 text-sm text-red-600">
                   {{ errors.responsable }}
                 </p>
@@ -269,7 +287,7 @@
                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                 />
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Código asignado por SENESCYT (opcional)
+                  Opcional. Puede repetirse; el identificador único del sistema es el código institucional.
                 </p>
               </div>
               <div>
@@ -316,7 +334,7 @@
                 <div class="relative">
                   <span class="absolute left-3 top-2 text-gray-500">$</span>
                   <input
-                    v-model="depreciacionCalculada"
+                    :value="depreciacionCalculada"
                     type="number"
                     step="0.01"
                     readonly
@@ -451,24 +469,16 @@
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Período Académico
                 </label>
-                <input
-                  v-model="form.periodo_id"
-                  type="text"
-                  list="periodos-list"
-                  placeholder="Ingresa o selecciona el período académico"
-                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                <VueMultiselect
+                  v-model="selectedPeriodo"
+                  :options="periodos"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :show-labels="false"
+                  placeholder="Buscar periodo..."
+                  label="nombre"
+                  track-by="id"
                 />
-                <datalist id="periodos-list">
-                  <option value="2024-1"></option>
-                  <option value="2024-2"></option>
-                  <option value="2025-1"></option>
-                  <option value="2025-2"></option>
-                  <option
-                    v-for="periodo in periodos"
-                    :key="periodo.id"
-                    :value="periodo.nombre"
-                  ></option>
-                </datalist>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   Período académico de registro del bien
                 </p>
@@ -528,402 +538,6 @@
   </div>
 </template>
 
-<script>
-import { ref, computed, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/auth'
-import { useToast } from 'vue-toastification'
+<script src="./BienForm.script.js"></script>
 
-export default {
-  name: 'BienForm',
-  setup() {
-    // Stores
-    const authStore = useAuthStore()
-    const toast = useToast()
-
-    // Control de acceso por rol
-    const isAdmin = computed(() => authStore.hasRole('Administrador'))
-
-    // Estado del formulario
-    const isEditing = ref(false)
-    const showConfirmModal = ref(false)
-    const form = ref({
-      id: null,
-      codigo: '',
-      nombre: '',
-      categoria: '',
-      estado: '',
-      ubicacion: '',
-      responsable: '',
-      marca: '',
-      codigo_senescyt: '',
-      vida_util: 5,
-      valor_residual: 0,
-      nro_acta_entrega_recepcion: '',
-      nro_acta_constatacion_fisica: '',
-      color: '',
-      material: '',
-      periodo_id: '',
-      modelo: '',
-      serie: '',
-      anioFabricacion: '',
-      valorAdquisicion: '',
-      valorActual: '',
-      fechaAdquisicion: '',
-      proveedor: '',
-      descripcion: '',
-      observaciones: '',
-      frecuenciaMantenimiento: '',
-      ultimoMantenimiento: '',
-    })
-
-    const errors = ref({})
-
-    // Períodos académicos dinámicos
-    const periodos = ref([])
-
-    // Datos reales de usuarios
-    const usuarios = ref([])
-
-    // Datos reales de categorías y ubicaciones
-    const categorias = ref([])
-    const ubicaciones = ref([])
-
-    // Cálculo de depreciación
-    const depreciacionCalculada = computed(() => {
-      if (!form.value.valorAdquisicion || !form.value.vida_util || !form.value.fechaAdquisicion) {
-        return 0
-      }
-
-      const valorAdquisicion = parseFloat(form.value.valorAdquisicion)
-      const vidaUtil = parseInt(form.value.vida_util)
-      const valorResidual = parseFloat(form.value.valor_residual) || 0
-      const fechaAdquisicion = new Date(form.value.fechaAdquisicion)
-      const fechaActual = new Date()
-
-      // Calcular años transcurridos
-      const tiempoTranscurrido = (fechaActual - fechaAdquisicion) / (1000 * 60 * 60 * 24 * 365.25)
-      const añosTranscurridos = Math.max(0, tiempoTranscurrido)
-
-      // Depreciación lineal
-      const depreciacionAnual = (valorAdquisicion - valorResidual) / vidaUtil
-      const depreciacionAcumulada = Math.min(
-        depreciacionAnual * añosTranscurridos,
-        valorAdquisicion - valorResidual
-      )
-
-      return depreciacionAcumulada.toFixed(2)
-    })
-
-    const porcentajeDepreciacion = computed(() => {
-      if (!form.value.valorAdquisicion || form.value.valorAdquisicion == 0) {
-        return 0
-      }
-      const porcentaje = (depreciacionCalculada.value / form.value.valorAdquisicion) * 100
-      return Math.min(100, porcentaje).toFixed(1)
-    })
-
-    // Validación del formulario
-    const isFormValid = computed(() => {
-      return (
-        form.value.codigo &&
-        form.value.nombre &&
-        form.value.categoria &&
-        form.value.estado &&
-        form.value.ubicacion &&
-        form.value.responsable &&
-        form.value.valorAdquisicion &&
-        form.value.vida_util &&
-        form.value.fechaAdquisicion
-      )
-    })
-
-    // Validaciones específicas
-    const validateForm = () => {
-      errors.value = {}
-
-      if (!form.value.codigo) {
-        errors.value.codigo = 'El código es requerido'
-      }
-
-      if (!form.value.nombre) {
-        errors.value.nombre = 'El nombre es requerido'
-      }
-
-      if (!form.value.categoria) {
-        errors.value.categoria = 'La categoría es requerida'
-      }
-
-      if (!form.value.estado) {
-        errors.value.estado = 'El estado es requerido'
-      }
-
-      if (!form.value.ubicacion) {
-        errors.value.ubicacion = 'La ubicación es requerida'
-      }
-
-      if (!form.value.responsable) {
-        errors.value.responsable = 'El responsable es requerido'
-      }
-
-      if (!form.value.valorAdquisicion || form.value.valorAdquisicion <= 0) {
-        errors.value.valorAdquisicion = 'El valor de adquisición debe ser mayor a 0'
-      }
-
-      if (!form.value.fechaAdquisicion) {
-        errors.value.fechaAdquisicion = 'La fecha de adquisición es requerida'
-      }
-
-      if (!form.value.vida_util || form.value.vida_util <= 0) {
-        errors.value.vida_util = 'La vida útil debe ser mayor a 0'
-      }
-
-      return Object.keys(errors.value).length === 0
-    }
-
-    // Acciones
-    const goBack = () => {
-      window.history.back()
-    }
-
-    const saveBien = () => {
-      if (validateForm()) {
-        showConfirmModal.value = true
-      }
-    }
-
-    const confirmSave = async () => {
-      showConfirmModal.value = false
-
-      try {
-        const method = isEditing.value ? 'PUT' : 'POST'
-        const endpoint = isEditing.value ? `/api/bienes/${form.value.id}` : '/api/bienes'
-
-        const response = await fetch(endpoint, {
-          method,
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            codigo_institucional: form.value.codigo,
-            nombre: form.value.nombre,
-            descripcion: form.value.descripcion,
-            marca: form.value.marca,
-            modelo: form.value.modelo,
-            serie: form.value.serie,
-            estado: form.value.estado.toUpperCase(),
-            valor: parseFloat(form.value.valorAdquisicion),
-            fecha_adquisicion: form.value.fechaAdquisicion,
-            vida_util: parseInt(form.value.vida_util),
-            valor_residual: parseFloat(form.value.valor_residual) || 0,
-            categoria_id: parseInt(form.value.categoria),
-            ubicacion_id: parseInt(form.value.ubicacion),
-            responsable_id: parseInt(form.value.responsable),
-            periodo_id: form.value.periodo_id ? parseInt(form.value.periodo_id) : null,
-            observaciones: form.value.observaciones,
-            codigo_senescyt: form.value.codigo_senescyt,
-            nro_acta_entrega_recepcion: form.value.nro_acta_entrega_recepcion,
-            nro_acta_constatacion_fisica: form.value.nro_acta_constatacion_fisica,
-            color: form.value.color,
-            material: form.value.material,
-          }),
-        })
-
-        if (!response.ok) throw new Error('Error al guardar bien')
-
-        const data = await response.json()
-        if (data.success) {
-          const mensaje = isEditing.value
-            ? 'Bien actualizado correctamente'
-            : 'Bien guardado correctamente'
-          toast.success(mensaje)
-          goBack()
-        } else {
-          throw new Error(data.message || 'Error al guardar bien')
-        }
-      } catch (error) {
-        console.error('Error saving bien:', error)
-        toast.error('Error al guardar el bien')
-      }
-    }
-
-    // Control de acceso por rol al cargar
-    onMounted(async () => {
-      if (!isAdmin.value) {
-        toast.error('Acceso denegado: solo administradores pueden crear/editar bienes')
-        goBack()
-        return
-      }
-
-      // Cargar datos iniciales
-      await Promise.all([loadUsuarios(), loadPeriodos(), loadCategorias(), loadUbicaciones()])
-
-      // Verificar si estamos editando
-      const urlParams = new URLSearchParams(window.location.search)
-      const bienId = urlParams.get('id')
-      if (bienId) {
-        isEditing.value = true
-        await loadBienData(bienId)
-      }
-    })
-
-    const loadBienData = async (id) => {
-      try {
-        const response = await fetch(`/api/bienes/${id}`, {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) throw new Error('Error al cargar bien')
-
-        const data = await response.json()
-        if (data.success) {
-          const bien = data.data
-          form.value = {
-            id: bien.id_bien,
-            codigo: bien.codigo_institucional,
-            nombre: bien.nombre,
-            categoria: bien.categoria_id?.toString() || '',
-            estado: bien.estado?.toLowerCase() || 'activo',
-            ubicacion: bien.ubicacion_id?.toString() || '',
-            responsable: bien.responsable_id?.toString() || '',
-            marca: bien.marca || '',
-            modelo: bien.modelo || '',
-            serie: bien.serie || '',
-            anioFabricacion: bien.fecha_adquisicion ? new Date(bien.fecha_adquisicion).getFullYear().toString() : '',
-            valorAdquisicion: bien.valor?.toString() || '',
-            fechaAdquisicion: bien.fecha_adquisicion || '',
-            proveedor: bien.proveedor || '',
-            descripcion: bien.descripcion || '',
-            observaciones: bien.observaciones || '',
-            codigo_senescyt: bien.codigo_senescyt || '',
-            vida_util: bien.vida_util || 5,
-            valor_residual: bien.valor_residual || 0,
-            nro_acta_entrega_recepcion: bien.nro_acta_entrega_recepcion || '',
-            nro_acta_constatacion_fisica: bien.nro_acta_constatacion_fisica || '',
-            color: bien.color || '',
-            material: bien.material || '',
-            periodo_id: bien.periodo_id?.toString() || '',
-          }
-        } else {
-          throw new Error(data.message || 'Error al cargar bien')
-        }
-      } catch (error) {
-        console.error('Error loading bien:', error)
-        toast.error('Error al cargar los datos del bien')
-      }
-    }
-
-    const loadUsuarios = async () => {
-      try {
-        const response = await fetch('/api/usuarios', {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) throw new Error('Error al cargar usuarios')
-
-        const data = await response.json()
-        if (data.success) {
-          usuarios.value = data.data || []
-        } else {
-          throw new Error(data.message || 'Error al cargar usuarios')
-        }
-      } catch (error) {
-        console.error('Error loading usuarios:', error)
-        usuarios.value = []
-        toast.error('Error al cargar usuarios')
-      }
-    }
-
-    const loadPeriodos = async () => {
-      try {
-        const response = await fetch('/api/periodos-academicos', {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) throw new Error('Error al cargar períodos')
-
-        const data = await response.json()
-        if (data.success) {
-          periodos.value = data.data || []
-        } else {
-          throw new Error(data.message || 'Error al cargar períodos')
-        }
-      } catch (error) {
-        console.error('Error loading periodos:', error)
-        periodos.value = []
-        // No mostrar error si no hay periodos, es opcional
-      }
-    }
-
-    const loadCategorias = async () => {
-      try {
-        const response = await fetch('/api/categorias', {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) throw new Error('Error al cargar categorías')
-
-        const data = await response.json()
-        if (data.success) {
-          categorias.value = data.data || []
-        }
-      } catch (error) {
-        console.error('Error loading categorias:', error)
-        categorias.value = []
-      }
-    }
-
-    const loadUbicaciones = async () => {
-      try {
-        const response = await fetch('/api/ubicaciones', {
-          headers: {
-            Authorization: `Bearer ${authStore.token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-
-        if (!response.ok) throw new Error('Error al cargar ubicaciones')
-
-        const data = await response.json()
-        if (data.success) {
-          ubicaciones.value = data.data || []
-        }
-      } catch (error) {
-        console.error('Error loading ubicaciones:', error)
-        ubicaciones.value = []
-      }
-    }
-
-    return {
-      isAdmin,
-      isEditing,
-      showConfirmModal,
-      form,
-      errors,
-      usuarios,
-      periodos,
-      categorias,
-      ubicaciones,
-      depreciacionCalculada,
-      porcentajeDepreciacion,
-      isFormValid,
-      validateForm,
-      goBack,
-      saveBien,
-      confirmSave,
-    }
-  },
-}
-</script>
+<style src="./BienForm.style.css"></style>

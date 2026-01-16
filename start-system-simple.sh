@@ -16,7 +16,7 @@ docker run -d \
   -e MYSQL_ROOT_PASSWORD=admin \
   -e MYSQL_DATABASE=intbienes \
   -p 3307:3306 \
-  -v "$(pwd)/database/init/01-intbienes.sql:/docker-entrypoint-initdb.d/01-intbienes.sql" \
+  -v "$(pwd)/shared/database/init/01-intbienes.sql:/docker-entrypoint-initdb.d/01-intbienes.sql" \
   mysql:8.0
 
 # Esperar a que MySQL esté listo
@@ -85,7 +85,7 @@ echo "🗄️  MySQL: localhost:3307"
 echo ""
 echo "🔑 Usuarios de prueba:"
 echo "   - admin@intsuperior.edu.ec"
-echo "   - jhonatan@intsuperior.edu.ec"
+echo "   - jhonatan.bano@intsuperior.edu.ec"
 echo ""
 echo "🛑 Para detener el sistema, presiona Ctrl+C"
 echo ""

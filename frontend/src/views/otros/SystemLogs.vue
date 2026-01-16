@@ -204,47 +204,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 
 // Estados reactivos
 const cargando = ref(false)
-const logs = ref([
-  {
-    id: 1,
-    timestamp: new Date('2024-01-15T10:30:00'),
-    nivel: 'info',
-    modulo: 'auth',
-    mensaje: 'Usuario autenticado exitosamente',
-    usuario: 'admin@int.edu.co',
-    detalles: null,
-  },
-  {
-    id: 2,
-    timestamp: new Date('2024-01-15T10:25:00'),
-    nivel: 'warning',
-    modulo: 'bienes',
-    mensaje: 'Bien con ID 123 próximo a vencer garantía',
-    usuario: 'user@int.edu.co',
-    detalles: 'Vencimiento: 2024-02-01',
-  },
-  {
-    id: 3,
-    timestamp: new Date('2024-01-15T10:20:00'),
-    nivel: 'error',
-    modulo: 'database',
-    mensaje: 'Error de conexión a la base de datos',
-    usuario: 'system',
-    detalles: 'Connection timeout after 30 seconds',
-  },
-  {
-    id: 4,
-    timestamp: new Date('2024-01-15T10:15:00'),
-    nivel: 'debug',
-    modulo: 'api',
-    mensaje: 'Procesando solicitud GET /api/v1/bienes',
-    usuario: 'admin@int.edu.co',
-    detalles: 'Response time: 245ms',
-  },
-])
+const logs = ref<any[]>([])
 
 // Filtros
 const filtros = reactive({
@@ -262,36 +226,45 @@ const logsFiltrados = computed(() => {
   let resultado = logs.value
 
   if (filtros.nivel) {
-    resultado = resultado.filter(log => log.nivel === filtros.nivel)
+    resultado = resultado.filter((log: any) => log.nivel === filtros.nivel)
   }
 
   if (filtros.modulo) {
-    resultado = resultado.filter(log => log.modulo === filtros.modulo)
+    resultado = resultado.filter((log: any) => log.modulo === filtros.modulo)
   }
 
   if (filtros.fechaDesde) {
     const fechaDesde = new Date(filtros.fechaDesde)
-    resultado = resultado.filter(log => log.timestamp >= fechaDesde)
+    resultado = resultado.filter((log: any) => new Date(log.timestamp) >= fechaDesde)
   }
 
   if (filtros.fechaHasta) {
     const fechaHasta = new Date(filtros.fechaHasta)
     fechaHasta.setHours(23, 59, 59, 999)
-    resultado = resultado.filter(log => log.timestamp <= fechaHasta)
+    resultado = resultado.filter((log: any) => new Date(log.timestamp) <= fechaHasta)
   }
 
-  return resultado.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+  return resultado.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 })
 
 // Métodos
 const actualizarLogs = async () => {
   cargando.value = true
   try {
-    // Simular carga de logs
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    toast.success('Logs actualizados correctamente')
+    const response = await apiClient.get('/logs')
+    const data = response
+    if (data.success) {
+      logs.value = data.data
+      toast.success('Logs actualizados correctamente')
+    } else {
+       // If endpoint exists but returns error
+       logs.value = []
+    }
   } catch (error) {
-    toast.error('Error al cargar los logs')
+    logs.value = []
+    // Silent fail or info toast if endpoint is known to be missing often
+    console.warn('Error al cargar logs (posiblemente no implementado):', error)
+    toast.info('No se pudieron cargar los registros del sistema.')
   } finally {
     cargando.value = false
   }
@@ -303,11 +276,11 @@ const aplicarFiltros = () => {
 
 const limpiarLogs = () => {
   logs.value = []
-  toast.info('Logs limpiados')
+  toast.info('Vista de logs limpiada')
 }
 
-const formatearFecha = (fecha: Date) => {
-  return fecha.toLocaleString('es-CO', {
+const formatearFecha = (fecha: string | Date) => {
+  return new Date(fecha).toLocaleString('es-CO', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -325,9 +298,9 @@ onMounted(() => {
 
   filtros.fechaDesde = sieteDiasAtras.toISOString().split('T')[0]
   filtros.fechaHasta = hoy.toISOString().split('T')[0]
+
+  actualizarLogs()
 })
 </script>
 
-<style scoped>
-/* Estilos adicionales si son necesarios */
-</style>
+<style scoped src="./SystemLogs.style.scoped.css"></style>

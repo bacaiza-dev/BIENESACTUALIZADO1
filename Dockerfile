@@ -53,7 +53,7 @@ RUN usermod -d /var/lib/mysql/ mysql && \
     mkdir -p /var/lib/mysql /run/mysqld && \
     chown -R mysql:mysql /var/lib/mysql /run/mysqld
 
-COPY database/init/01-intbienes.sql /tmp/intbienes.sql
+COPY shared/database/init/01-intbienes.sql /tmp/intbienes.sql
 
 RUN service mysql start && \
     sleep 10 && \

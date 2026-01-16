@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 export const useUIStore = defineStore('ui', () => {
   const isDarkMode = ref(false)
   const sidebarOpen = ref(false)
+  const sidebarCollapsed = ref(false)
   const loading = ref(false)
   interface NotificationItem {
     id: number
@@ -92,6 +93,27 @@ export const useUIStore = defineStore('ui', () => {
     sidebarOpen.value = !sidebarOpen.value
   }
 
+  const initializeSidebar = () => {
+    try {
+      const saved = localStorage.getItem('sidebar-collapsed')
+      if (saved !== null) {
+        sidebarCollapsed.value = JSON.parse(saved)
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const toggleSidebarCollapsed = () => {
+    sidebarCollapsed.value = !sidebarCollapsed.value
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(sidebarCollapsed.value))
+  }
+
+  const setSidebarCollapsed = (value: boolean) => {
+    sidebarCollapsed.value = value
+    localStorage.setItem('sidebar-collapsed', JSON.stringify(sidebarCollapsed.value))
+  }
+
   const closeSidebar = () => {
     sidebarOpen.value = false
   }
@@ -174,6 +196,7 @@ export const useUIStore = defineStore('ui', () => {
     isSystemPreference,
     systemPrefersDark,
     sidebarOpen,
+    sidebarCollapsed,
     loading,
     notifications,
 
@@ -193,6 +216,9 @@ export const useUIStore = defineStore('ui', () => {
     
     // Actions - UI
     toggleSidebar,
+    initializeSidebar,
+    toggleSidebarCollapsed,
+    setSidebarCollapsed,
     closeSidebar,
     openSidebar,
     setLoading,

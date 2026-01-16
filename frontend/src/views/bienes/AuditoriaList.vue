@@ -23,7 +23,7 @@
           <div class="sm:w-48">
             <select
               v-model="tipoAuditoria"
-              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+              class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             >
               <option value="">Todos los tipos</option>
               <option value="accesos">Accesos</option>
@@ -59,7 +59,7 @@
           </div>
           <button
             @click="loadAuditoria"
-            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
           >
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -127,13 +127,13 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ registro.accion }}</td>
-                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ registro.usuario || 'N/A' }}</td>
+                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ registro.usuario_nombre || registro.usuario || 'N/A' }}</td>
                 <td class="px-6 py-4 max-w-xs truncate text-gray-900 dark:text-gray-200">
                   <span v-if="registro.detalles">{{ registro.detalles }}</span>
                   <span v-else class="text-gray-400 dark:text-gray-500">Sin detalles</span>
                 </td>
-                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ formatDate(registro.fecha) }}</td>
-                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ registro.ip || 'N/A' }}</td>
+                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ formatDate(registro.created_at || registro.fecha) }}</td>
+                <td class="px-6 py-4 text-gray-900 dark:text-gray-200">{{ registro.ip_address || registro.ip || 'N/A' }}</td>
               </tr>
             </tbody>
           </table>
@@ -168,62 +168,50 @@
     </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-const auditoria = ref([])
+import { useAuthStore } from '@/stores/auth'
+import apiClient from '@/api/client'
+import { useToast } from 'vue-toastification'
+
+const authStore = useAuthStore()
+const toast = useToast()
+
+const auditoria = ref<any[]>([])
 const tipoAuditoria = ref('')
 const searchQuery = ref('')
+const loading = ref(false)
 
 const loadAuditoria = async () => {
-  // Simulación de carga, reemplazar por fetch real a /api/v1/auditoria
-  auditoria.value = [
-    {
-      id: 1,
-      tipo: 'accesos',
-      accion: 'LOGIN',
-      usuario: 'admin',
-      detalles: 'Inicio de sesión exitoso',
-      fecha: '2025-07-06T21:00:00Z',
-      ip: '192.168.1.10',
-    },
-    {
-      id: 2,
-      tipo: 'bienes',
-      accion: 'CREATE',
-      usuario: 'admin',
-      detalles: 'Creó bien INT-TEST-0001',
-      fecha: '2025-07-06T20:00:00Z',
-      ip: '192.168.1.10',
-    },
-    {
-      id: 3,
-      tipo: 'usuarios',
-      accion: 'UPDATE',
-      usuario: 'admin',
-      detalles: 'Actualizó usuario Jhonatan',
-      fecha: '2025-07-05T19:00:00Z',
-      ip: '192.168.1.10',
-    },
-    {
-      id: 4,
-      tipo: 'ubicaciones',
-      accion: 'DELETE',
-      usuario: 'admin',
-      detalles: 'Eliminó ubicación Biblioteca',
-      fecha: '2025-07-04T18:00:00Z',
-      ip: '192.168.1.10',
-    },
-  ]
+  loading.value = true
+  try {
+    // Attempt to fetch real logs
+    const response = await apiClient.get('/logs')
+    const data = response
+    
+    if (data.success && Array.isArray(data.data)) {
+        auditoria.value = data.data
+    } else {
+        // Fallback or empty if structure differs
+        auditoria.value = []
+    }
+  } catch (error) {
+    console.warn('Error loading logs (optional feature):', error)
+    toast.info('No se pudieron cargar los registros de auditoría (Backend pendiente)')
+    auditoria.value = [] 
+  } finally {
+    loading.value = false
+  }
 }
 
 const filteredAuditoria = computed(() => {
   let filtered = auditoria.value
   if (tipoAuditoria.value) {
-    filtered = filtered.filter(r => r.tipo === tipoAuditoria.value)
+    filtered = filtered.filter((r: any) => r.tipo === tipoAuditoria.value)
   }
   if (searchQuery.value) {
     filtered = filtered.filter(
-      r =>
+      (r: any) =>
         (r.accion && r.accion.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
         (r.usuario && r.usuario.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
         (r.detalles && r.detalles.toLowerCase().includes(searchQuery.value.toLowerCase()))
@@ -232,7 +220,7 @@ const filteredAuditoria = computed(() => {
   return filtered
 })
 
-const formatDate = dateString => {
+const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleString('es-EC', {
     year: 'numeric',

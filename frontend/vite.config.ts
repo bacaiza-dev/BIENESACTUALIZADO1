@@ -44,6 +44,9 @@ export default defineConfig({
   server: {
     port: 3001,
     host: true,
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       '/api': {
         target: 'http://intbienes_backend:3000',

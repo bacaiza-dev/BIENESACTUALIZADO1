@@ -1,0 +1,25 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-panel {
+  width: 100%;
+  max-width: 40rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+:global(.dark) .modal-panel {
+  background: #1f2937;
+  border-color: #374151;
+}
+

@@ -189,6 +189,4 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
-/* Estilos adicionales si son necesarios */
-</style>
+<style scoped src="./PublicHeader.style.scoped.css"></style>

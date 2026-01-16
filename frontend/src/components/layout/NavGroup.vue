@@ -67,7 +67,7 @@ const groupId = computed(() => props.label.toLowerCase().replace(/\s+/g, '-'))
 const isOpen = ref(false)
 
 const hasActiveItem = computed(() => {
-  return props.items.some(item => isItemActive(item.to))
+  return props.items.some((item: any) => isItemActive(item.to))
 })
 
 const isItemActive = (to: RouteLocationRaw) => {

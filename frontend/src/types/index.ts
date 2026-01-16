@@ -36,22 +36,36 @@ export interface Permission {
 
 export interface Asset {
   id: number
+  id_bien?: number
+  codigo?: string
   codigo_institucional: string
-  codigo_senescyt: string
+  codigo_senescyt?: string
   nombre: string
-  descripcion: string
+  clase_de_bien?: string
+  descripcion?: string
+  marca?: string
+  modelo?: string
+  serie?: string
+  color?: string
+  material?: string
+  proveedor?: string
+  anio_fabricacion?: number
+  observaciones?: string
   categoria_id: number
-  categoria: Category
-  ubicacion_id: number
-  ubicacion: Location
-  responsable_id: number
-  responsable: User
-  estado: 'activo' | 'inactivo' | 'mantenimiento' | 'baja'
-  fecha_adquisicion: string
-  valor_adquisicion: number
-  vida_util: number
-  created_at: string
-  updated_at: string
+  categoria?: Category
+  ubicacion_id?: number
+  ubicacion?: Location
+  responsable_id?: number
+  responsable?: User
+  responsable_completo?: string
+  estado: 'activo' | 'inactivo' | 'mantenimiento' | 'baja' | 'ACTIVO' | 'INACTIVO' | 'MANTENIMIENTO' | 'BAJA'
+  fecha_adquisicion?: string
+  valor_adquisicion?: number
+  vida_util?: number
+  valor_residual?: number
+  created_at?: string
+  updated_at?: string
+  codigo_qr?: string
 }
 
 export interface Category {
@@ -59,6 +73,10 @@ export interface Category {
   nombre: string
   descripcion: string
   activo: boolean
+  codigo?: string
+  tipo?: string
+  estado?: 'activo' | 'inactivo'
+  observaciones?: string
 }
 
 export interface Location {
@@ -95,6 +113,12 @@ export interface ApiResponse<T> {
   data: T
   message: string
   success: boolean
+  meta?: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+  }
 }
 
 export interface PaginatedResponse<T> {
@@ -203,6 +227,9 @@ export interface Document {
   usuario: User
   created_at: string
 }
+
+// Alias en español (usado en algunas vistas)
+export type Documento = Document
 
 export interface Assignment {
   id: number

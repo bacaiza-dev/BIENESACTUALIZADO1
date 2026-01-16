@@ -1,0 +1,15 @@
+FROM node:18-slim
+
+WORKDIR /usr/src/app
+
+# Instala dependencias primero (cacheable)
+COPY package*.json ./
+RUN npm ci
+
+# Copia el resto (en runtime lo pisa el volumen, pero sirve para build)
+COPY . .
+
+EXPOSE 3000
+
+# Dev flow: usar nodemon para watch (npx descargará si no está)
+CMD ["npx","nodemon","server.js","--legacy-watch"]

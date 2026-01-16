@@ -1,18 +1,18 @@
 <template>
   <div class="p-6">
-    <DataTableNew
+    <DataTable
       title="Lista de Bienes"
       description="Gestión completa de bienes institucionales"
-      :data="tableData.paginatedData.value"
+      :data="paginatedData"
       :columns="columns"
-      :loading="tableData.state.loading"
-      :total="tableData.total.value"
-      :search-term="tableData.state.searchTerm"
-      :current-page="tableData.state.currentPage"
-      :page-size="tableData.state.pageSize"
-      :sort-column="tableData.state.sortColumn"
-      :sort-direction="tableData.state.sortDirection"
-      :selected-items="tableData.state.selectedItems"
+      :loading="state.loading"
+      :total="total"
+      :search-term="state.searchTerm"
+      :current-page="state.currentPage"
+      :page-size="state.pageSize"
+      :sort-column="state.sortColumn"
+      :sort-direction="state.sortDirection"
+      :selected-items="state.selectedItems"
       :server-side="false"
       :selectable="true"
       :show-q-r="true"
@@ -21,11 +21,11 @@
       empty-title="No hay bienes registrados"
       empty-description="Comienza agregando tu primer bien institucional"
       empty-action-text="Agregar Bien"
-      @update:search-term="tableData.setSearch"
-      @update:current-page="tableData.setPage"
-      @update:page-size="tableData.setPageSize"
-      @update:selected-items="(items) => (tableData.state.selectedItems = items)"
-      @sort="tableData.sort"
+      @update:search-term="setSearch"
+      @update:current-page="setPage"
+      @update:page-size="setPageSize"
+      @update:selected-items="(items: any[]) => (state.selectedItems = items)"
+      @sort="sort"
       @edit="handleEdit"
       @delete="handleDelete"
       @generate-qr="handleGenerateQR"
@@ -139,14 +139,14 @@
           Exportar seleccionados
         </button>
       </template>
-    </DataTableNew>
+    </DataTable>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useDataTable, type TableColumn } from '@/composables/useDataTable'
-import DataTableNew from '@/components/shared/DataTableNew.vue'
+import DataTable from '@/components/shared/DataTable.vue'
 
 // Filters
 const selectedCategory = ref('')
@@ -194,57 +194,70 @@ const sampleData = [
 ]
 
 // Initialize table
-const tableData = useDataTable()
+const {
+  state,
+  paginatedData,
+  total,
+  setSearch,
+  setPage,
+  setPageSize,
+  sort,
+  setData
+} = useDataTable()
 
 // Lifecycle
 onMounted(() => {
-  tableData.setData(sampleData)
+  setData(sampleData)
 })
+
+const debug = (...args: any[]) => {
+  if (import.meta.env.DEV) console.log(...args)
+}
 
 // Event handlers
 const handleEdit = (item: any) => {
-  console.log('Edit item:', item)
+  debug('Edit item:', item)
 }
 
 const handleDelete = (item: any) => {
-  console.log('Delete item:', item)
+  debug('Delete item:', item)
 }
 
 const handleView = (item: any) => {
-  console.log('View item:', item)
+  debug('View item:', item)
 }
 
 const handleGenerateQR = (item: any) => {
-  console.log('Generate QR for item:', item)
+  debug('Generate QR for item:', item)
 }
 
 const handleCreate = () => {
-  console.log('Create new item')
+  debug('Create new item')
 }
 
 const handleImport = () => {
-  console.log('Import data')
+  debug('Import data')
 }
 
 const handleExport = () => {
-  console.log('Export data')
+  debug('Export data')
 }
 
 const handleBulkDelete = (items: any[]) => {
-  console.log('Bulk delete items:', items)
+  debug('Bulk delete items:', items)
 }
 
 const handleBulkEdit = (items: any[]) => {
-  console.log('Bulk edit items:', items)
+  debug('Bulk edit items:', items)
 }
 
 const handleBulkExport = (items: any[]) => {
-  console.log('Bulk export items:', items)
+  debug('Bulk export items:', items)
 }
 
 const applyFilters = () => {
   // Apply custom filters
-  console.log('Apply filters:', { selectedCategory: selectedCategory.value, selectedStatus: selectedStatus.value })
+  debug('Apply filters:', { selectedCategory: selectedCategory.value, selectedStatus: selectedStatus.value })
 }
 
 // Utility functions

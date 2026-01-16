@@ -96,7 +96,7 @@
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Valor Total</p>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              ${{ metricas.valorTotal.toLocaleString() }}
+              ${{ (metricas.valorTotal as number).toLocaleString() }}
             </p>
             <p class="text-sm text-green-600 dark:text-green-400">
               +{{ metricas.incrementoValor }}% este mes
@@ -161,6 +161,95 @@
             <p class="text-sm text-blue-600 dark:text-blue-400">
               {{ metricas.nuevosUsuarios }} nuevos
             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Espacios Físicos -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Aulas</h3>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {{ (espacios?.aulas?.total ?? 0) }} aulas
+            </span>
+            <router-link
+              :to="{ name: 'SalasList' }"
+              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              title="Gestionar salas"
+            >
+              Salas
+            </router-link>
+          </div>
+        </div>
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Bienes: {{ espacios?.aulas?.bienes_total ?? 0 }} · Capacidad total: {{ espacios?.aulas?.capacidad_total ?? 0 }}
+        </div>
+        <div v-if="(espacios?.aulas?.top?.length ?? 0) === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          Sin datos de aulas
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="u in espacios?.aulas?.top ?? []"
+            :key="u.id"
+            class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/40"
+          >
+            <div class="min-w-0">
+              <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {{ u.nombre }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {{ u.edificio || '—' }}{{ u.aula ? ` · ${u.aula}` : '' }}
+              </div>
+            </div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+              {{ u.bienesAsignados ?? 0 }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Laboratorios</h3>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {{ espacios?.laboratorios?.total ?? 0 }} laboratorios
+            </span>
+            <router-link
+              :to="{ name: 'SalasList' }"
+              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+              title="Gestionar salas"
+            >
+              Salas
+            </router-link>
+          </div>
+        </div>
+        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Bienes: {{ espacios?.laboratorios?.bienes_total ?? 0 }} · Capacidad total: {{ espacios?.laboratorios?.capacidad_total ?? 0 }}
+        </div>
+        <div v-if="espacios.laboratorios.top.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          Sin datos de laboratorios
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="u in espacios?.laboratorios?.top ?? []"
+            :key="u.id"
+            class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/40"
+          >
+            <div class="min-w-0">
+              <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {{ u.nombre }}
+              </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {{ u.edificio || '—' }}{{ u.aula ? ` · ${u.aula}` : '' }}
+              </div>
+            </div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-white">
+              {{ u.bienesAsignados ?? 0 }}
+            </div>
           </div>
         </div>
       </div>
@@ -257,7 +346,7 @@
         <div class="p-6">
           <div class="space-y-4">
             <div
-              v-for="alerta in alertasRecientes"
+              v-for="alerta in alertasRecientes ?? []"
               :key="alerta.id"
               class="flex items-start space-x-3"
             >
@@ -308,7 +397,7 @@
         <div class="p-6">
           <div class="space-y-4">
             <div
-              v-for="actividad in actividadesRecientes"
+              v-for="actividad in actividadesRecientes ?? []"
               :key="actividad.id"
               class="flex items-start space-x-3"
             >
@@ -390,6 +479,11 @@ interface RecentActivity {
   tiempo: string
 }
 
+interface EspaciosDashboard {
+  aulas: { total: number; bienes_total: number; capacidad_total: number; top: any[] }
+  laboratorios: { total: number; bienes_total: number; capacidad_total: number; top: any[] }
+}
+
 const authStore = useAuthStore()
 const uiStore = useUIStore()
 const toast = useToast()
@@ -415,6 +509,10 @@ const bienesPorCategoria = ref<CategoryData[]>([])
 const valorPorUbicacion = ref<LocationData[]>([])
 const alertasRecientes = ref<RecentAlert[]>([])
 const actividadesRecientes = ref<RecentActivity[]>([])
+const espacios = reactive<EspaciosDashboard>({
+  aulas: { total: 0, bienes_total: 0, capacidad_total: 0, top: [] },
+  laboratorios: { total: 0, bienes_total: 0, capacidad_total: 0, top: [] },
+})
 
 // Computadas
 const formatCurrency = (value: number) => {
@@ -425,6 +523,8 @@ const formatCurrency = (value: number) => {
     maximumFractionDigits: 0,
   }).format(value)
 }
+
+import apiClient from '@/api/client'
 
 // Métodos
 const cargarDatos = async () => {
@@ -437,6 +537,7 @@ const cargarDatos = async () => {
       cargarMetricas(),
       cargarBienesPorCategoria(),
       cargarValorPorUbicacion(),
+      cargarEspacios(),
       cargarAlertasRecientes(),
       cargarActividadesRecientes(),
     ])
@@ -452,15 +553,9 @@ const cargarDatos = async () => {
 
 const cargarMetricas = async () => {
   try {
-    const response = await fetch('/api/dashboard/stats', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/dashboard/stats')
 
-    if (!response.ok) throw new Error('Error al cargar métricas')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       Object.assign(metricas, data.data)
     }
@@ -481,15 +576,9 @@ const cargarMetricas = async () => {
 
 const cargarBienesPorCategoria = async () => {
   try {
-    const response = await fetch('/api/dashboard/bienes-por-categoria', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/dashboard/bienes-por-categoria')
 
-    if (!response.ok) throw new Error('Error al cargar bienes por categoría')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       bienesPorCategoria.value = data.data
     }
@@ -500,15 +589,9 @@ const cargarBienesPorCategoria = async () => {
 
 const cargarValorPorUbicacion = async () => {
   try {
-    const response = await fetch('/api/dashboard/valor-por-ubicacion', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/dashboard/valor-por-ubicacion')
 
-    if (!response.ok) throw new Error('Error al cargar valor por ubicación')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       valorPorUbicacion.value = data.data
     }
@@ -517,17 +600,26 @@ const cargarValorPorUbicacion = async () => {
   }
 }
 
+const cargarEspacios = async () => {
+  try {
+    const response = await apiClient.get('/dashboard/espacios')
+
+    const data = response
+    if (data.success && data.data) {
+      if (data.data.aulas) espacios.aulas = data.data.aulas
+      if (data.data.laboratorios) espacios.laboratorios = data.data.laboratorios
+    }
+  } catch (error) {
+    espacios.aulas = { total: 0, bienes_total: 0, capacidad_total: 0, top: [] }
+    espacios.laboratorios = { total: 0, bienes_total: 0, capacidad_total: 0, top: [] }
+  }
+}
+
 const cargarAlertasRecientes = async () => {
   try {
-    const response = await fetch('/api/dashboard/alertas-recientes', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/dashboard/alertas-recientes')
 
-    if (!response.ok) throw new Error('Error al cargar alertas recientes')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       alertasRecientes.value = data.data
     }
@@ -538,15 +630,9 @@ const cargarAlertasRecientes = async () => {
 
 const cargarActividadesRecientes = async () => {
   try {
-    const response = await fetch('/api/dashboard/actividades-recientes', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/dashboard/actividades-recientes')
 
-    if (!response.ok) throw new Error('Error al cargar actividades recientes')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       actividadesRecientes.value = data.data
     }
@@ -606,6 +692,4 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-/* Estilos adicionales si son necesarios */
-</style>
+<style scoped src="./DashboardView.style.scoped.css"></style>

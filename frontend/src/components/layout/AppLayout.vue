@@ -4,7 +4,7 @@
     <AppSidebar />
 
     <!-- Main Content -->
-    <div class="lg:ml-64 transition-all duration-300">
+    <div :class="['transition-all duration-300', uiStore.sidebarCollapsed ? 'lg:ml-0' : 'lg:ml-64']">
       <!-- Top Header -->
       <AppHeader />
 

@@ -171,15 +171,15 @@
               class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center"
             >
               <span class="text-xs font-medium text-blue-600 dark:text-blue-300">
-                {{ item.usuario?.nombres?.charAt(0) || 'U' }}
+                {{ item.usuario?.nombre?.charAt(0) || 'U' }}
               </span>
             </div>
             <div class="text-sm">
               <div class="font-medium text-gray-900 dark:text-white">
-                {{ item.usuario?.nombres }} {{ item.usuario?.apellidos }}
+                {{ item.usuario?.nombre }} {{ item.usuario?.apellido }}
               </div>
               <div class="text-gray-500 dark:text-gray-400">
-                {{ item.usuario?.cedula }}
+                {{ item.usuario?.documento }}
               </div>
             </div>
           </div>
@@ -299,7 +299,7 @@
 
     <!-- Modal de nueva asignación -->
     <div
-      v-if="showAsignarModal"
+      v-if="mostrarModalCrear"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     >
       <div
@@ -353,10 +353,10 @@
               <option value="">Seleccionar usuario...</option>
               <option
                 v-for="usuario in usuarios"
-                :key="usuario.id_usuario"
-                :value="usuario.id_usuario"
+                :key="usuario.id"
+                :value="usuario.id"
               >
-                {{ usuario.nombres }} {{ usuario.apellidos }} ({{ usuario.cedula }})
+                {{ usuario.nombre }} {{ usuario.apellido }} ({{ usuario.documento }})
               </option>
             </select>
           </div>
@@ -419,9 +419,10 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
 import { useAuth } from '@/composables/useAuth'
-import DataTableNew from '@/components/shared/DataTableNew.vue'
+import DataTable from '@/components/shared/DataTable.vue'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
+import apiClient from '@/api/client'
 import type { DataTableColumn, Asset, User } from '@/types'
 
 interface Asignacion {
@@ -448,6 +449,7 @@ const { canCreateAssignment, canEditAssignment, canDeleteAssignment } = useAuth(
 
 // Estado del componente
 const cargando = ref(false)
+const loading = cargando  // Alias for template compatibility
 const guardando = ref(false)
 const mostrarModalCrear = ref(false)
 const mostrarModalEdicion = ref(false)
@@ -462,36 +464,48 @@ const filtros = reactive({
   limite: 10,
 })
 
+// Filters for template (matching v-model bindings in template)
+const filters = reactive({
+  searchUsuario: '',
+  searchBien: '',
+  estado: '',
+})
+
 // Formulario
-const formulario = reactive({
-  bien_id: '',
-  usuario_id: '',
+const nuevaAsignacion = ref({
+  id_bien: '',
+  id_usuario: '',
   fecha_asignacion: new Date().toISOString().split('T')[0],
-  fecha_limite: '',
   observaciones: '',
 })
 
 // Datos
 const asignaciones = ref<Asignacion[]>([])
-const bienes = ref<Asset[]>([])
+const bienesDisponibles = ref<Asset[]>([])
 const usuarios = ref<User[]>([])
+const metricas = ref({
+  asignacionesActivas: 0,
+  usuariosConBienes: 0,
+  pendientesDevolucion: 0,
+  totalAsignaciones: 0,
+})
 
 
 // Computadas
 const asignacionesActivas = computed(() => 
-  asignaciones.value.filter(a => a.estado === 'activa')
+  asignaciones.value.filter((a: Asignacion) => a.estado === 'activa')
 )
 
 const asignacionesDevueltas = computed(() => 
-  asignaciones.value.filter(a => a.estado === 'devuelta')
+  asignaciones.value.filter((a: Asignacion) => a.estado === 'devuelta')
 )
 
 const pendientesDevolucion = computed(() => 
-  asignaciones.value.filter(a => a.estado === 'activa' && !a.fecha_devolucion)
+  asignaciones.value.filter((a: Asignacion) => a.estado === 'activa' && !a.fecha_devolucion)
 )
 
 const usuariosConBienes = computed(() => {
-  const usuariosUnicos = new Set(asignacionesActivas.value.map(a => a.usuario_id))
+  const usuariosUnicos = new Set(asignacionesActivas.value.map((a: Asignacion) => a.usuario_id))
   return usuariosUnicos.size
 })
 
@@ -500,111 +514,62 @@ const asignacionesFiltradas = computed(() => {
 
   if (filtros.busqueda) {
     const busqueda = filtros.busqueda.toLowerCase()
-    resultado = resultado.filter(a =>
+    resultado = resultado.filter((a: Asignacion) =>
       a.usuario?.nombre?.toLowerCase().includes(busqueda) ||
-      a.usuario?.cedula?.includes(busqueda) ||
+      a.usuario?.documento?.includes(busqueda) ||
       a.bien?.nombre?.toLowerCase().includes(busqueda) ||
       a.bien?.codigo?.toLowerCase().includes(busqueda)
     )
   }
 
   if (filtros.estado) {
-    resultado = resultado.filter(a => a.estado === filtros.estado)
+    resultado = resultado.filter((a: Asignacion) => a.estado === filtros.estado)
   }
 
   if (filtros.usuario) {
-    resultado = resultado.filter(a => a.usuario_id.toString() === filtros.usuario)
+    resultado = resultado.filter((a: Asignacion) => a.usuario_id.toString() === filtros.usuario)
   }
 
   return resultado
 })
 
 // Columnas de la tabla
-const columns: DataTableColumn[] = [
-  { key: 'usuario.nombre', label: 'Usuario', sortable: true },
-  { key: 'bien.nombre', label: 'Bien', sortable: true },
+const columnas: DataTableColumn[] = [
+  { key: 'usuario_info', label: 'Usuario', sortable: true },
+  { key: 'bien_info', label: 'Bien', sortable: true },
   { key: 'estado', label: 'Estado', sortable: true },
   { key: 'fecha_asignacion', label: 'Fecha Asignación', sortable: true },
   { key: 'fecha_devolucion', label: 'Fecha Devolución', sortable: true },
   { key: 'observaciones', label: 'Observaciones', sortable: false },
+  { key: 'actions', label: 'Acciones', sortable: false },
 ]
 
 // Métodos
 const cargarAsignaciones = async () => {
-  loading.value = true
+  cargando.value = true
   try {
-    // Simular carga de asignaciones
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    asignaciones.value = [
-      {
-        id_asignacion: 1,
-        id_bien: 1,
-        id_usuario: 1,
-        estado: 'activa',
-        fecha_asignacion: '2024-01-15',
-        fecha_devolucion: null,
-        observaciones: 'Asignación para trabajo remoto',
-        usuario: {
-          id_usuario: 1,
-          nombres: 'Juan Carlos',
-          apellidos: 'Pérez García',
-          cedula: '1234567890',
-        },
-        bien: {
-          id_bien: 1,
-          codigo_institucional: 'INT-TEST-0001',
-          nombre: 'Laptop de Prueba',
-          estado: 'ACTIVO',
-        },
-      },
-      {
-        id_asignacion: 2,
-        id_bien: 2,
-        id_usuario: 2,
-        estado: 'devuelta',
-        fecha_asignacion: '2024-01-10',
-        fecha_devolucion: '2024-01-20',
-        observaciones: 'Devuelto en buen estado',
-        usuario: {
-          id_usuario: 2,
-          nombres: 'María Elena',
-          apellidos: 'López Vargas',
-          cedula: '0987654321',
-        },
-        bien: {
-          id_bien: 2,
-          codigo_institucional: 'INT-TEST-0002',
-          nombre: 'Monitor Dell 24"',
-          estado: 'ACTIVO',
-        },
-      },
-    ]
-
-    calcularMetricas()
+    const response = await apiClient.get('/asignaciones')
+    const data = response
+    if (data.success) {
+        asignaciones.value = data.data
+        calcularMetricas()
+    } else {
+        throw new Error(data.message || 'Error al cargar asignaciones')
+    }
   } catch (error) {
     toast.error('Error al cargar asignaciones')
   } finally {
-    loading.value = false
+    cargando.value = false
   }
 }
 
 const cargarUsuarios = async () => {
   try {
-    usuarios.value = [
-      {
-        id_usuario: 1,
-        nombres: 'Juan Carlos',
-        apellidos: 'Pérez García',
-        cedula: '1234567890',
-      },
-      {
-        id_usuario: 2,
-        nombres: 'María Elena',
-        apellidos: 'López Vargas',
-        cedula: '0987654321',
-      },
-    ]
+    const response = await apiClient.get('/usuarios')
+    const data = response
+    if (data.success) {
+      usuarios.value = data.data
+    }
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
   }
@@ -612,92 +577,122 @@ const cargarUsuarios = async () => {
 
 const cargarBienesDisponibles = async () => {
   try {
-    bienesDisponibles.value = [
-      {
-        id_bien: 1,
-        codigo_institucional: 'INT-TEST-0001',
-        nombre: 'Laptop de Prueba',
-        estado: 'ACTIVO',
-      },
-      {
-        id_bien: 3,
-        codigo_institucional: 'INT-TEST-0003',
-        nombre: 'Impresora HP',
-        estado: 'ACTIVO',
-      },
-    ]
+    const response = await apiClient.get('/bienes', { params: { estado: 'operativo' } }) // Assuming 'operativo' or filtering active/available
+    const data = response
+    if (data.success) {
+      // Filter locally if backend doesn't support 'disponible' status filtering directly in /bienes if needed, 
+      // but typically we assign active assets.
+      bienesDisponibles.value = data.data
+    }
   } catch (error) {
     console.error('Error al cargar bienes disponibles:', error)
   }
 }
 
 const calcularMetricas = () => {
-  const activas = asignaciones.value.filter(a => a.estado === 'activa')
-  const usuariosUnicos = new Set(activas.map(a => a.id_usuario))
+  const activas = asignaciones.value.filter((a: Asignacion) => a.estado === 'activa')
+  const usuariosUnicos = new Set(activas.map((a: Asignacion) => a.usuario_id))
 
   metricas.value = {
     asignacionesActivas: activas.length,
     usuariosConBienes: usuariosUnicos.size,
-    pendientesDevolucion: activas.filter(a => !a.fecha_devolucion).length,
+    pendientesDevolucion: activas.filter((a: Asignacion) => !a.fecha_devolucion).length,
     totalAsignaciones: asignaciones.value.length,
   }
 }
 
 const crearAsignacion = async () => {
-  creating.value = true
+  guardando.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await apiClient.post('/asignaciones', {
+        id_bien: nuevaAsignacion.value.id_bien,
+        id_usuario: nuevaAsignacion.value.id_usuario,
+        fecha_asignacion: nuevaAsignacion.value.fecha_asignacion,
+        observaciones: nuevaAsignacion.value.observaciones,
+        estado: 'activa'
+    })
 
-    toast.success('Asignación creada exitosamente')
-    cerrarModalAsignar()
-    await cargarAsignaciones()
+    const data = response
+    if (data.success) {
+        toast.success('Asignación creada exitosamente')
+        cerrarModalAsignar()
+        await cargarAsignaciones()
+    } else {
+        throw new Error(data.message || 'Error al crear asignación')
+    }
   } catch (error) {
     toast.error('Error al crear asignación')
   } finally {
-    creating.value = false
+    guardando.value = false
   }
 }
 
-const gestionarDevolucion = asignacion => {
-  toast.info(`Gestionando devolución de ${asignacion.bien.codigo_institucional}`)
+const gestionarDevolucion = async (asignacion: Asignacion) => {
+  if (confirm(`¿Confirmar devolución del bien ${asignacion.bien?.codigo_institucional}?`)) {
+     try {
+         const response = await apiClient.put(`/asignaciones/${asignacion.id}`, {
+             estado: 'devuelta',
+             fecha_devolucion: new Date().toISOString().split('T')[0]
+         })
+          if (response.success) {
+             toast.success('Devolución registrada')
+             await cargarAsignaciones()
+         }
+     } catch (e) {
+         toast.error('Error al registrar devolución')
+     }
+  }
 }
 
-const transferirBien = asignacion => {
-  toast.info(`Transfiriendo ${asignacion.bien.codigo_institucional} a otro usuario`)
+const transferirBien = (asignacion: Asignacion) => {
+  toast.info(`Funcionalidad de transferencia para ${asignacion.bien?.codigo_institucional} en desarrollo`)
 }
 
-const verHistorial = asignacion => {
-  toast.info(`Ver historial completo de ${asignacion.bien.codigo_institucional}`)
+const verHistorial = (asignacion: Asignacion) => {
+  // Implementar vista de historial
+  toast.info(`Historial de ${asignacion.bien?.codigo_institucional}`)
 }
 
-const generarActa = asignacion => {
-  toast.info(`Generando acta para ${asignacion.bien.codigo_institucional}`)
+const generarActa = (asignacion: Asignacion) => {
+   // Implementar generación de acta PDF
+   toast.info(`Generando acta para ${asignacion.bien?.codigo_institucional}`)
 }
 
-const editarAsignacion = asignacion => {
-  toast.info(`Editando asignación ${asignacion.id_asignacion}`)
+const editarAsignacion = (asignacion: Asignacion) => {
+  // Implementar edición
+  toast.info(`Editando asignación ${asignacion.id}`)
 }
 
-const verAsignacion = asignacion => {
-  toast.info(`Ver detalles de asignación ${asignacion.id_asignacion}`)
+const verAsignacion = (asignacion: Asignacion) => {
+  // Implementar ver detalles
+  toast.info(`Ver detalles de asignación ${asignacion.id}`)
 }
 
-const finalizarAsignacion = asignacion => {
+const finalizarAsignacion = async (asignacion: Asignacion) => {
   if (
     confirm(
-      `¿Estás seguro de finalizar la asignación de "${asignacion.bien.codigo_institucional}"?`
+      `¿Estás seguro de finalizar (eliminar) la asignación de "${asignacion.bien?.codigo_institucional}"?`
     )
   ) {
-    toast.success('Asignación finalizada')
+    try {
+        const response = await apiClient.delete(`/asignaciones/${asignacion.id}`)
+        if (response.success) {
+            toast.success('Asignación eliminada')
+            await cargarAsignaciones()
+        }
+    } catch (e) {
+        toast.error('Error al eliminar asignación')
+    }
   }
 }
 
-const exportarAsignaciones = () => {
-  toast.info('Exportando asignaciones...')
+const exportarDatos = () => {
+    // Implementar exportación real si existe endpoint
+    toast.info('Exportando asignaciones...')
 }
 
 const cerrarModalAsignar = () => {
-  showAsignarModal.value = false
+  mostrarModalCrear.value = false
   nuevaAsignacion.value = {
     id_bien: '',
     id_usuario: '',
@@ -707,16 +702,14 @@ const cerrarModalAsignar = () => {
 }
 
 const limpiarFiltros = () => {
-  filters.value = {
-    searchUsuario: '',
-    searchBien: '',
-    estado: '',
-  }
+  filtros.busqueda = ''
+  filtros.estado = ''
+  filtros.usuario = ''
 }
 
 // Funciones de formato
-const formatEstado = estado => {
-  const estados = {
+const formatEstado = (estado: string) => {
+  const estados: Record<string, string> = {
     activa: 'Activa',
     devuelta: 'Devuelta',
     transferida: 'Transferida',
@@ -725,25 +718,23 @@ const formatEstado = estado => {
   return estados[estado] || estado
 }
 
-const getEstadoBadgeClass = estado => {
-  const classes = {
-    activa: 'bg-green-100 text-green-800',
-    devuelta: 'bg-blue-100 text-blue-800',
-    transferida: 'bg-yellow-100 text-yellow-800',
-    perdida: 'bg-red-100 text-red-800',
+const getEstadoBadgeClass = (estado: string) => {
+  const classes: Record<string, string> = {
+    activa: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    devuelta: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    transferida: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    perdida: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   }
-  return classes[estado] || 'bg-gray-100 text-gray-800'
+  return classes[estado] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
 }
 
-const formatDate = dateString => {
+const formatDate = (dateString: string) => {
   if (!dateString) return ''
   return new Date(dateString).toLocaleDateString('es-ES')
 }
 
 // Lifecycle
 onMounted(async () => {
-  await cargarUsuarios()
-  await cargarBienesDisponibles()
-  await cargarAsignaciones()
+  await Promise.all([cargarUsuarios(), cargarBienesDisponibles(), cargarAsignaciones()])
 })
 </script>

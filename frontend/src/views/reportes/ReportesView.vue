@@ -459,6 +459,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 import type { Category } from '@/types'
 
 // Stores
@@ -494,15 +495,9 @@ const reportesGenerados = ref<any[]>([])
 // Métodos de carga de datos
 const cargarEstadisticas = async () => {
   try {
-    const response = await fetch('/api/reportes/estadisticas', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/reportes/estadisticas')
+    const data = response
 
-    if (!response.ok) throw new Error('Error al cargar estadísticas')
-
-    const data = await response.json()
     if (data.success) {
       Object.assign(estadisticas, data.data)
     }
@@ -513,15 +508,9 @@ const cargarEstadisticas = async () => {
 
 const cargarCategorias = async () => {
   try {
-    const response = await fetch('/api/categorias', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/categorias')
+    const data = response
 
-    if (!response.ok) throw new Error('Error al cargar categorías')
-
-    const data = await response.json()
     if (data.success) {
       categorias.value = data.data
     }
@@ -533,15 +522,9 @@ const cargarCategorias = async () => {
 const cargarReportes = async () => {
   cargandoReportes.value = true
   try {
-    const response = await fetch('/api/reportes', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/reportes')
+    const data = response
 
-    if (!response.ok) throw new Error('Error al cargar reportes')
-
-    const data = await response.json()
     if (data.success) {
       reportesGenerados.value = data.data
     }
@@ -556,18 +539,9 @@ const cargarReportes = async () => {
 const generarReporte = async () => {
   generandoReporte.value = true
   try {
-    const response = await fetch('/api/reportes/generar', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(filtros),
-    })
+    const response = await apiClient.post('/reportes/generar', filtros)
+    const data = response
 
-    if (!response.ok) throw new Error('Error al generar reporte')
-
-    const data = await response.json()
     if (data.success) {
       reportesGenerados.value.unshift(data.data)
       await cargarEstadisticas() // Actualizar estadísticas
@@ -584,18 +558,11 @@ const generarReporte = async () => {
 
 const exportarReporte = async () => {
   try {
-    const response = await fetch('/api/reportes/export', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(filtros),
+    const response = await apiClient.post('/reportes/export', filtros, {
+      responseType: 'blob'
     })
 
-    if (!response.ok) throw new Error('Error al exportar reporte')
-
-    const blob = await response.blob()
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -618,15 +585,11 @@ const verReporte = (reporte: any) => {
 
 const descargarReporte = async (reporte: any) => {
   try {
-    const response = await fetch(`/api/reportes/${reporte.id}/descargar`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
+    const response = await apiClient.get(`/reportes/${reporte.id}/descargar`, {
+      responseType: 'blob'
     })
 
-    if (!response.ok) throw new Error('Error al descargar reporte')
-
-    const blob = await response.blob()
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -645,18 +608,11 @@ const descargarReporte = async (reporte: any) => {
 const eliminarReporte = async (id: number) => {
   if (confirm('¿Estás seguro de que quieres eliminar este reporte?')) {
     try {
-      const response = await fetch(`/api/reportes/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
+      const response = await apiClient.delete(`/reportes/${id}`)
+      const data = response
 
-      if (!response.ok) throw new Error('Error al eliminar reporte')
-
-      const data = await response.json()
       if (data.success) {
-        reportesGenerados.value = reportesGenerados.value.filter(r => r.id !== id)
+        reportesGenerados.value = reportesGenerados.value.filter((r: any) => r.id !== id)
         await cargarEstadisticas() // Actualizar estadísticas
         toast.success('Reporte eliminado correctamente')
       } else {

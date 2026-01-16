@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { Network } from '@capacitor/network'
 import { Preferences } from '@capacitor/preferences'
+import apiClient from '@/api/client'
 
 interface OfflineData {
   bienes: any[]
@@ -41,7 +42,7 @@ export function useOfflineData() {
         key: `offline_${key}`,
         value: JSON.stringify(data)
       })
-      console.log(`💾 Datos guardados offline: ${key}`)
+      if (import.meta.env.DEV) console.log(`Datos guardados offline: ${key}`)
     } catch (error) {
       console.error(`❌ Error guardando datos offline ${key}:`, error)
     }
@@ -63,7 +64,7 @@ export function useOfflineData() {
     if (!isOnline.value) return
 
     try {
-      console.log('🔄 Sincronizando datos offline...')
+      if (import.meta.env.DEV) console.log('Sincronizando datos offline...')
       
       // Cargar datos guardados
       const storedData = await getOfflineData('main')
@@ -79,7 +80,7 @@ export function useOfflineData() {
       // Guardar datos actualizados
       await saveOfflineData('main', offlineData.value)
       
-      console.log('✅ Sincronización completada')
+      if (import.meta.env.DEV) console.log('Sincronización completada')
     } catch (error) {
       console.error('❌ Error en sincronización:', error)
     }
@@ -87,24 +88,29 @@ export function useOfflineData() {
 
   // Obtener datos (online o offline)
   const getData = async (endpoint: string): Promise<any> => {
+    const key = endpoint.split('/').pop() || 'data'
+
     if (isOnline.value) {
       try {
-        // Intentar obtener datos online
-        const response = await fetch(endpoint)
-        const data = await response.json()
+        // Intentar obtener datos online con apiClient
+        const response = await apiClient.get<any>(endpoint)
         
-        // Guardar en cache offline
-        const key = endpoint.split('/').pop() || 'data'
-        await saveOfflineData(key, data)
-        
-        return data
+        if (response.success) {
+            const data = response.data
+            // Guardar en cache offline
+            await saveOfflineData(key, data)
+            return data
+        } else {
+             console.warn('❌ Error API, usando offline:', response.message)
+             return await getOfflineData(key)
+        }
+
       } catch (error) {
         console.warn('❌ Error obteniendo datos online, usando offline:', error)
-        return await getOfflineData(endpoint.split('/').pop() || 'data')
+        return await getOfflineData(key)
       }
     } else {
       // Usar datos offline
-      const key = endpoint.split('/').pop() || 'data'
       return await getOfflineData(key)
     }
   }
@@ -126,7 +132,7 @@ export function useOfflineData() {
         lastSync: ''
       }
       
-      console.log('🗑️ Datos offline limpiados')
+      if (import.meta.env.DEV) console.log('Datos offline limpiados')
     } catch (error) {
       console.error('❌ Error limpiando datos offline:', error)
     }

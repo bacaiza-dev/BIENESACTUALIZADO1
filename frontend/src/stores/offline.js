@@ -1,6 +1,8 @@
+// src/stores/offline.js
 import { defineStore } from 'pinia'
 import offlineStorage from '@/services/offlineStorage'
 import networkService from '@/services/networkService'
+import apiClient from '@/api/client'
 
 export const useOfflineStore = defineStore('offline', {
   state: () => ({
@@ -166,88 +168,45 @@ export const useOfflineStore = defineStore('offline', {
     },
 
     async syncCreateBien(data) {
-      const response = await fetch('/api/bienes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Error creando bien en servidor')
+      const response = await apiClient.post('/bienes', data)
+      if (!response.success && response.status !== 201 && response.status !== 200) {
+        // apiClient normally throws on error, but checks success property just in case
+         throw new Error(response.message || 'Error creando bien en servidor')
       }
     },
 
     async syncUpdateBien(data) {
-      const response = await fetch(`/api/bienes/${data.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Error actualizando bien en servidor')
+      const response = await apiClient.put(`/bienes/${data.id}`, data)
+      if (!response.success) {
+         throw new Error(response.message || 'Error actualizando bien en servidor')
       }
     },
 
     async syncDeleteBien(data) {
-      const response = await fetch(`/api/bienes/${data.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Error eliminando bien en servidor')
+      const response = await apiClient.delete(`/bienes/${data.id}`)
+      if (!response.success) {
+         throw new Error(response.message || 'Error eliminando bien en servidor')
       }
     },
 
     async syncCreateUsuario(data) {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Error creando usuario en servidor')
+      const response = await apiClient.post('/usuarios', data)
+      if (!response.success) {
+         throw new Error(response.message || 'Error creando usuario en servidor')
       }
     },
 
     async syncUpdateUsuario(data) {
-      const response = await fetch(`/api/users/${data.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        throw new Error('Error actualizando usuario en servidor')
+      const response = await apiClient.put(`/usuarios/${data.id}`, data)
+      if (!response.success) {
+         throw new Error(response.message || 'Error actualizando usuario en servidor')
       }
     },
 
     async syncDeleteUsuario(data) {
-      const response = await fetch(`/api/users/${data.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Error eliminando usuario en servidor')
+      const response = await apiClient.delete(`/usuarios/${data.id}`)
+      if (!response.success) {
+         throw new Error(response.message || 'Error eliminando usuario en servidor')
       }
     },
 
@@ -258,27 +217,20 @@ export const useOfflineStore = defineStore('offline', {
 
       try {
         // Descargar bienes
-        const bienesResponse = await fetch('/api/bienes?limit=1000', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-        })
+        const bienesResponse = await apiClient.get('/bienes?limit=1000')
 
-        if (bienesResponse.ok) {
-          const bienesData = await bienesResponse.json()
-          await offlineStorage.saveBienes(bienesData.data || [])
+        if (bienesResponse.success) {
+          // data structure: apiClient returns response.data
+          // In offline.js it was: const bienesData = await bienesResponse.json(); saveBienes(bienesData.data || [])
+          // apiClient.get returns the body. If body is { success, data: [], ... }, then bienesResponse.data is the array
+          await offlineStorage.saveBienes(bienesResponse.data || [])
         }
 
         // Descargar usuarios
-        const usuariosResponse = await fetch('/api/users?limit=1000', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-        })
+        const usuariosResponse = await apiClient.get('/usuarios?limit=1000')
 
-        if (usuariosResponse.ok) {
-          const usuariosData = await usuariosResponse.json()
-          await offlineStorage.saveUsuarios(usuariosData.data || [])
+        if (usuariosResponse.success) {
+          await offlineStorage.saveUsuarios(usuariosResponse.data || [])
         }
 
         // Actualizar estadísticas

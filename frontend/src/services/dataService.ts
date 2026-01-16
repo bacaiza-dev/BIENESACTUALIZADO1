@@ -277,7 +277,7 @@ class DataService {
   // Sincronizar datos
   async syncData(): Promise<boolean> {
     try {
-      console.log('🔄 Sincronizando datos...')
+      if (import.meta.env.DEV) console.log('Sincronizando datos...')
       
       // Sincronizar todos los datos principales
       await Promise.all([
@@ -289,7 +289,7 @@ class DataService {
       ])
       
       await this.offlineData.syncOfflineData()
-      console.log('✅ Sincronización completada')
+      if (import.meta.env.DEV) console.log('Sincronización completada')
       return true
     } catch (error) {
       console.error('❌ Error en sincronización:', error)

@@ -355,24 +355,20 @@ Cédula
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >Departamento *</label
               >
-              <input
-                v-model="form.departamento"
-                type="text"
+              <select
+                v-model="form.departamento_id"
                 required
-                list="departamentos-list"
-                placeholder="Ingresa o selecciona el departamento"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
-              <datalist id="departamentos-list">
-                <option value="Diseño Gráfico y Multimedia"></option>
-                <option value="Administración"></option>
-                <option value="Desarrollo de Software"></option>
+              >
+                <option value="">Seleccionar departamento</option>
                 <option
-                  v-for="departamento in departamentos"
-                  :key="departamento.id"
-                  :value="departamento.nombre"
-                ></option>
-              </datalist>
+                  v-for="dep in departamentos"
+                  :key="dep.id_departamento || dep.id"
+                  :value="dep.id_departamento"
+                >
+                  {{ dep.nombre }}
+                </option>
+              </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -449,6 +445,14 @@ Cédula
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >Departamento</label
+              >
+              <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                {{ selectedUser.departamento || 'No asignado' }}
+              </p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >Email</label
               >
               <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedUser.email }}</p>
@@ -506,8 +510,13 @@ Cédula
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
+import apiClient from '@/api/client'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import type { User, Role } from '@/types'
+
+interface ExtendedUser extends User {
+  departamento_id?: number | string;
+}
 
 // Stores
 const authStore = useAuthStore()
@@ -517,7 +526,7 @@ const toast = useToast()
 const isAdmin = computed(() => authStore.hasRole('Administrador'))
 
 // Estado del componente
-const users = ref<User[]>([])
+const users = ref<ExtendedUser[]>([])
 const roles = ref<Role[]>([])
 const departamentos = ref<any[]>([])
 const loading = ref(false)
@@ -543,6 +552,7 @@ const form = ref({
   email: '',
   documento: '',
   departamento: '',
+  departamento_id: '',
   rol: '',
   password: '',
   confirmPassword: '',
@@ -555,7 +565,7 @@ const filteredUsers = computed(() => {
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase()
     result = result.filter(
-      u =>
+      (u: User) =>
         u.nombre.toLowerCase().includes(search) ||
         u.apellido?.toLowerCase().includes(search) ||
         u.email.toLowerCase().includes(search) ||
@@ -563,13 +573,13 @@ const filteredUsers = computed(() => {
     )
   }
   if (filters.value.rol) {
-    result = result.filter(u => u.rol === filters.value.rol)
+    result = result.filter((u: User) => u.rol === filters.value.rol)
   }
   if (filters.value.estado) {
-    result = result.filter(u => u.estado === filters.value.estado)
+    result = result.filter((u: User) => u.estado === filters.value.estado)
   }
   if (filters.value.departamento) {
-    result = result.filter(u => u.departamento === filters.value.departamento)
+    result = result.filter((u: User) => u.departamento === filters.value.departamento)
   }
   return result
 })
@@ -590,13 +600,15 @@ const visiblePages = computed(() => {
 
 // Clases para badges
 const getRolClass = (rol: string): string => {
+  const key = (rol || '').toLowerCase()
   const map: Record<string, string> = {
+    administrador: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     admin: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
     usuario: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     tecnico: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     supervisor: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
   }
-  return map[rol] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+  return map[key] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
 }
 
 const getEstadoClass = (estado: string): string => {
@@ -612,16 +624,9 @@ const getEstadoClass = (estado: string): string => {
 const loadUsers = async () => {
   loading.value = true
   try {
-    const response = await fetch('/api/usuarios', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await apiClient.get('/usuarios')
+    const data = response
 
-    if (!response.ok) throw new Error('Error al cargar usuarios')
-
-    const data = await response.json()
     if (data.success) {
       users.value = data.data || []
     } else {
@@ -638,15 +643,8 @@ const loadUsers = async () => {
 
 const loadRoles = async () => {
   try {
-    const response = await fetch('/api/roles', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al cargar roles')
-
-    const data = await response.json()
+    const response = await apiClient.get('/roles')
+    const data = response
     if (data.success) {
       roles.value = data.data || []
     }
@@ -659,17 +657,12 @@ const loadRoles = async () => {
 
 const loadDepartamentos = async () => {
   try {
-    const response = await fetch('/api/departamentos', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) throw new Error('Error al cargar departamentos')
-
-    const data = await response.json()
+    const response = await apiClient.get('/departamentos')
+    const data = response
     if (data.success) {
       departamentos.value = data.data
+    } else {
+      console.error('Error en respuesta de departamentos:', data)
     }
   } catch (error) {
     console.error('Error al cargar departamentos:', error)
@@ -705,6 +698,7 @@ const editUser = (user: User) => {
     email: user.email,
     documento: user.documento || '',
     departamento: user.departamento || '',
+    departamento_id: (user as any).departamento_id || '',
     rol: user.rol || '',
     password: '',
     confirmPassword: '',
@@ -716,28 +710,21 @@ const editUser = (user: User) => {
 const toggleUserStatus = async (user: User) => {
   try {
     const newStatus = user.estado === 'activo' ? 'inactivo' : 'activo'
-    const response = await fetch(`/api/usuarios/${user.id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
+    const departamentoId = (user as any).departamento_id || ''
+    const response = await apiClient.put(`/usuarios/${user.id}`, { 
         nombre: user.nombre,
         apellido: user.apellido,
         email: user.email,
         documento: user.documento,
-        departamento: user.departamento,
+        telefono: user.telefono,
+        departamento_id: departamentoId,
         rol: user.rol,
         activo: newStatus === 'activo'
-      }),
-    })
+      })
 
-    if (!response.ok) throw new Error('Error al cambiar estado')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
-      const index = users.value.findIndex(u => u.id === user.id)
+      const index = users.value.findIndex((u: User) => u.id === user.id)
       if (index !== -1) {
         users.value[index].estado = newStatus
       }
@@ -753,19 +740,10 @@ const toggleUserStatus = async (user: User) => {
 const deleteUser = async (id: number) => {
   if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
     try {
-      const response = await fetch(`/api/usuarios/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) throw new Error('Error al eliminar usuario')
-
-      const data = await response.json()
+      const response = await apiClient.delete(`/usuarios/${id}`)
+      const data = response
       if (data.success) {
-        users.value = users.value.filter(u => u.id !== id)
+        users.value = users.value.filter((u: User) => u.id !== id)
         toast.success('Usuario eliminado correctamente')
       } else {
         throw new Error(data.message || 'Error al eliminar usuario')
@@ -783,34 +761,20 @@ const saveUser = async () => {
       return
     }
 
-    const method = showEditModal.value ? 'PUT' : 'POST'
-    const endpoint = showEditModal.value ? `/api/usuarios/${form.value.id}` : '/api/usuarios'
+    const payload = { ...form.value, confirmPassword: undefined }
+    let response
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...form.value,
-        confirmPassword: undefined, // No enviar confirmación al backend
-      }),
-    })
+    if (showEditModal.value && form.value.id) {
+       response = await apiClient.put(`/usuarios/${form.value.id}`, payload)
+    } else {
+       response = await apiClient.post('/usuarios', payload)
+    }
 
-    if (!response.ok) throw new Error('Error al guardar usuario')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
-      if (showEditModal.value) {
-        // Recargar datos para obtener información actualizada
-        await loadUsers()
-        toast.success('Usuario actualizado correctamente')
-      } else {
-        // Recargar datos para obtener el nuevo usuario
-        await loadUsers()
-        toast.success('Usuario creado correctamente')
-      }
+      // Recargar datos para obtener información actualizada
+      await loadUsers()
+      toast.success(showEditModal.value ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente')
       closeModal()
     } else {
       throw new Error(data.message || 'Error al guardar usuario')
@@ -830,6 +794,7 @@ const closeModal = () => {
     email: '',
     documento: '',
     departamento: '',
+    departamento_id: '',
     rol: '',
     password: '',
     confirmPassword: '',

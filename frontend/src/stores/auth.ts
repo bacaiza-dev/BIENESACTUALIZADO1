@@ -16,16 +16,16 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAdmin = computed(() => {
     if (!roles.value || !Array.isArray(roles.value)) return false
-    return roles.value.some((role: Role) => role && role.nombre === 'Administrador')
+    return roles.value.some((role: Role) => role && role.nombre?.toUpperCase() === 'ADMINISTRADOR')
   })
 
   const isUser = computed(() => {
     if (!roles.value || !Array.isArray(roles.value)) return false
-    return roles.value.some((role: Role) => role && role.nombre === 'Usuario')
+    return roles.value.some((role: Role) => role && role.nombre?.toUpperCase() === 'USUARIO')
   })
 
   const hasRole = (roleName: string) => {
-    return roles.value.some((role: Role) => role.nombre === roleName)
+    return roles.value.some((role: Role) => role.nombre?.toUpperCase() === roleName.toUpperCase())
   }
 
   const hasPermission = (permission: string) => {
@@ -85,11 +85,11 @@ export const useAuthStore = defineStore('auth', () => {
     const userRoles = roles.value || []
 
     // Si es administrador, ir al dashboard principal
-    if (userRoles.some((role: any) => role.nombre === 'Administrador')) {
+    if (userRoles.some((role: any) => role.nombre?.toUpperCase() === 'ADMINISTRADOR')) {
       await router.push('/dashboard')
     }
     // Si es usuario normal, ir a dashboard de usuario
-    else if (userRoles.some((role: any) => role.nombre === 'Usuario')) {
+    else if (userRoles.some((role: any) => role.nombre?.toUpperCase() === 'USUARIO')) {
       await router.push('/dashboard-user')
     }
     // Fallback al dashboard principal

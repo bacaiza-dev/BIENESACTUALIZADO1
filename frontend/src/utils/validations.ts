@@ -1,5 +1,5 @@
 // Frontend validation utilities
-import type { User, Bien } from '@/types'
+import type { User, Asset } from '@/types'
 
 export interface ValidationResult {
   isValid: boolean
@@ -197,7 +197,7 @@ export const validatePassword = (password: string, confirmPassword?: string): Va
   }
 }
 
-export const validateBien = (bien: Partial<Bien>): ValidationResult => {
+export const validateBien = (bien: Partial<Asset>): ValidationResult => {
   const errors: FormError[] = []
 
   // Required fields
@@ -210,8 +210,8 @@ export const validateBien = (bien: Partial<Bien>): ValidationResult => {
   if (!bien.ubicacion_id) {
     errors.push({ field: 'ubicacion_id', message: 'La ubicación es requerida' })
   }
-  if (bien.valor_inicial === null || bien.valor_inicial === undefined) {
-    errors.push({ field: 'valor_inicial', message: 'El valor inicial es requerido' })
+  if (bien.valor_adquisicion === null || bien.valor_adquisicion === undefined) {
+    errors.push({ field: 'valor_adquisicion', message: 'El valor de adquisición es requerido' })
   }
   if (!bien.fecha_adquisicion) {
     errors.push({ field: 'fecha_adquisicion', message: 'La fecha de adquisición es requerida' })
@@ -236,19 +236,14 @@ export const validateBien = (bien: Partial<Bien>): ValidationResult => {
     if (descError) errors.push(descError)
   }
 
-  if (bien.valor_inicial !== undefined) {
-    const valueError = ValidationRules.positiveNumber(bien.valor_inicial, 'valor inicial')
+  if (bien.valor_adquisicion !== undefined && bien.valor_adquisicion !== null) {
+    const valueError = ValidationRules.positiveNumber(bien.valor_adquisicion, 'valor de adquisición')
     if (valueError) errors.push(valueError)
   }
 
-  if (bien.valor_actual !== undefined) {
-    const currentValueError = ValidationRules.positiveNumber(bien.valor_actual, 'valor actual')
-    if (currentValueError) errors.push(currentValueError)
-  }
-
-  if (bien.vida_util_anos !== undefined && bien.vida_util_anos !== null) {
-    if (bien.vida_util_anos < 1 || bien.vida_util_anos > 50) {
-      errors.push({ field: 'vida_util_anos', message: 'La vida útil debe estar entre 1 y 50 años' })
+  if (bien.vida_util !== undefined && bien.vida_util !== null) {
+    if (bien.vida_util < 1 || bien.vida_util > 50) {
+      errors.push({ field: 'vida_util', message: 'La vida útil debe estar entre 1 y 50 años' })
     }
   }
 

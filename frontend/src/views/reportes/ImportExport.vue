@@ -314,6 +314,40 @@
           </div>
         </div>
 
+        <!-- Base de Datos (SQL) -->
+        <div class="mt-8 bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900 dark:to-amber-800 rounded-xl p-6">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mr-4">
+              <i class="bx bx-data text-white text-2xl"></i>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">Carga de Base de Datos</h3>
+              <p class="text-sm text-gray-700 dark:text-gray-200">
+                Ejecuta la inicialización completa usando el SQL del sistema (reemplaza la información actual).
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="text-sm text-gray-700 dark:text-gray-200">
+              Recomendado para instalaciones nuevas o cuando necesites cargar la base actualizada.
+            </div>
+            <button
+              @click="initDatabase"
+              :disabled="isInitializingDb"
+              class="inline-flex items-center justify-center px-6 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg disabled:hover:scale-100"
+            >
+              <i v-if="isInitializingDb" class="bx bx-loader-alt animate-spin mr-2"></i>
+              <i v-else class="bx bx-upload mr-2"></i>
+              {{ isInitializingDb ? 'Cargando...' : 'Cargar Base de Datos' }}
+            </button>
+          </div>
+
+          <p class="mt-4 text-xs text-gray-600 dark:text-gray-300">
+            Nota: en Docker, si ya existe un volumen de MySQL, puede requerir reiniciar con limpieza de volumen para que se re-ejecute el SQL de inicialización.
+          </p>
+        </div>
+
         <!-- Historial de Operaciones -->
         <div class="mt-8 bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
           <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">
@@ -409,7 +443,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
@@ -420,6 +454,7 @@ const toast = useToast()
 // Estado reactivo
 const isExporting = ref(false)
 const isImporting = ref(false)
+const isInitializingDb = ref(false)
 const isDragging = ref(false)
 const operationsHistory = ref([])
 
@@ -448,26 +483,20 @@ const availableTables = ref([
   { value: 'mantenimientos', label: 'Mantenimientos' },
 ])
 
+import apiClient from '@/api/client'
+
 // Métodos
 const exportData = async () => {
   isExporting.value = true
   try {
-    let url = `/api/export/${exportForm.value.table}?formato=${exportForm.value.format}`
+    let url = `/export/${exportForm.value.table}?formato=${exportForm.value.format}`
     if (exportForm.value.dateFrom) url += `&dateFrom=${exportForm.value.dateFrom}`
     if (exportForm.value.dateTo) url += `&dateTo=${exportForm.value.dateTo}`
     
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error('Error en la exportación')
-    }
+    const response = await apiClient.get(url, { responseType: 'blob' })
 
     // Descargar archivo
-    const blob = await response.blob()
+    const blob = response as any
     const downloadUrl = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = downloadUrl
@@ -490,7 +519,7 @@ const exportData = async () => {
     operationsHistory.value.unshift(newOperation)
     
     toast.success('Exportación completada exitosamente')
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error exportando:', error)
     toast.error('Error en la exportación')
   } finally {
@@ -506,15 +535,13 @@ const importData = async () => {
     formData.append('hasHeaders', importForm.value.hasHeaders.toString())
     formData.append('updateExisting', importForm.value.updateExisting.toString())
 
-    const response = await fetch(`/api/import/${importForm.value.table}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-      body: formData,
+    const response = await apiClient.post(`/import/${importForm.value.table}`, formData, {
+        headers: {
+            'Content-Type': undefined
+        } as any
     })
 
-    const data = await response.json()
+    const data = response
 
     if (data.success) {
       // Agregar al historial
@@ -541,22 +568,44 @@ const importData = async () => {
     } else {
       throw new Error(data.message || 'Error en la importación')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error importando:', error)
-    toast.error('Error en la importación: ' + error.message)
+    toast.error('Error en la importación: ' + (error?.message || 'Error desconocido'))
   } finally {
     isImporting.value = false
   }
 }
 
-const handleFileSelect = event => {
+const initDatabase = async () => {
+  const confirmed = confirm(
+    'Esto ejecutará la carga completa de la base de datos del sistema y puede reemplazar información existente. ¿Continuar?'
+  )
+  if (!confirmed) return
+
+  isInitializingDb.value = true
+  try {
+    const response = await apiClient.post('/init-db', { confirm: true })
+    if (response.success) {
+      toast.success(response.message || 'Base de datos cargada correctamente')
+    } else {
+      toast.error(response.message || 'Error cargando la base de datos')
+    }
+  } catch (error: any) {
+    console.error('Error initializing DB:', error)
+    toast.error(error?.message || 'Error cargando la base de datos')
+  } finally {
+    isInitializingDb.value = false
+  }
+}
+
+const handleFileSelect = (event: any) => {
   const file = event.target.files[0]
   if (file) {
     importForm.value.file = file
   }
 }
 
-const handleDrop = event => {
+const handleDrop = (event: any) => {
   event.preventDefault()
   isDragging.value = false
 
@@ -570,25 +619,25 @@ const removeFile = () => {
   importForm.value.file = null
 }
 
-const downloadFile = filename => {
+const downloadFile = (filename: string) => {
   // Simular descarga de archivo
   alert(`Descargando: ${filename}`)
 }
 
-const viewDetails = operation => {
+const viewDetails = (operation: any) => {
   alert(`Detalles de operación: ${operation.tipo} en tabla ${operation.tabla}`)
 }
 
-const getStatusColor = estado => {
-  const colors = {
-    completado: 'bg-green-100 text-green-800',
-    en_proceso: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
+const getStatusColor = (estado: string) => {
+  const colors: Record<string, string> = {
+    completado: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    en_proceso: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
   }
-  return colors[estado] || 'bg-gray-100 text-gray-800'
+  return colors[estado] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
 }
 
-const formatDate = dateString => {
+const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('es-ES')
 }
 

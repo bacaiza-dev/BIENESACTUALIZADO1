@@ -97,7 +97,7 @@
     </div>
 
     <!-- DataTable -->
-    <DataTableNew
+    <DataTable
       title="Lista de Documentos"
       :data="documentosFiltrados"
       :columns="columns"
@@ -214,7 +214,7 @@
           </button>
         </div>
       </template>
-    </DataTableNew>
+    </DataTable>
 
     <!-- Modal de Subir/Editar Documento -->
     <BaseModal
@@ -334,9 +334,10 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from 'vue-toastification'
 import { useAuth } from '@/composables/useAuth'
-import DataTableNew from '@/components/shared/DataTableNew.vue'
+import DataTable from '@/components/shared/DataTable.vue'
 import BaseModal from '@/components/shared/BaseModal.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
+import apiClient from '@/api/client'
 import type { DataTableColumn, Asset, User } from '@/types'
 
 interface Documento {
@@ -389,7 +390,7 @@ const bienes = ref<Asset[]>([])
 
 // Computadas
 const totalSize = computed(() => {
-  const total = documentos.value.reduce((sum, doc) => sum + (doc.tamano || 0), 0)
+  const total = documentos.value.reduce((sum: number, doc: Documento) => sum + (doc.tamano || 0), 0)
   return formatFileSize(total)
 })
 
@@ -401,7 +402,7 @@ const documentosPorTipo = computed(() => {
     foto: 0,
   }
   
-  documentos.value.forEach(doc => {
+  documentos.value.forEach((doc: Documento) => {
     if (conteo.hasOwnProperty(doc.tipo)) {
       conteo[doc.tipo as keyof typeof conteo]++
     }
@@ -415,7 +416,7 @@ const documentosFiltrados = computed(() => {
 
   if (filtros.busqueda) {
     const busqueda = filtros.busqueda.toLowerCase()
-    resultado = resultado.filter(doc =>
+    resultado = resultado.filter((doc: Documento) =>
       doc.bien?.nombre?.toLowerCase().includes(busqueda) ||
       doc.bien?.codigo?.toLowerCase().includes(busqueda) ||
       doc.nombre_archivo.toLowerCase().includes(busqueda) ||
@@ -424,7 +425,7 @@ const documentosFiltrados = computed(() => {
   }
 
   if (filtros.tipo) {
-    resultado = resultado.filter(doc => doc.tipo === filtros.tipo)
+    resultado = resultado.filter((doc: Documento) => doc.tipo === filtros.tipo)
   }
 
   if (filtros.fechaDesde) {
@@ -450,19 +451,13 @@ const columns: DataTableColumn[] = [
 
 
 // Métodos
+// Métodos
 const cargarDocumentos = async () => {
   cargando.value = true
   try {
-    const response = await fetch('/api/documentos', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await apiClient.get('/documentos')
 
-    if (!response.ok) throw new Error('Error al cargar documentos')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       documentos.value = data.data || []
     }
@@ -477,15 +472,9 @@ const cargarDocumentos = async () => {
 
 const cargarBienes = async () => {
   try {
-    const response = await fetch('/api/bienes', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/bienes')
 
-    if (!response.ok) throw new Error('Error al cargar bienes')
-
-    const data = await response.json()
+    const data = response
     if (data.success) {
       bienes.value = data.data || []
     }
@@ -521,22 +510,26 @@ const guardarDocumento = async () => {
       formData.append('archivo', archivoSeleccionado.value)
     }
 
-    const method = documentoActual.value ? 'PUT' : 'POST'
     const endpoint = documentoActual.value 
-      ? `/api/documentos/${documentoActual.value.id}` 
-      : '/api/documentos'
+      ? `/documentos/${documentoActual.value.id}` 
+      : '/documentos'
 
-    const response = await fetch(endpoint, {
-      method,
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-      body: formData,
-    })
+    // Use apiClient.post/put but need to let browser handle Content-Type for FormData
+    // We pass 'undefined' as Content-Type to override default application/json
+    const config = {
+        headers: {
+            'Content-Type': undefined 
+        } as any
+    }
 
-    if (!response.ok) throw new Error('Error al guardar documento')
+    let response;
+    if (documentoActual.value) {
+        response = await apiClient.put(endpoint, formData, config)
+    } else {
+        response = await apiClient.post(endpoint, formData, config)
+    }
 
-    const data = await response.json()
+    const data = response
     if (data.success) {
       await cargarDocumentos()
       toast.success(documentoActual.value 
@@ -556,15 +549,9 @@ const guardarDocumento = async () => {
 const descargarDocumento = async (documento: Documento) => {
   try {
     toast.info(`Descargando ${documento.nombre_archivo}...`)
-    const response = await fetch(`/api/documentos/${documento.id}/download`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get(`/documentos/${documento.id}/download`, { responseType: 'blob' })
 
-    if (!response.ok) throw new Error('Error al descargar documento')
-
-    const blob = await response.blob()
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -583,15 +570,9 @@ const descargarDocumento = async (documento: Documento) => {
 
 const verDocumento = async (documento: Documento) => {
   try {
-    const response = await fetch(`/api/documentos/${documento.id}/view`, {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get(`/documentos/${documento.id}/view`, { responseType: 'blob' })
 
-    if (!response.ok) throw new Error('Error al abrir documento')
-
-    const blob = await response.blob()
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     window.open(url, '_blank')
   } catch (error) {
@@ -613,18 +594,11 @@ const editarDocumento = (documento: Documento) => {
 const eliminarDocumento = async (documento: Documento) => {
   if (confirm(`¿Estás seguro de eliminar el documento "${documento.nombre_archivo}"?`)) {
     try {
-      const response = await fetch(`/api/documentos/${documento.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${authStore.token}`,
-        },
-      })
+      const response = await apiClient.delete(`/documentos/${documento.id}`)
 
-      if (!response.ok) throw new Error('Error al eliminar documento')
-
-      const data = await response.json()
+      const data = response
       if (data.success) {
-        const index = documentos.value.findIndex(d => d.id === documento.id)
+        const index = documentos.value.findIndex((d: Documento) => d.id === documento.id)
         if (index > -1) {
           documentos.value.splice(index, 1)
         }
@@ -661,15 +635,9 @@ const limpiarFiltros = () => {
 const exportarDatos = async () => {
   try {
     toast.info('Exportando datos...')
-    const response = await fetch('/api/documentos/export', {
-      headers: {
-        Authorization: `Bearer ${authStore.token}`,
-      },
-    })
+    const response = await apiClient.get('/documentos/export', { responseType: 'blob' })
 
-    if (!response.ok) throw new Error('Error al exportar datos')
-
-    const blob = await response.blob()
+    const blob = response as any
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
