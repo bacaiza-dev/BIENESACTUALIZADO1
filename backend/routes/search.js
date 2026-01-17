@@ -19,7 +19,7 @@ router.get("/", verifyToken, async (req, res) => {
     const searchTerm = `%${q.trim()}%`;
     const limitNum = Math.min(parseInt(limit) || 50, 100);
 
-    // Buscar bienes
+    // Buscar bienes - usando columnas correctas del esquema
     const bienes = await query(`
       SELECT 
         b.id_bien as id,
@@ -29,21 +29,21 @@ router.get("/", verifyToken, async (req, res) => {
         b.estado,
         b.marca,
         b.modelo,
-        c.nombre as categoria_nombre,
-        u.nombre as ubicacion_nombre,
-        CONCAT(usr.nombre, ' ', COALESCE(usr.apellido, '')) as responsable_nombre
+        c.nombre_categoria as categoria_nombre,
+        u.area as ubicacion_nombre,
+        CONCAT(usr.nombres, ' ', COALESCE(usr.apellidos, '')) as responsable_nombre
       FROM bienes b
-      LEFT JOIN categorias c ON b.id_categoria = c.id_categoria
-      LEFT JOIN ubicaciones u ON b.id_ubicacion = u.id_ubicacion
-      LEFT JOIN usuarios usr ON b.id_responsable = usr.id_usuario
+      LEFT JOIN categorias c ON b.categoria_id = c.id_categoria
+      LEFT JOIN ubicaciones u ON b.ubicacion_id = u.id_ubicacion
+      LEFT JOIN usuarios usr ON b.responsable_id = usr.id_usuario
       WHERE b.codigo_institucional LIKE ?
          OR b.nombre LIKE ?
          OR b.clase_de_bien LIKE ?
          OR b.marca LIKE ?
          OR b.modelo LIKE ?
-         OR c.nombre LIKE ?
-         OR u.nombre LIKE ?
-         OR CONCAT(usr.nombre, ' ', COALESCE(usr.apellido, '')) LIKE ?
+         OR c.nombre_categoria LIKE ?
+         OR u.area LIKE ?
+         OR CONCAT(usr.nombres, ' ', COALESCE(usr.apellidos, '')) LIKE ?
       ORDER BY b.nombre ASC
       LIMIT ?
     `, [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, limitNum]);
@@ -62,49 +62,52 @@ router.get("/", verifyToken, async (req, res) => {
       responsable: b.responsable_nombre ? { nombre: b.responsable_nombre } : null
     }));
 
-    // Buscar ubicaciones
+    // Buscar ubicaciones - usando columna 'area' como nombre
     const ubicaciones = await query(`
       SELECT 
         u.id_ubicacion as id,
-        u.nombre,
+        u.area as nombre,
         u.tipo,
-        u.edificio,
-        u.aula,
+        u.sede as edificio,
+        u.numero_aula as aula,
         u.piso,
-        (SELECT COUNT(*) FROM bienes WHERE id_ubicacion = u.id_ubicacion) as bienesAsignados
+        (SELECT COUNT(*) FROM bienes WHERE ubicacion_id = u.id_ubicacion) as bienesAsignados
       FROM ubicaciones u
-      WHERE u.nombre LIKE ?
+      WHERE u.area LIKE ?
          OR u.tipo LIKE ?
-         OR u.edificio LIKE ?
-         OR u.aula LIKE ?
-      ORDER BY u.nombre ASC
+         OR u.sede LIKE ?
+         OR u.numero_aula LIKE ?
+      ORDER BY u.area ASC
       LIMIT ?
     `, [searchTerm, searchTerm, searchTerm, searchTerm, limitNum]);
 
-    // Buscar usuarios (solo si es admin)
+    // Buscar usuarios (solo si es admin) - usando nombres/apellidos
     let usuarios = [];
     const isAdmin = req.user?.roles?.includes('Admin') || req.user?.roles?.includes('Administrador');
     
     if (isAdmin) {
-      usuarios = await query(`
+      const usuariosResult = await query(`
         SELECT 
-          id_usuario as id,
-          nombre,
-          apellido,
-          email,
-          cedula as documento,
-          telefono,
-          activo,
-          departamento
-        FROM usuarios
-        WHERE nombre LIKE ?
-           OR apellido LIKE ?
-           OR email LIKE ?
-           OR cedula LIKE ?
-           OR departamento LIKE ?
-        ORDER BY nombre ASC
+          u.id_usuario as id,
+          u.nombres as nombre,
+          u.apellidos as apellido,
+          u.email,
+          u.cedula as documento,
+          u.telefono,
+          u.activo,
+          d.nombre as departamento
+        FROM usuarios u
+        LEFT JOIN departamentos d ON u.departamento_id = d.id_departamento
+        WHERE u.nombres LIKE ?
+           OR u.apellidos LIKE ?
+           OR u.email LIKE ?
+           OR u.cedula LIKE ?
+           OR d.nombre LIKE ?
+        ORDER BY u.nombres ASC
         LIMIT ?
       `, [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, limitNum]);
+      
+      usuarios = usuariosResult;
     }
 
     res.json({
