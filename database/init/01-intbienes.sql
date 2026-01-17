@@ -3,6 +3,14 @@
 -- Versión: 2.0 - Sin redundancias ni bucles circulares
 -- =====================================================
 
+-- Crear base de datos si no existe
+CREATE DATABASE IF NOT EXISTS `intbienes` 
+  CHARACTER SET utf8mb4 
+  COLLATE utf8mb4_unicode_ci;
+
+-- Usar la base de datos
+USE `intbienes`;
+
 -- Deshabilitar verificaciones FK temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
 
