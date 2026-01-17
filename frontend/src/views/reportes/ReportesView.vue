@@ -262,12 +262,17 @@
                       <i class="bx bx-show text-lg"></i>
                     </button>
                     <button @click="descargarReporte(reporte)"
-                      class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
-                      title="Descargar reporte">
-                      <i class="bx bx-download text-lg"></i>
+                      class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
+                      title="Descargar PDF">
+                      <i class="bx bxs-file-pdf text-lg"></i>
+                    </button>
+                    <button @click="descargarExcel(reporte)"
+                      class="p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:hover:bg-emerald-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
+                      title="Descargar Excel">
+                      <i class="bx bxs-file-export text-lg"></i>
                     </button>
                     <button @click="eliminarReporte(reporte.id)"
-                      class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
+                      class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
                       title="Eliminar reporte">
                       <i class="bx bx-trash text-lg"></i>
                     </button>
@@ -487,10 +492,41 @@ const descargarReporte = async (reporte: any) => {
     document.body.removeChild(a)
     window.URL.revokeObjectURL(url)
 
-    toast.success('Reporte descargado correctamente')
+    toast.success('PDF descargado correctamente')
   } catch (error) {
     console.error('Download error:', error)
-    toast.error('Error al descargar el reporte')
+    toast.error('Error al descargar el PDF')
+  }
+}
+
+const descargarExcel = async (reporte: any) => {
+  try {
+    const token = localStorage.getItem('authToken')
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+
+    const response = await fetch(`${apiUrl}/reportes/${reporte.id}/excel`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+
+    if (!response.ok) throw new Error('Error al descargar Excel')
+
+    const blob = await response.blob()
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `reporte_${reporte.id}.xlsx`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    window.URL.revokeObjectURL(url)
+
+    toast.success('Excel descargado correctamente')
+  } catch (error) {
+    console.error('Excel download error:', error)
+    toast.error('Error al descargar el Excel')
   }
 }
 

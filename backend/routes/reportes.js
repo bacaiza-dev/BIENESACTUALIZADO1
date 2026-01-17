@@ -311,8 +311,8 @@ router.get("/:id/download", verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Reporte no encontrado" });
     }
 
-    // Generar PDF
-    const doc = new PDFDocument({ margin: 50 });
+    // Generar PDF con tabla bien formateada
+    const doc = new PDFDocument({ margin: 40, size: 'A4', layout: 'landscape' });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="reporte_${reporte.id}.pdf"`);
     
@@ -320,63 +320,89 @@ router.get("/:id/download", verifyToken, async (req, res) => {
 
     // Encabezado
     doc.fontSize(18).font('Helvetica-Bold').text("SISTEMA DE GESTIÓN DE BIENES", { align: "center" });
-    doc.moveDown(0.5);
+    doc.moveDown(0.3);
     doc.fontSize(14).font('Helvetica').text(reporte.tipo, { align: "center" });
-    doc.moveDown();
+    doc.moveDown(0.5);
     
     // Info
-    doc.fontSize(10);
-    doc.text(`Fecha: ${new Date(reporte.fecha).toLocaleDateString("es-EC")}`);
-    doc.text(`Generado por: ${reporte.generadoPor}`);
-    doc.text(`Total de registros: ${reporte.datosCount}`);
-    doc.moveDown();
+    doc.fontSize(9);
+    doc.text(`Fecha: ${new Date(reporte.fecha).toLocaleDateString("es-EC")}   |   Generado por: ${reporte.generadoPor}   |   Total de registros: ${reporte.datosCount}`, { align: 'center' });
+    doc.moveDown(0.5);
 
     // Línea separadora
-    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown();
+    doc.moveTo(40, doc.y).lineTo(800, doc.y).stroke();
+    doc.moveDown(0.5);
 
-    // Datos
+    // Tabla de datos
     if (reporte.datos && reporte.datos.length > 0 && reporte.columnas) {
-      // Encabezados de tabla
-      doc.fontSize(9).font('Helvetica-Bold');
-      let xPos = 50;
-      const colWidth = 80;
+      const startX = 40;
+      const startY = doc.y;
+      const pageWidth = 760;
+      const numCols = Math.min(reporte.columnas.length, 8);
+      const colWidth = pageWidth / numCols;
+      const rowHeight = 18;
       
-      reporte.columnas.forEach((col, i) => {
-        if (i < 6) { // Max 6 columnas en PDF
-          doc.text(col.substring(0, 12), xPos, doc.y, { width: colWidth, continued: i < 5 });
-          xPos += colWidth;
-        }
-      });
-      doc.moveDown();
-
-      // Datos
-      doc.font('Helvetica').fontSize(8);
-      reporte.datos.slice(0, 50).forEach((row, index) => { // Max 50 filas
-        if (doc.y > 700) {
-          doc.addPage();
-        }
-        xPos = 50;
-        const values = Object.values(row);
-        values.forEach((val, i) => {
-          if (i < 6) {
-            const text = String(val || '').substring(0, 15);
-            doc.text(text, xPos, doc.y, { width: colWidth, continued: i < 5 });
-            xPos += colWidth;
-          }
+      // Dibujar encabezados con fondo azul
+      doc.rect(startX, startY, pageWidth, rowHeight).fill('#2563EB');
+      doc.fillColor('white').font('Helvetica-Bold').fontSize(8);
+      
+      reporte.columnas.slice(0, numCols).forEach((col, i) => {
+        doc.text(col.substring(0, 15), startX + (i * colWidth) + 2, startY + 4, { 
+          width: colWidth - 4, 
+          align: 'center' 
         });
-        doc.moveDown(0.3);
       });
 
-      if (reporte.datos.length > 50) {
+      // Dibujar filas de datos
+      let currentY = startY + rowHeight;
+      doc.fillColor('black').font('Helvetica').fontSize(7);
+      
+      const maxRows = Math.min(reporte.datos.length, 40);
+      
+      reporte.datos.slice(0, maxRows).forEach((row, rowIndex) => {
+        // Nueva página si es necesario
+        if (currentY > 550) {
+          doc.addPage({ layout: 'landscape' });
+          currentY = 40;
+        }
+
+        // Alternar color de fondo
+        if (rowIndex % 2 === 0) {
+          doc.rect(startX, currentY, pageWidth, rowHeight).fill('#F3F4F6');
+        } else {
+          doc.rect(startX, currentY, pageWidth, rowHeight).fill('white');
+        }
+
+        // Dibujar bordes
+        doc.strokeColor('#E5E7EB').lineWidth(0.5);
+        doc.rect(startX, currentY, pageWidth, rowHeight).stroke();
+
+        // Dibujar datos
+        doc.fillColor('black');
+        const values = Object.values(row);
+        values.slice(0, numCols).forEach((val, i) => {
+          const text = String(val ?? '').substring(0, 18);
+          doc.text(text, startX + (i * colWidth) + 2, currentY + 4, { 
+            width: colWidth - 4, 
+            align: i === 0 ? 'left' : 'center' 
+          });
+        });
+
+        currentY += rowHeight;
+      });
+
+      // Mensaje si hay más registros
+      if (reporte.datos.length > maxRows) {
         doc.moveDown();
-        doc.fontSize(9).text(`... y ${reporte.datos.length - 50} registros más`, { align: 'center' });
+        doc.fontSize(8).fillColor('#666').text(`... y ${reporte.datos.length - maxRows} registros más. Descargue en Excel para ver todos.`, { align: 'center' });
       }
+    } else {
+      doc.fontSize(10).text("No hay datos disponibles para mostrar.", { align: 'center' });
     }
 
     // Pie de página
-    doc.moveDown(2);
-    doc.fontSize(8).text("Generado automáticamente por el Sistema de Gestión de Bienes Institucionales", { align: "center" });
+    doc.fontSize(7).fillColor('#999');
+    doc.text("Generado automáticamente por el Sistema de Gestión de Bienes Institucionales", 40, 560, { align: "center", width: 760 });
     
     doc.end();
   } catch (error) {
@@ -385,10 +411,90 @@ router.get("/:id/download", verifyToken, async (req, res) => {
   }
 });
 
-// GET /reportes/:id/descargar - Alias para download (compatibilidad frontend)
-router.get("/:id/descargar", verifyToken, async (req, res) => {
-  req.url = req.url.replace('/descargar', '/download');
-  router.handle(req, res);
+// GET /reportes/:id/excel - Descargar reporte como Excel por ID
+router.get("/:id/excel", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reporte = reportesGenerados.find((r) => r.id === parseInt(id));
+
+    if (!reporte) {
+      return res.status(404).json({ success: false, message: "Reporte no encontrado" });
+    }
+
+    if (!reporte.datos || !reporte.columnas) {
+      return res.status(404).json({ success: false, message: "Datos del reporte no disponibles" });
+    }
+
+    // Crear workbook de Excel
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Sistema de Gestión de Bienes';
+    workbook.created = new Date();
+
+    const worksheet = workbook.addWorksheet(reporte.tipo.substring(0, 31));
+
+    // Título
+    worksheet.mergeCells('A1:H1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = reporte.tipo;
+    titleCell.font = { bold: true, size: 16 };
+    titleCell.alignment = { horizontal: 'center' };
+
+    // Info
+    worksheet.mergeCells('A2:H2');
+    const dateCell = worksheet.getCell('A2');
+    dateCell.value = `Generado: ${new Date(reporte.fecha).toLocaleDateString('es-EC')} | Por: ${reporte.generadoPor} | Registros: ${reporte.datos.length}`;
+    dateCell.font = { italic: true, size: 10 };
+    dateCell.alignment = { horizontal: 'center' };
+
+    worksheet.addRow([]);
+
+    // Encabezados
+    const headerRow = worksheet.addRow(reporte.columnas);
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+      cell.alignment = { horizontal: 'center' };
+      cell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    });
+
+    // Datos
+    reporte.datos.forEach((row, index) => {
+      const values = Object.values(row);
+      const dataRow = worksheet.addRow(values);
+      dataRow.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+        if (index % 2 === 0) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+        }
+      });
+    });
+
+    // Ajustar anchos
+    worksheet.columns.forEach((column, i) => {
+      column.width = Math.max(reporte.columnas[i]?.length || 10, 15);
+    });
+
+    // Enviar archivo
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="reporte_${reporte.id}.xlsx"`);
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error("[ERROR] GET /reportes/:id/excel:", error.message);
+    res.status(500).json({ success: false, message: "Error descargando Excel", error: error.message });
+  }
 });
 
 // DELETE /reportes/:id - Eliminar reporte
