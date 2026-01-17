@@ -6,15 +6,14 @@
 
     <!-- Sidebar -->
     <div :class="[
-      'fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 z-50 flex flex-col',
+      'fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-all duration-300 ease-in-out z-50 flex flex-col',
       uiStore.sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      uiStore.sidebarCollapsed ? 'lg:-translate-x-full' : 'lg:translate-x-0',
-    ]">
+      uiStore.sidebarCollapsed && !isHovering ? 'lg:-translate-x-full' : 'lg:translate-x-0',
+    ]" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
       <!-- Logo -->
       <div
         class="flex items-center justify-center h-16 border-b border-gray-200 dark:border-gray-700 px-4 flex-shrink-0">
         <img src="@/assets/LogoINT.png" alt="INT Logo" class="h-8 w-auto" />
-        <span class="ml-2 text-xl font-bold text-gray-800 dark:text-white truncate">INT Bienes</span>
       </div>
 
       <!-- Navigation -->
@@ -71,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUIStore } from '@/stores/ui'
@@ -81,6 +80,28 @@ import NavGroup from './NavGroup.vue'
 const router = useRouter()
 const authStore = useAuthStore()
 const uiStore = useUIStore()
+
+// Estado para hover del sidebar en PC
+const isHovering = ref(false)
+let hoverTimeout: ReturnType<typeof setTimeout> | null = null
+
+const handleMouseEnter = () => {
+  // Solo activar en pantallas grandes (PC)
+  if (window.innerWidth >= 1024) {
+    if (hoverTimeout) clearTimeout(hoverTimeout)
+    isHovering.value = true
+  }
+}
+
+const handleMouseLeave = () => {
+  // Solo activar en pantallas grandes (PC)
+  if (window.innerWidth >= 1024) {
+    // Delay para evitar cierre accidental
+    hoverTimeout = setTimeout(() => {
+      isHovering.value = false
+    }, 300)
+  }
+}
 
 const bienesItems = computed(() => {
   const items = [{ to: { name: 'BienesList' }, icon: 'bx-list-ul', label: 'Lista de Bienes' }]

@@ -559,44 +559,46 @@ const deleteUbicacion = async (id: number) => {
   }
 }
 
-const payload = {
-  area: form.value.nombre,
-  sede: form.value.edificio,
-  piso: form.value.piso,
-  numero_aula: form.value.aula,
-  tipo: form.value.tipo.toLowerCase(),
-  capacidad: form.value.capacidad,
-  descripcion: form.value.descripcion,
-  activo: form.value.estado === 'activo' || form.value.estado === 'mantenimiento' ? 1 : 0
-}
+const saveUbicacion = async () => {
+  try {
+    const payload = {
+      area: form.value.nombre,
+      sede: form.value.edificio,
+      piso: form.value.piso,
+      numero_aula: form.value.aula,
+      tipo: form.value.tipo ? form.value.tipo.toLowerCase() : 'aula',
+      capacidad: form.value.capacidad,
+      descripcion: form.value.descripcion,
+      activo: form.value.estado === 'activo' || form.value.estado === 'mantenimiento' ? 1 : 0
+    }
 
-let response
-if (showEditModal.value && form.value.id) {
-  response = await apiClient.put(`/ubicaciones/${form.value.id}`, payload)
-} else {
-  response = await apiClient.post('/ubicaciones', payload)
-}
+    let response
+    if (showEditModal.value && form.value.id) {
+      response = await apiClient.put(`/ubicaciones/${form.value.id}`, payload)
+    } else {
+      response = await apiClient.post('/ubicaciones', payload)
+    }
 
-const data = response
-if (data.success) {
-  if (showEditModal.value) {
-    // Recargar datos para obtener información actualizada
-    await loadUbicaciones()
-    toast.success('Ubicación actualizada correctamente')
-  } else {
-    // Recargar datos para obtener la nueva ubicación
-    await loadUbicaciones()
-    toast.success('Ubicación creada correctamente')
-  }
-  closeModal()
-} else {
-  throw new Error(data.message || 'Error al guardar ubicación')
-}
+    const data = response
+    if (data.success) {
+      if (showEditModal.value) {
+        // Recargar datos para obtener información actualizada
+        await loadUbicaciones()
+        toast.success('Ubicación actualizada correctamente')
+      } else {
+        // Recargar datos para obtener la nueva ubicación
+        await loadUbicaciones()
+        toast.success('Ubicación creada correctamente')
+      }
+      closeModal()
+    } else {
+      throw new Error(data.message || 'Error al guardar ubicación')
+    }
   } catch (error: any) {
-  console.error('Error saving ubicacion:', error)
-  const msg = error.response?.data?.message || error.message || 'Error al guardar la ubicación'
-  toast.error(msg)
-}
+    console.error('Error saving ubicacion:', error)
+    const msg = error.response?.data?.message || error.message || 'Error al guardar la ubicación'
+    toast.error(msg)
+  }
 }
 
 const closeModal = () => {

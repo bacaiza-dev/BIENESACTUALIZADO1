@@ -23,6 +23,7 @@ const movimientosRoutes = require("./movimientos");
 const alertasRoutes = require("./alertas");
 const documentosRoutes = require("./documentos");
 const asignacionesRoutes = require("./asignaciones");
+const searchRoutes = require("./search");
 
 // Ruta pública de información
 router.get("/", (req, res) => {
@@ -101,6 +102,9 @@ router.use("/alertas", alertasRoutes);
 // Documentos y Asignaciones
 router.use("/documentos", documentosRoutes);
 router.use("/asignaciones", asignacionesRoutes);
+
+// Búsqueda Global
+router.use("/search", searchRoutes);
 
 // Exportación
 router.use("/export", exportRoutes);

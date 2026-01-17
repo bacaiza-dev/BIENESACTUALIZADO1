@@ -28,30 +28,24 @@ async function verifyToken(req, res, next) {
       });
     }
 
-    // Obtener roles del usuario
+
+    // Obtener rol del usuario directamente desde usuarios.rol_id (la tabla usuario_rol no existe)
     let roles = [];
     try {
-      roles = await query(
+      // Consulta directa: usuarios tiene rol_id que apunta a roles.id_rol
+      const result = await query(
         `SELECT r.nombre_rol as nombre 
-         FROM roles r 
-         JOIN usuario_rol ur ON r.id_rol = ur.rol_id 
-         WHERE ur.usuario_id = ?`,
+         FROM usuarios u
+         JOIN roles r ON u.rol_id = r.id_rol
+         WHERE u.id_usuario = ?`,
         [decoded.id]
       );
-    } catch (e) {
-      if (e.code === 'ER_NO_SUCH_TABLE') {
-        try {
-          const [user] = await query("SELECT rol_id FROM usuarios WHERE id_usuario = ?", [decoded.id]);
-          if (user && user.rol_id) {
-             const rs = await query("SELECT id_rol as id, nombre_rol as nombre FROM roles WHERE id_rol = ?", [user.rol_id]);
-             if (rs.length) roles = rs;
-          }
-        } catch (err) {
-          // ignore
-        }
-      } else {
-        throw e;
+      if (result && result.length > 0) {
+        roles = result;
       }
+    } catch (e) {
+      console.error("[AUTH] Error obteniendo rol:", e.message);
+      // Si falla, continuar sin roles (el usuario podrá acceder pero no tendrá permisos de admin)
     }
 
     req.user = {

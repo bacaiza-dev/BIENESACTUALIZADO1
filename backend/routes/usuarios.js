@@ -92,16 +92,38 @@ router.get("/:id", verifyToken, async (req, res) => {
 // POST /usuarios - Crear usuario
 router.post("/", verifyToken, requireAdmin, async (req, res) => {
   try {
+    console.log("[DEBUG] POST /usuarios - Body recibido:", JSON.stringify(req.body, null, 2));
     const { nombres, apellidos, email, password, cedula, telefono, rol_id, departamento_id, activo } = req.body;
 
-    if (!nombres || !email || !password) {
-      return res.status(400).json({ success: false, message: "Nombres, email y contraseña son requeridos" });
+    const missing = [];
+    if (!nombres) missing.push("nombres");
+    if (!email) missing.push("email");
+    if (!password) missing.push("password");
+
+    if (missing.length > 0) {
+      return res.status(400).json({ success: false, message: `Faltan campos requeridos: ${missing.join(", ")}` });
     }
 
-    const existing = await query("SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?", [email.toLowerCase()]);
-
-    if (existing.length) {
+    // Validar email duplicado
+    const existingEmail = await query("SELECT id_usuario FROM usuarios WHERE LOWER(email) = ?", [email.toLowerCase()]);
+    if (existingEmail.length) {
       return res.status(400).json({ success: false, message: "El email ya está registrado" });
+    }
+
+    // Validar cédula duplicada (si se proporciona)
+    if (cedula) {
+      const existingCedula = await query("SELECT id_usuario FROM usuarios WHERE cedula = ?", [cedula]);
+      if (existingCedula.length) {
+        return res.status(400).json({ success: false, message: "La cédula ya está registrada" });
+      }
+    }
+
+    // Validar teléfono duplicado (si se proporciona)
+    if (telefono) {
+      const existingTelefono = await query("SELECT id_usuario FROM usuarios WHERE telefono = ?", [telefono]);
+      if (existingTelefono.length) {
+        return res.status(400).json({ success: false, message: "El teléfono ya está registrado" });
+      }
     }
 
     const passwordHash = hashPassword(password);
@@ -114,6 +136,7 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
 
     res.json({ success: true, message: "Usuario creado", data: { id: result.insertId } });
   } catch (error) {
+    console.error("[ERROR] POST /usuarios - Error creando usuario:", error.message, error.stack);
     res.status(500).json({ success: false, message: "Error creando usuario", error: error.message });
   }
 });

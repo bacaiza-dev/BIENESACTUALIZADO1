@@ -10,18 +10,10 @@
               Administra usuarios del sistema institucional
             </p>
           </div>
-          <button
-            v-if="isAdmin"
-            @click="showCreateModal = true"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
+          <button v-if="isAdmin" @click="showCreateModal = true"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Nuevo Usuario
           </button>
@@ -34,18 +26,12 @@
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div class="lg:col-span-2">
-            <input
-              v-model="filters.search"
-              type="text"
-              placeholder="Buscar por nombre, email, cédula..."
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-            />
+            <input v-model="filters.search" type="text" placeholder="Buscar por nombre, email, cédula..."
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
           </div>
           <div>
-            <select
-              v-model="filters.rol"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="filters.rol"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
               <option value="">Todos los roles</option>
               <option v-for="rol in roles" :key="rol.id" :value="rol.nombre">
                 {{ rol.nombre }}
@@ -53,10 +39,8 @@
             </select>
           </div>
           <div>
-            <select
-              v-model="filters.estado"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="filters.estado"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
               <option value="">Todos los estados</option>
               <option value="activo">Activo</option>
               <option value="inactivo">Inactivo</option>
@@ -64,26 +48,18 @@
             </select>
           </div>
           <div>
-            <select
-              v-model="filters.departamento"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="filters.departamento"
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
               <option value="">Todos los departamentos</option>
-              <option
-                v-for="departamento in departamentos"
-                :key="departamento.id"
-                :value="departamento.nombre"
-              >
+              <option v-for="departamento in departamentos" :key="departamento.id" :value="departamento.nombre">
                 {{ departamento.nombre }}
               </option>
             </select>
           </div>
         </div>
         <div class="flex justify-end mt-4">
-          <button
-            @click="clearFilters"
-            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
-          >
+          <button @click="clearFilters"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
             Limpiar filtros
           </button>
         </div>
@@ -97,33 +73,31 @@
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Usuario
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
-Cédula
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Cédula
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Celular
+              </th>
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Departamento
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Rol
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Estado
               </th>
               <th
-                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
-              >
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -132,24 +106,11 @@ Cédula
             <tr v-if="loading">
               <td colspan="6" class="px-6 py-4 text-center">
                 <div class="flex items-center justify-center">
-                  <svg
-                    class="animate-spin h-5 w-5 text-blue-600 mr-2"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      class="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      stroke-width="4"
-                    ></circle>
-                    <path
-                      class="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
+                  <svg class="animate-spin h-5 w-5 text-blue-600 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
                   </svg>
                   Cargando usuarios...
                 </div>
@@ -160,18 +121,12 @@ Cédula
                 No se encontraron usuarios
               </td>
             </tr>
-            <tr
-              v-else
-              v-for="user in paginatedUsers"
-              :key="user.id"
-              class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            >
+            <tr v-else v-for="user in paginatedUsers" :key="user.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
                   <div class="flex-shrink-0 h-10 w-10">
-                    <div
-                      class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center"
-                    >
+                    <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
                       <span class="text-sm font-medium text-blue-600 dark:text-blue-400">
                         {{ user.nombre.charAt(0).toUpperCase()
                         }}{{ user.apellido?.charAt(0).toUpperCase() }}
@@ -192,60 +147,45 @@ Cédula
                 {{ user.documento }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                {{ user.telefono || '-' }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                 {{ user.departamento }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                  :class="getRolClass(user.rol)"
-                >
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="getRolClass(user.rol)">
                   {{ user.rol }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span
-                  class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                  :class="getEstadoClass(user.estado)"
-                >
+                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                  :class="getEstadoClass(user.estado)">
                   {{ user.estado }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
-                  <button
-                    @click="viewUser(user)"
+                  <button @click="viewUser(user)"
                     class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
-                    title="Ver detalles del usuario"
-                  >
+                    title="Ver detalles del usuario">
                     <i class="bx bx-show text-lg"></i>
                   </button>
-                  <button
-                    v-if="isAdmin"
-                    @click="editUser(user)"
+                  <button v-if="isAdmin" @click="editUser(user)"
                     class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
-                    title="Editar usuario"
-                  >
+                    title="Editar usuario">
                     <i class="bx bx-edit text-lg"></i>
                   </button>
-                  <button
-                    v-if="isAdmin"
-                    @click="toggleUserStatus(user)"
-                    :class="[
-                      'p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation',
-                      user.estado === 'activo'
-                        ? 'text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900'
-                        : 'text-green-600 hover:text-green-900 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900'
-                    ]"
-                    :title="user.estado === 'activo' ? 'Desactivar usuario' : 'Activar usuario'"
-                  >
+                  <button v-if="isAdmin" @click="toggleUserStatus(user)" :class="[
+                    'p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation',
+                    user.estado === 'activo'
+                      ? 'text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900'
+                      : 'text-green-600 hover:text-green-900 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900'
+                  ]" :title="user.estado === 'activo' ? 'Desactivar usuario' : 'Activar usuario'">
                     <i :class="user.estado === 'activo' ? 'bx bx-user-x' : 'bx bx-user-check'" class="text-lg"></i>
                   </button>
-                  <button
-                    v-if="isAdmin"
-                    @click="deleteUser(user.id)"
+                  <button v-if="isAdmin" @click="deleteUser(user.id)"
                     class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
-                    title="Eliminar usuario"
-                  >
+                    title="Eliminar usuario">
                     <i class="bx bx-trash text-lg"></i>
                   </button>
                 </div>
@@ -254,40 +194,27 @@ Cédula
           </tbody>
         </table>
         <!-- Paginación -->
-        <div
-          class="flex justify-between items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700"
-        >
+        <div class="flex justify-between items-center px-4 py-3 border-t border-gray-200 dark:border-gray-700">
           <div class="text-sm text-gray-700 dark:text-gray-300">
             Mostrando {{ (currentPage - 1) * itemsPerPage + 1 }} a
             {{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }} de
             {{ filteredUsers.length }} usuarios
           </div>
           <div class="flex space-x-1">
-            <button
-              @click="previousPage"
-              :disabled="currentPage === 1"
-              class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white disabled:opacity-50"
-            >
+            <button @click="previousPage" :disabled="currentPage === 1"
+              class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white disabled:opacity-50">
               Anterior
             </button>
-            <button
-              v-for="page in visiblePages"
-              :key="page"
-              @click="goToPage(page)"
-              :class="[
-                'px-3 py-1 rounded',
-                page === currentPage
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white',
-              ]"
-            >
+            <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="[
+              'px-3 py-1 rounded',
+              page === currentPage
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white',
+            ]">
               {{ page }}
             </button>
-            <button
-              @click="nextPage"
-              :disabled="currentPage === totalPages"
-              class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white disabled:opacity-50"
-            >
+            <button @click="nextPage" :disabled="currentPage === totalPages"
+              class="px-3 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white disabled:opacity-50">
               Siguiente
             </button>
           </div>
@@ -296,11 +223,8 @@ Cédula
     </div>
 
     <!-- Modal de creación/edición -->
-    <div
-      v-if="showCreateModal || showEditModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="closeModal"
-    >
+    <div v-if="showCreateModal || showEditModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" @click.self="closeModal">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-lg">
         <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">
           {{ showEditModal ? 'Editar Usuario' : 'Nuevo Usuario' }}
@@ -308,77 +232,45 @@ Cédula
         <form @submit.prevent="saveUser" class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Nombre *</label
-              >
-              <input
-                v-model="form.nombre"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre *</label>
+              <input v-model="form.nombre" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Apellido *</label
-              >
-              <input
-                v-model="form.apellido"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Apellido *</label>
+              <input v-model="form.apellido" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Email *</label
-              >
-              <input
-                v-model="form.email"
-                type="email"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email *</label>
+              <input v-model="form.email" type="email" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Cédula *</label
-              >
-              <input
-                v-model="form.documento"
-                type="text"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cédula *</label>
+              <input v-model="form.documento" type="text" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Departamento *</label
-              >
-              <select
-                v-model="form.departamento_id"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Celular</label>
+              <input v-model="form.telefono" type="tel" placeholder="Ej: 0991234567" maxlength="10" pattern="[0-9]*"
+                inputmode="numeric" @input="form.telefono = form.telefono.replace(/[^0-9]/g, '').slice(0, 10)"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Departamento *</label>
+              <select v-model="form.departamento_id" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 <option value="">Seleccionar departamento</option>
-                <option
-                  v-for="dep in departamentos"
-                  :key="dep.id_departamento || dep.id"
-                  :value="dep.id_departamento"
-                >
+                <option v-for="dep in departamentos" :key="dep.id_departamento || dep.id" :value="dep.id_departamento">
                   {{ dep.nombre }}
                 </option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Rol *</label
-              >
-              <select
-                v-model="form.rol"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rol *</label>
+              <select v-model="form.rol" required
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
                 <option value="">Seleccionar rol</option>
                 <option v-for="rol in roles" :key="rol.id" :value="rol.nombre">
                   {{ rol.nombre }}
@@ -386,38 +278,20 @@ Cédula
               </select>
             </div>
             <div v-if="!showEditModal">
-              <BaseInput
-                v-model="form.password"
-                type="password"
-                label="Contraseña *"
-                placeholder="Ingresa la contraseña"
-                required
-                :show-password-toggle="true"
-              />
+              <BaseInput v-model="form.password" type="password" label="Contraseña *"
+                placeholder="Ingresa la contraseña" required :show-password-toggle="true" />
             </div>
             <div v-if="!showEditModal">
-              <BaseInput
-                v-model="form.confirmPassword"
-                type="password"
-                label="Confirmar Contraseña *"
-                placeholder="Confirma la contraseña"
-                required
-                :show-password-toggle="true"
-              />
+              <BaseInput v-model="form.confirmPassword" type="password" label="Confirmar Contraseña *"
+                placeholder="Confirma la contraseña" required :show-password-toggle="true" />
             </div>
           </div>
           <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="closeModal"
-              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
-            >
+            <button type="button" @click="closeModal"
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
               Cancelar
             </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-            >
+            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
               {{ showEditModal ? 'Actualizar' : 'Crear' }}
             </button>
           </div>
@@ -426,77 +300,56 @@ Cédula
     </div>
 
     <!-- Modal de detalles -->
-    <div
-      v-if="showViewModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
-      @click.self="closeViewModal"
-    >
+    <div v-if="showViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="closeViewModal">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-lg">
         <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Detalles del Usuario</h2>
         <div v-if="selectedUser" class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Nombre</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
               <p class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ selectedUser.nombre }} {{ selectedUser.apellido }}
               </p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Departamento</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departamento</label>
               <p class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ selectedUser.departamento || 'No asignado' }}
               </p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Email</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
               <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedUser.email }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Cédula</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cédula</label>
               <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedUser.documento }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Departamento</label
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departamento</label>
               <p class="mt-1 text-sm text-gray-900 dark:text-white">
                 {{ selectedUser.departamento }}
               </p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
-              <span
-                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
-                :class="getRolClass(selectedUser.rol)"
-              >
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
+                :class="getRolClass(selectedUser.rol)">
                 {{ selectedUser.rol }}
               </span>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >Estado</label
-              >
-              <span
-                class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
-                :class="getEstadoClass(selectedUser.estado)"
-              >
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
+                :class="getEstadoClass(selectedUser.estado)">
                 {{ selectedUser.estado }}
               </span>
             </div>
           </div>
           <div class="flex justify-end pt-4">
-            <button
-              @click="closeViewModal"
-              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
-            >
+            <button @click="closeViewModal"
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
               Cerrar
             </button>
           </div>
@@ -711,16 +564,16 @@ const toggleUserStatus = async (user: User) => {
   try {
     const newStatus = user.estado === 'activo' ? 'inactivo' : 'activo'
     const departamentoId = (user as any).departamento_id || ''
-    const response = await apiClient.put(`/usuarios/${user.id}`, { 
-        nombre: user.nombre,
-        apellido: user.apellido,
-        email: user.email,
-        documento: user.documento,
-        telefono: user.telefono,
-        departamento_id: departamentoId,
-        rol: user.rol,
-        activo: newStatus === 'activo'
-      })
+    const response = await apiClient.put(`/usuarios/${user.id}`, {
+      nombre: user.nombre,
+      apellido: user.apellido,
+      email: user.email,
+      documento: user.documento,
+      telefono: user.telefono,
+      departamento_id: departamentoId,
+      rol: user.rol,
+      activo: newStatus === 'activo'
+    })
 
     const data = response
     if (data.success) {
@@ -761,13 +614,32 @@ const saveUser = async () => {
       return
     }
 
-    const payload = { ...form.value, confirmPassword: undefined }
-    let response
+    const payload = {
+      nombres: form.value.nombre,
+      apellidos: form.value.apellido,
+      email: form.value.email,
+      cedula: form.value.documento,
+      telefono: form.value.telefono,
+      departamento_id: form.value.departamento_id,
+      rol_id: roles.value.find((r: Role) => r.nombre === form.value.rol)?.id || form.value.rol, // Intentar obtener ID si está seleccionado por nombre
+      password: form.value.password,
+      activo: true
+    }
 
+    // Si el rol es numérico (ID), usarlo directamente. Si es string, ya tratamos de buscarlo.
+    // Hack: El select actualmente bindea 'rol.nombre'. Lo ideal sería bindear ID, pero para minimizar cambios visuales
+    // vamos a buscar el ID basado en el nombre seleccionado.
+    const selectedRole = roles.value.find((r: Role) => r.nombre === form.value.rol)
+    if (selectedRole) {
+      payload.rol_id = selectedRole.id
+    }
+
+    let response
     if (showEditModal.value && form.value.id) {
-       response = await apiClient.put(`/usuarios/${form.value.id}`, payload)
+      // Para update, usamos los mismos nombres de campos
+      response = await apiClient.put(`/usuarios/${form.value.id}`, payload)
     } else {
-       response = await apiClient.post('/usuarios', payload)
+      response = await apiClient.post('/usuarios', payload)
     }
 
     const data = response
@@ -779,8 +651,10 @@ const saveUser = async () => {
     } else {
       throw new Error(data.message || 'Error al guardar usuario')
     }
-  } catch (error) {
-    toast.error('Error al guardar el usuario')
+  } catch (error: any) {
+    console.error('Error saving user:', error)
+    const msg = error.response?.data?.message || error.message || 'Error al guardar el usuario'
+    toast.error(msg)
   }
 }
 

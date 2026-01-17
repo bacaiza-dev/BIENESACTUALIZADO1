@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: intbienes
 -- ------------------------------------------------------
--- Server version	8.0.42
+-- Server version	8.0.44
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -26,15 +26,15 @@ CREATE TABLE `alertas` (
   `id_alerta` int NOT NULL AUTO_INCREMENT,
   `id_bien` int DEFAULT NULL,
   `tipo_alerta` varchar(50) DEFAULT NULL,
-  `prioridad` ENUM('baja','media','alta','critica') DEFAULT 'media',
+  `prioridad` enum('baja','media','alta','critica') DEFAULT 'media',
   `descripcion` text,
-  `estado` ENUM('pendiente','en_proceso','resuelta','cerrada') DEFAULT 'pendiente',
+  `estado` enum('pendiente','en_proceso','resuelta','cerrada') DEFAULT 'pendiente',
   `fecha_alerta` date DEFAULT NULL,
   `fecha_resolucion` date DEFAULT NULL,
   PRIMARY KEY (`id_alerta`),
   KEY `id_bien` (`id_bien`),
   CONSTRAINT `alertas_ibfk_1` FOREIGN KEY (`id_bien`) REFERENCES `bienes` (`id_bien`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -43,14 +43,12 @@ CREATE TABLE `alertas` (
 
 LOCK TABLES `alertas` WRITE;
 /*!40000 ALTER TABLE `alertas` DISABLE KEYS */;
+INSERT INTO `alertas` VALUES (1,1,'mantenimiento','alta','Mantenimiento preventivo requerido','pendiente','2026-01-16',NULL),(2,1,'depreciacion','media','Bien alcanzÃ³ depreciaciÃ³n del 50%','pendiente','2026-01-16',NULL),(3,1,'garantia','baja','GarantÃ­a prÃ³xima a vencer','en_proceso','2026-01-16',NULL);
 /*!40000 ALTER TABLE `alertas` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
--- Table structure for table `auditoria` (CONSOLIDADA)
---
--- Esta tabla unifica: auditoria_accesos, auditoria_bienes,
--- auditoria_ubicaciones, auditoria_usuarios
+-- Table structure for table `auditoria`
 --
 
 DROP TABLE IF EXISTS `auditoria`;
@@ -58,9 +56,9 @@ DROP TABLE IF EXISTS `auditoria`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `auditoria` (
   `id_auditoria` int NOT NULL AUTO_INCREMENT,
-  `tabla_afectada` ENUM('usuarios','bienes','ubicaciones','accesos','settings','reportes','categorias','mantenimientos') NOT NULL,
+  `tabla_afectada` enum('usuarios','bienes','ubicaciones','accesos','settings','reportes','categorias','mantenimientos') NOT NULL,
   `id_registro` int DEFAULT NULL,
-  `accion` ENUM('CREATE','UPDATE','DELETE','LOGIN','LOGOUT','TRANSFER','VIEW') NOT NULL,
+  `accion` enum('CREATE','UPDATE','DELETE','LOGIN','LOGOUT','TRANSFER','VIEW') NOT NULL,
   `usuario_id` int DEFAULT NULL,
   `datos_anteriores` json DEFAULT NULL,
   `datos_nuevos` json DEFAULT NULL,
@@ -70,7 +68,7 @@ CREATE TABLE `auditoria` (
   `descripcion` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_auditoria`),
-  KEY `idx_auditoria_tabla` (`tabla_afectada`, `id_registro`),
+  KEY `idx_auditoria_tabla` (`tabla_afectada`,`id_registro`),
   KEY `idx_auditoria_usuario` (`usuario_id`),
   KEY `idx_auditoria_fecha` (`created_at`),
   KEY `idx_auditoria_accion` (`accion`),
@@ -85,6 +83,42 @@ CREATE TABLE `auditoria` (
 LOCK TABLES `auditoria` WRITE;
 /*!40000 ALTER TABLE `auditoria` DISABLE KEYS */;
 /*!40000 ALTER TABLE `auditoria` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `aulas_asignadas`
+--
+
+DROP TABLE IF EXISTS `aulas_asignadas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `aulas_asignadas` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `ubicacion_id` int NOT NULL,
+  `usuario_id` int NOT NULL,
+  `periodo_id` int NOT NULL,
+  `observaciones` text,
+  `activo` tinyint DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_aula_periodo` (`ubicacion_id`,`periodo_id`),
+  KEY `usuario_id` (`usuario_id`),
+  KEY `periodo_id` (`periodo_id`),
+  CONSTRAINT `aulas_asignadas_ibfk_1` FOREIGN KEY (`ubicacion_id`) REFERENCES `ubicaciones` (`id_ubicacion`),
+  CONSTRAINT `aulas_asignadas_ibfk_2` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`),
+  CONSTRAINT `aulas_asignadas_ibfk_3` FOREIGN KEY (`periodo_id`) REFERENCES `periodos_academicos` (`id_periodo`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `aulas_asignadas`
+--
+
+LOCK TABLES `aulas_asignadas` WRITE;
+/*!40000 ALTER TABLE `aulas_asignadas` DISABLE KEYS */;
+INSERT INTO `aulas_asignadas` VALUES (1,3,2,2,'n',1,'2026-01-16 07:32:25','2026-01-16 07:32:25');
+/*!40000 ALTER TABLE `aulas_asignadas` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -103,12 +137,13 @@ CREATE TABLE `bien_ubicacion` (
   `activo` tinyint(1) DEFAULT '1',
   `observaciones` text,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_bien_ubicacion_activo` (((case when (`activo` = 1) then `id_bien` else NULL end))),
   KEY `id_bien` (`id_bien`),
   KEY `id_ubicacion` (`id_ubicacion`),
+  KEY `idx_bien_ubicacion_activo` (`id_bien`,`activo`),
   CONSTRAINT `bien_ubicacion_ibfk_1` FOREIGN KEY (`id_bien`) REFERENCES `bienes` (`id_bien`) ON DELETE CASCADE,
   CONSTRAINT `bien_ubicacion_ibfk_2` FOREIGN KEY (`id_ubicacion`) REFERENCES `ubicaciones` (`id_ubicacion`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE UNIQUE INDEX `uk_bien_ubicacion_activo` ON `bien_ubicacion` ((CASE WHEN `activo` = 1 THEN `id_bien` ELSE NULL END));
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -117,7 +152,7 @@ CREATE UNIQUE INDEX `uk_bien_ubicacion_activo` ON `bien_ubicacion` ((CASE WHEN `
 
 LOCK TABLES `bien_ubicacion` WRITE;
 /*!40000 ALTER TABLE `bien_ubicacion` DISABLE KEYS */;
-INSERT INTO `bien_ubicacion` (`id`, `id_bien`, `id_ubicacion`, `fecha_asignacion`, `fecha_retiro`, `activo`, `observaciones`) VALUES (1,1,1,'2025-07-04 22:36:08',NULL,1,'Asignacion inicial');
+INSERT INTO `bien_ubicacion` VALUES (1,1,1,'2025-07-04 22:36:08',NULL,1,'Asignacion inicial'),(2,2,2,'2026-01-16 02:01:15',NULL,1,NULL),(3,3,3,'2026-01-16 07:42:14',NULL,1,NULL);
 /*!40000 ALTER TABLE `bien_ubicacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -137,12 +172,13 @@ CREATE TABLE `bien_usuario` (
   `activo` tinyint(1) DEFAULT '1',
   `observaciones` text,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_bien_usuario_activo` (((case when (`activo` = 1) then `id_bien` else NULL end))),
   KEY `id_bien` (`id_bien`),
   KEY `id_usuario` (`id_usuario`),
+  KEY `idx_bien_usuario_activo` (`id_bien`,`activo`),
   CONSTRAINT `bien_usuario_ibfk_1` FOREIGN KEY (`id_bien`) REFERENCES `bienes` (`id_bien`) ON DELETE CASCADE,
   CONSTRAINT `bien_usuario_ibfk_2` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-CREATE UNIQUE INDEX `uk_bien_usuario_activo` ON `bien_usuario` ((CASE WHEN `activo` = 1 THEN `id_bien` ELSE NULL END));
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -151,7 +187,7 @@ CREATE UNIQUE INDEX `uk_bien_usuario_activo` ON `bien_usuario` ((CASE WHEN `acti
 
 LOCK TABLES `bien_usuario` WRITE;
 /*!40000 ALTER TABLE `bien_usuario` DISABLE KEYS */;
-INSERT INTO `bien_usuario` (`id`, `id_bien`, `id_usuario`, `fecha_asignacion`, `fecha_devolucion`, `activo`, `observaciones`) VALUES (1,1,1,'2025-07-04 22:36:08',NULL,1,'Asignacion inicial');
+INSERT INTO `bien_usuario` VALUES (1,1,1,'2025-07-04 22:36:08',NULL,1,'Asignacion inicial'),(2,2,2,'2026-01-16 02:01:15',NULL,1,NULL),(3,3,2,'2026-01-16 07:42:14',NULL,1,NULL);
 /*!40000 ALTER TABLE `bien_usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -188,15 +224,20 @@ CREATE TABLE `bienes` (
   `anio_fabricacion` int DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `clase_de_bien` varchar(150) DEFAULT NULL,
+  `ubicacion_id` int DEFAULT NULL,
+  `responsable_id` int DEFAULT NULL,
   PRIMARY KEY (`id_bien`),
   UNIQUE KEY `codigo_institucional` (`codigo_institucional`),
   KEY `periodo_id` (`periodo_id`),
   KEY `idx_bienes_estado` (`estado`),
   KEY `idx_bienes_codigo` (`codigo_institucional`),
   KEY `idx_bienes_categoria` (`categoria_id`),
+  KEY `idx_bienes_nombre` (`nombre`(100)),
+  KEY `idx_bienes_cat_estado` (`categoria_id`,`estado`),
   CONSTRAINT `bienes_ibfk_1` FOREIGN KEY (`categoria_id`) REFERENCES `categorias` (`id_categoria`),
   CONSTRAINT `bienes_ibfk_4` FOREIGN KEY (`periodo_id`) REFERENCES `periodos_academicos` (`id_periodo`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -205,7 +246,7 @@ CREATE TABLE `bienes` (
 
 LOCK TABLES `bienes` WRITE;
 /*!40000 ALTER TABLE `bienes` DISABLE KEYS */;
-INSERT INTO `bienes` (`id_bien`, `codigo_institucional`, `nombre`, `descripcion`, `marca`, `modelo`, `serie`, `estado`, `valor`, `fecha_adquisicion`, `vida_util`, `valor_residual`, `depreciacion_acumulada`, `categoria_id`, `periodo_id`, `observaciones`, `codigo_senescyt`, `nro_acta_entrega_recepcion`, `nro_acta_constatacion_fisica`, `color`, `material`, `proveedor`, `anio_fabricacion`, `created_at`, `updated_at`) VALUES (1,'INT-TEST-0001','Laptop de Prueba','Equipo portátil para pruebas','Dell','Inspiron 15','SN123456','ACTIVO',1200.00,'2024-01-15',5,200.00,0.00,1,1,'Bien de prueba para desarrollo','SEN-0001','ACTA-001','CONST-001','Negro','Plástico','Proveedor Demo',2024,'2025-07-04 22:36:08','2025-07-04 22:36:08');
+INSERT INTO `bienes` VALUES (1,'INT-TEST-0001','Laptop de Prueba','Equipo port??til para pruebas','Dell','Inspiron 15','SN123456','ACTIVO',NULL,'2024-01-15',NULL,NULL,0.00,1,NULL,'Bien de prueba para desarrollo','SEN-0001','ACTA-001','CONST-001','Negro','Pl??stico',NULL,2024,'2025-07-04 22:36:08','2026-01-16 11:33:33',NULL,3,1),(2,'Prueba 20','HP Prueba 20','DSDFSF','Prueba HP','PRUEBA 2026','12345678900','ACTIVO',1000.00,'2021-01-15',5,NULL,NULL,2,1,'SDFDSF','1234567890','SDFSDFDSFS','KLJFAHFUEFJBFBUFJHK','SDFJLKJDSJF','FSKDFKJLKSD','ASDLDUUFJ',2026,'2026-01-16 02:01:15','2026-01-16 11:16:33','Computadores',2,2),(3,'123','123','12312','1313','3123123312','1323','MANTENIMIENTO',500.00,'2026-01-16',NULL,NULL,NULL,1,NULL,'wre','123',NULL,NULL,'rew','wer',NULL,NULL,'2026-01-16 07:42:14','2026-01-16 07:42:14',NULL,3,2),(4,'zdzs','dszz','zsdsz','zsdzsd','dszd','zsd','ACTIVO',NULL,'2026-01-16',NULL,NULL,NULL,1,NULL,'zsdzs','565656','zsdzsdz','dszd','zsd','zds',NULL,2025,'2026-01-16 11:00:14','2026-01-16 11:25:58',NULL,3,2);
 /*!40000 ALTER TABLE `bienes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -237,8 +278,36 @@ CREATE TABLE `categorias` (
 
 LOCK TABLES `categorias` WRITE;
 /*!40000 ALTER TABLE `categorias` DISABLE KEYS */;
-INSERT INTO `categorias` (`id_categoria`, `nombre_categoria`, `codigo`, `tipo`, `descripcion`, `observaciones`, `activo`, `created_at`, `updated_at`) VALUES (1,'Computadores','CAT-001','tecnologia','Equipos de computo',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Muebles','CAT-002','mobiliario','Mobiliario institucional',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08');
+INSERT INTO `categorias` VALUES (1,'Computadores','CAT-001','tecnologia','Equipos de computo',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Muebles','CAT-002','mobiliario','Mobiliario institucional',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08');
 /*!40000 ALTER TABLE `categorias` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `departamentos`
+--
+
+DROP TABLE IF EXISTS `departamentos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `departamentos` (
+  `id_departamento` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) NOT NULL,
+  `descripcion` text,
+  `activo` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_departamento`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `departamentos`
+--
+
+LOCK TABLES `departamentos` WRITE;
+/*!40000 ALTER TABLE `departamentos` DISABLE KEYS */;
+INSERT INTO `departamentos` VALUES (1,'Administracion',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Sistemas',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08');
+/*!40000 ALTER TABLE `departamentos` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -287,16 +356,16 @@ DROP TABLE IF EXISTS `mantenimientos`;
 CREATE TABLE `mantenimientos` (
   `id_mantenimiento` int NOT NULL AUTO_INCREMENT,
   `id_bien` int DEFAULT NULL,
-  `tipo` ENUM('preventivo','correctivo','predictivo') DEFAULT 'preventivo',
+  `tipo` enum('preventivo','correctivo','predictivo') DEFAULT 'preventivo',
   `descripcion` text,
   `fecha_programada` date DEFAULT NULL,
   `fecha_limite` date DEFAULT NULL,
   `fecha_realizada` date DEFAULT NULL,
-  `estado` ENUM('programado','en_proceso','completado','cancelado') DEFAULT 'programado',
+  `estado` enum('programado','en_proceso','completado','cancelado') DEFAULT 'programado',
   `responsable_id` int DEFAULT NULL,
   `costo_estimado` decimal(12,2) DEFAULT NULL,
   `costo_real` decimal(12,2) DEFAULT NULL,
-  `prioridad` ENUM('baja','media','alta','critica') DEFAULT 'media',
+  `prioridad` enum('baja','media','alta','critica') DEFAULT 'media',
   `observaciones` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -305,7 +374,7 @@ CREATE TABLE `mantenimientos` (
   KEY `responsable_id` (`responsable_id`),
   CONSTRAINT `mantenimientos_ibfk_1` FOREIGN KEY (`id_bien`) REFERENCES `bienes` (`id_bien`) ON DELETE CASCADE,
   CONSTRAINT `mantenimientos_ibfk_2` FOREIGN KEY (`responsable_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -314,6 +383,7 @@ CREATE TABLE `mantenimientos` (
 
 LOCK TABLES `mantenimientos` WRITE;
 /*!40000 ALTER TABLE `mantenimientos` DISABLE KEYS */;
+INSERT INTO `mantenimientos` VALUES (1,2,'preventivo','Limpieza interna','2026-01-16','2026-01-22','2026-01-16','completado',1,50.00,NULL,'media','Nada','2026-01-16 05:43:20','2026-01-16 05:47:00');
 /*!40000 ALTER TABLE `mantenimientos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -337,7 +407,7 @@ CREATE TABLE `periodos_academicos` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_periodo`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -346,7 +416,7 @@ CREATE TABLE `periodos_academicos` (
 
 LOCK TABLES `periodos_academicos` WRITE;
 /*!40000 ALTER TABLE `periodos_academicos` DISABLE KEYS */;
-INSERT INTO `periodos_academicos` VALUES (1,'2024-2025','2024-09-01','2025-07-31',1,2024,'anual',NULL,NULL,'2025-07-04 22:36:08','2025-07-04 22:36:08');
+INSERT INTO `periodos_academicos` VALUES (1,'2024-2025','2024-09-01','2025-07-31',1,2024,'anual',NULL,NULL,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'2025-1','2025-01-01','2025-06-30',1,2025,'semestre','Primer semestre 2025',NULL,'2026-01-16 06:58:33','2026-01-16 06:58:33'),(3,'2025-2','2025-07-01','2025-12-31',1,2025,'semestre','Segundo semestre 2025',NULL,'2026-01-16 06:58:33','2026-01-16 06:58:33'),(4,'2026-1','2026-01-01','2026-06-30',1,2026,'semestre','Primer semestre 2026',NULL,'2026-01-16 06:58:33','2026-01-16 06:58:33');
 /*!40000 ALTER TABLE `periodos_academicos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -374,6 +444,37 @@ LOCK TABLES `permisos` WRITE;
 /*!40000 ALTER TABLE `permisos` DISABLE KEYS */;
 INSERT INTO `permisos` VALUES (1,'ver_bienes','Puede ver bienes'),(2,'editar_bienes','Puede editar bienes'),(3,'eliminar_bienes','Puede eliminar bienes');
 /*!40000 ALTER TABLE `permisos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `reportes`
+--
+
+DROP TABLE IF EXISTS `reportes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `reportes` (
+  `id_reporte` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `tipo` varchar(50) NOT NULL,
+  `parametros` json DEFAULT NULL,
+  `usuario_id` int DEFAULT NULL,
+  `ruta_archivo` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_reporte`),
+  KEY `usuario_id` (`usuario_id`),
+  CONSTRAINT `reportes_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `reportes`
+--
+
+LOCK TABLES `reportes` WRITE;
+/*!40000 ALTER TABLE `reportes` DISABLE KEYS */;
+INSERT INTO `reportes` VALUES (1,'Reporte','general',NULL,2,NULL,'2026-01-16 05:56:51'),(2,'Reporte','general',NULL,2,NULL,'2026-01-16 06:48:59');
+/*!40000 ALTER TABLE `reportes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -425,114 +526,9 @@ CREATE TABLE `roles` (
 
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
-INSERT INTO `roles` VALUES (1,'Administrador','Acceso total al sistema'),(2,'Usuario','Usuario estándar');
+INSERT INTO `roles` VALUES (1,'Administrador','Acceso total al sistema'),(2,'Usuario','Usuario est??ndar');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `ubicaciones`
---
-
-DROP TABLE IF EXISTS `ubicaciones`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ubicaciones` (
-  `id_ubicacion` int NOT NULL AUTO_INCREMENT,
-  `area` varchar(100) NOT NULL,
-  `numero_aula` varchar(20) DEFAULT NULL,
-  `piso` varchar(20) DEFAULT NULL,
-  `sede` varchar(100) DEFAULT NULL,
-  `descripcion` text,
-  `tipo` ENUM('oficina','laboratorio','aula','biblioteca','almacen','otro') DEFAULT 'oficina',
-  `capacidad` int DEFAULT 0,
-  `activo` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_ubicacion`),
-  UNIQUE KEY `uk_area` (`area`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ubicaciones`
---
-
-LOCK TABLES `ubicaciones` WRITE;
-/*!40000 ALTER TABLE `ubicaciones` DISABLE KEYS */;
-INSERT INTO `ubicaciones` (`id_ubicacion`, `area`, `numero_aula`, `piso`, `sede`, `descripcion`, `tipo`, `capacidad`, `activo`, `created_at`, `updated_at`) VALUES (1,'Laboratorio 1','A101','1','Sede Central','Laboratorio de computación','laboratorio',30,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Biblioteca','B201','2','Sede Central','Biblioteca principal','biblioteca',50,1,'2025-07-04 22:36:08','2025-07-04 22:36:08');
-/*!40000 ALTER TABLE `ubicaciones` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `departamentos`
---
-
-DROP TABLE IF EXISTS `departamentos`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `departamentos` (
-  `id_departamento` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `descripcion` text,
-  `activo` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_departamento`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `departamentos`
---
-
-LOCK TABLES `departamentos` WRITE;
-/*!40000 ALTER TABLE `departamentos` DISABLE KEYS */;
-INSERT INTO `departamentos` (`id_departamento`, `nombre`, `descripcion`, `activo`, `created_at`, `updated_at`) VALUES (1,'Administracion',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Sistemas',NULL,1,'2025-07-04 22:36:08','2025-07-04 22:36:08');
-/*!40000 ALTER TABLE `departamentos` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `usuarios`
---
-
-DROP TABLE IF EXISTS `usuarios`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `usuarios` (
-  `id_usuario` int NOT NULL AUTO_INCREMENT,
-  `nombres` varchar(100) NOT NULL,
-  `apellidos` varchar(100) DEFAULT NULL,
-  `cedula` varchar(20) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `telefono` varchar(20) DEFAULT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `rol_id` int DEFAULT 2,
-  `activo` tinyint(1) DEFAULT '1',
-  `departamento_id` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_usuario`),
-  UNIQUE KEY `cedula` (`cedula`),
-  UNIQUE KEY `email` (`email`),
-  KEY `departamento_id` (`departamento_id`),
-  KEY `rol_id` (`rol_id`),
-  CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`departamento_id`) REFERENCES `departamentos` (`id_departamento`) ON DELETE SET NULL,
-  CONSTRAINT `usuarios_ibfk_2` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id_rol`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `usuarios`
---
-
-LOCK TABLES `usuarios` WRITE;
-/*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` (`id_usuario`, `nombres`, `apellidos`, `cedula`, `email`, `telefono`, `password_hash`, `rol_id`, `activo`, `departamento_id`, `created_at`, `updated_at`) VALUES (1,'Jhonatan','Prueba','1728163484','jhonatan.bano@intsuperior.edu.ec',NULL,'$2b$12$nMWLsKTVR2z0D5zvU.gCC.3C0XsFKGKvhosmFrKIQbMi2zMs6FFA.',2,1,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Administrador','Sistema','1234567890','admin@intsuperior.edu.ec',NULL,'$2b$12$5AGjCq9lxaaD47rArFQRm.3fxWV/ysWApaxAnxSkg7Zx/tMQu6Dte',1,1,2,'2025-07-04 22:48:44','2025-07-06 21:56:32');
-/*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
-UNLOCK TABLES;
-
--- Tabla ubicacion_custodio ELIMINADA (redundante con bien_usuario)
--- La responsabilidad de bienes se maneja directamente via bien_usuario
 
 --
 -- Table structure for table `settings`
@@ -554,6 +550,15 @@ CREATE TABLE `settings` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Dumping data for table `settings`
+--
+
+LOCK TABLES `settings` WRITE;
+/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `support_messages`
 --
 
@@ -567,8 +572,8 @@ CREATE TABLE `support_messages` (
   `email` varchar(100) NOT NULL,
   `asunto` varchar(150) DEFAULT NULL,
   `mensaje` text NOT NULL,
-  `tipo` ENUM('consulta','soporte','sugerencia','queja') DEFAULT 'consulta',
-  `estado` ENUM('pendiente','en_proceso','resuelto','cerrado') DEFAULT 'pendiente',
+  `tipo` enum('consulta','soporte','sugerencia','queja') DEFAULT 'consulta',
+  `estado` enum('pendiente','en_proceso','resuelto','cerrado') DEFAULT 'pendiente',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_mensaje`),
   KEY `usuario_id` (`usuario_id`),
@@ -577,25 +582,87 @@ CREATE TABLE `support_messages` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `reportes`
+-- Dumping data for table `support_messages`
 --
 
-DROP TABLE IF EXISTS `reportes`;
+LOCK TABLES `support_messages` WRITE;
+/*!40000 ALTER TABLE `support_messages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `support_messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ubicaciones`
+--
+
+DROP TABLE IF EXISTS `ubicaciones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `reportes` (
-  `id_reporte` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(150) NOT NULL,
-  `tipo` varchar(50) NOT NULL,
-  `parametros` json DEFAULT NULL,
-  `usuario_id` int DEFAULT NULL,
-  `ruta_archivo` varchar(500) DEFAULT NULL,
+CREATE TABLE `ubicaciones` (
+  `id_ubicacion` int NOT NULL AUTO_INCREMENT,
+  `area` varchar(100) NOT NULL,
+  `numero_aula` varchar(20) DEFAULT NULL,
+  `piso` varchar(20) DEFAULT NULL,
+  `sede` varchar(100) DEFAULT NULL,
+  `descripcion` text,
+  `tipo` enum('oficina','laboratorio','aula','biblioteca','almacen','otro') DEFAULT 'oficina',
+  `capacidad` int DEFAULT '0',
+  `activo` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_reporte`),
-  KEY `usuario_id` (`usuario_id`),
-  CONSTRAINT `reportes_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id_usuario`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_ubicacion`),
+  UNIQUE KEY `uk_area` (`area`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ubicaciones`
+--
+
+LOCK TABLES `ubicaciones` WRITE;
+/*!40000 ALTER TABLE `ubicaciones` DISABLE KEYS */;
+INSERT INTO `ubicaciones` VALUES (1,'Laboratorio 1','A101','1','Sede Central','Laboratorio de computaci??n','laboratorio',30,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(2,'Biblioteca','B201','2','Sede Central','Biblioteca principal','biblioteca',50,1,'2025-07-04 22:36:08','2025-07-04 22:36:08'),(3,'A','18','1','1','SIN NOVEDAD','aula',30,1,'2026-01-16 07:22:56','2026-01-16 07:22:56');
+/*!40000 ALTER TABLE `ubicaciones` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `usuarios`
+--
+
+DROP TABLE IF EXISTS `usuarios`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `usuarios` (
+  `id_usuario` int NOT NULL AUTO_INCREMENT,
+  `nombres` varchar(100) NOT NULL,
+  `apellidos` varchar(100) DEFAULT NULL,
+  `cedula` varchar(20) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `telefono` varchar(20) DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `rol_id` int DEFAULT '2',
+  `activo` tinyint(1) DEFAULT '1',
+  `departamento_id` int DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_usuario`),
+  UNIQUE KEY `cedula` (`cedula`),
+  UNIQUE KEY `email` (`email`),
+  KEY `departamento_id` (`departamento_id`),
+  KEY `rol_id` (`rol_id`),
+  CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`departamento_id`) REFERENCES `departamentos` (`id_departamento`) ON DELETE SET NULL,
+  CONSTRAINT `usuarios_ibfk_2` FOREIGN KEY (`rol_id`) REFERENCES `roles` (`id_rol`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `usuarios`
+--
+
+LOCK TABLES `usuarios` WRITE;
+/*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
+INSERT INTO `usuarios` VALUES (1,'Jhonatan','Baño','1728163455','jhonatan.bano@intsuperior.edu.ec',NULL,'$2b$12$nMWLsKTVR2z0D5zvU.gCC.3C0XsFKGKvhosmFrKIQbMi2zMs6FFA.',2,1,2,'2025-07-04 22:36:08','2026-01-16 06:40:48'),(2,'Administrador','Sistema','1234567890','admin@intsuperior.edu.ec',NULL,'$2b$12$5AGjCq9lxaaD47rArFQRm.3fxWV/ysWApaxAnxSkg7Zx/tMQu6Dte',1,1,2,'2025-07-04 22:48:44','2025-07-06 21:56:32');
+/*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -606,21 +673,4 @@ CREATE TABLE `reportes` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- =====================================================
--- ÍNDICES ADICIONALES PARA OPTIMIZACIÓN
--- =====================================================
-
--- Índice para búsqueda rápida de ubicación actual de bien
-CREATE INDEX `idx_bien_ubicacion_activo` ON `bien_ubicacion` (`id_bien`, `activo`);
-
--- Índice para búsqueda rápida de usuario actual de bien
-CREATE INDEX `idx_bien_usuario_activo` ON `bien_usuario` (`id_bien`, `activo`);
-
--- Índice para búsquedas por nombre en bienes
-CREATE INDEX `idx_bienes_nombre` ON `bienes` (`nombre`(100));
-
--- Índice compuesto para filtrar por categoría y estado
-CREATE INDEX `idx_bienes_cat_estado` ON `bienes` (`categoria_id`, `estado`);
-
--- Dump completed on 2025-07-06 17:02:06
--- Modified on 2026-01-14: Correcciones de estructura aplicadas
+-- Dump completed on 2026-01-16  8:09:05

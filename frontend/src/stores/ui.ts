@@ -166,6 +166,53 @@ export const useUIStore = defineStore('ui', () => {
     notifications.value = []
   }
 
+  const setNotifications = (items: NotificationItem[]) => {
+    notifications.value = items
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('authToken')
+      if (!token) return
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/alertas?estado=pendiente`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && Array.isArray(data.data)) {
+          // Convertir alertas a formato de notificaciones
+          notifications.value = data.data.map((alerta: any) => ({
+            id: alerta.id,
+            timestamp: new Date(alerta.fecha_alerta),
+            read: alerta.estado === 'resuelta',
+            title: alerta.tipo || 'Alerta',
+            message: alerta.descripcion || `Alerta para bien: ${alerta.bien_nombre || 'Desconocido'}`,
+            type: mapPrioridadToType(alerta.prioridad),
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
+    }
+  }
+
+  const mapPrioridadToType = (prioridad: string): 'success' | 'error' | 'warning' | 'info' => {
+    switch (prioridad) {
+      case 'alta':
+        return 'error'
+      case 'media':
+        return 'warning'
+      case 'baja':
+        return 'info'
+      default:
+        return 'info'
+    }
+  }
+
   const unreadCount = computed(() => notifications.value.filter((n: NotificationItem) => !n.read).length)
 
   // Métodos adicionales para compatibilidad con theme.js
@@ -229,6 +276,8 @@ export const useUIStore = defineStore('ui', () => {
     markAsRead,
     markAllAsRead,
     clearNotifications,
+    setNotifications,
+    fetchNotifications,
   }
 })
 
