@@ -1,33 +1,16 @@
 // routes/reportes.js - Generación de reportes
 const express = require("express");
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const { query } = require("../config/database");
 const { verifyToken } = require("../middleware/auth");
 
-// Directorio para reportes (dentro de uploads que tiene permisos correctos)
-const REPORTES_DIR = path.join(__dirname, "..", "uploads", "reportes");
-
-// Función para asegurar que el directorio existe
-const ensureReportesDir = () => {
-  try {
-    if (!fs.existsSync(REPORTES_DIR)) {
-      fs.mkdirSync(REPORTES_DIR, { recursive: true });
-    }
-  } catch (error) {
-    console.warn("[WARNING] Could not create reportes directory:", error.message);
-  }
-};
-
-// Almacenamiento en memoria para reportes generados
+// Almacenamiento en memoria para reportes generados (info básica)
 const reportesGenerados = [];
 
 // GET /reportes/estadisticas - Obtener estadísticas generales
 router.get("/estadisticas", verifyToken, async (req, res) => {
   try {
-    // Esquema real: valor (no valor_adquisicion), NO hay columna activo en bienes
     const [totalBienes] = await query("SELECT COUNT(*) as count FROM bienes");
     const [totalValor] = await query("SELECT SUM(valor) as total FROM bienes");
     
@@ -57,6 +40,10 @@ router.get("/estadisticas", verifyToken, async (req, res) => {
         estadoSalud: porcentajeBuenos,
         totalUsuarios: totalUsuarios?.count || 0,
         totalUbicaciones: totalUbicaciones?.count || 0,
+        reportesGenerados: reportesGenerados.length,
+        ultimoReporte: reportesGenerados.length > 0 
+          ? new Date(reportesGenerados[reportesGenerados.length - 1].fecha).toLocaleDateString('es-EC')
+          : 'N/A',
         distribucionEstados: bienesPorEstado.reduce((acc, curr) => {
           acc[curr.estado] = curr.count;
           return acc;
@@ -74,7 +61,9 @@ router.get("/estadisticas", verifyToken, async (req, res) => {
         estadoSalud: 100,
         totalUsuarios: 0,
         totalUbicaciones: 0,
-        distribucionEstados: {}
+        distribucionEstados: {},
+        reportesGenerados: 0,
+        ultimoReporte: 'N/A'
       },
     });
   }
@@ -83,17 +72,16 @@ router.get("/estadisticas", verifyToken, async (req, res) => {
 // GET /reportes - Listar reportes generados
 router.get("/", verifyToken, (req, res) => {
   try {
-    const validReports = reportesGenerados.filter(rep => rep.path && fs.existsSync(rep.path));
-    reportesGenerados.length = 0;
-    reportesGenerados.push(...validReports);
-    
     res.json({
       success: true,
-      data: validReports.map(r => ({
+      data: reportesGenerados.map(r => ({
         id: r.id,
         nombre: r.nombre,
         tipo: r.tipo,
-        fecha: r.fecha
+        fecha: r.fecha,
+        descripcion: r.descripcion || `Reporte de ${r.tipo}`,
+        generadoPor: r.generadoPor || 'Sistema',
+        estado: 'Completado'
       }))
     });
   } catch (error) {
@@ -104,27 +92,16 @@ router.get("/", verifyToken, (req, res) => {
 // POST /reportes/generar - Generar nuevo reporte
 router.post("/generar", verifyToken, async (req, res) => {
   try {
-    const { tipo, filtros } = req.body;
-
-    ensureReportesDir();
-
-    const filename = `reporte_${tipo}_${Date.now()}.pdf`;
-    const filePath = path.join(REPORTES_DIR, filename);
-
-    const doc = new PDFDocument();
-    const stream = fs.createWriteStream(filePath);
-    doc.pipe(stream);
-
-    // Encabezado
-    doc.fontSize(20).text("REPORTE DE BIENES INSTITUCIONALES", { align: "center" });
-    doc.moveDown();
-    doc.fontSize(12).text(`Tipo: ${tipo}`, { align: "left" });
-    doc.text(`Fecha: ${new Date().toLocaleDateString("es-EC")}`, { align: "left" });
-    doc.moveDown();
+    // El frontend envía tipoReporte, lo mapeamos a tipo
+    const { tipoReporte, tipo, filtros } = req.body;
+    const reporteTipo = tipoReporte || tipo || 'general';
 
     // Obtener datos según tipo
     let datos = [];
-    if (tipo === "inventario" || tipo === "bienes") {
+    let tituloReporte = 'Reporte General';
+    
+    if (reporteTipo === "inventario" || reporteTipo === "bienes" || reporteTipo === "") {
+      tituloReporte = 'Inventario de Bienes';
       datos = await query(`
         SELECT b.codigo_institucional, b.nombre, b.marca, b.modelo, b.estado, b.valor,
                c.nombre_categoria as categoria, u.area as ubicacion
@@ -134,7 +111,8 @@ router.post("/generar", verifyToken, async (req, res) => {
         ORDER BY b.nombre
         LIMIT 100
       `);
-    } else if (tipo === "ubicaciones") {
+    } else if (reporteTipo === "ubicaciones" || reporteTipo === "ubicacion") {
+      tituloReporte = 'Reporte por Ubicación';
       datos = await query(`
         SELECT u.area, u.sede, u.tipo, COUNT(b.id_bien) as bienes_count
         FROM ubicaciones u
@@ -143,57 +121,115 @@ router.post("/generar", verifyToken, async (req, res) => {
         GROUP BY u.id_ubicacion
         ORDER BY u.area
       `);
+    } else if (reporteTipo === "categoria") {
+      tituloReporte = 'Reporte por Categoría';
+      datos = await query(`
+        SELECT c.nombre_categoria, c.codigo, COUNT(b.id_bien) as bienes_count, SUM(b.valor) as valor_total
+        FROM categorias c
+        LEFT JOIN bienes b ON c.id_categoria = b.categoria_id
+        WHERE c.activo = 1
+        GROUP BY c.id_categoria
+        ORDER BY c.nombre_categoria
+      `);
+    } else if (reporteTipo === "estado") {
+      tituloReporte = 'Reporte por Estado';
+      datos = await query(`
+        SELECT estado, COUNT(*) as cantidad, SUM(valor) as valor_total
+        FROM bienes
+        GROUP BY estado
+        ORDER BY cantidad DESC
+      `);
+    } else if (reporteTipo === "depreciacion") {
+      tituloReporte = 'Reporte de Depreciación';
+      datos = await query(`
+        SELECT b.codigo_institucional, b.nombre, b.valor, b.depreciacion_acumulada,
+               (b.valor - COALESCE(b.depreciacion_acumulada, 0)) as valor_neto
+        FROM bienes b
+        WHERE b.valor > 0
+        ORDER BY b.valor DESC
+        LIMIT 100
+      `);
+    } else if (reporteTipo === "valor") {
+      tituloReporte = 'Análisis de Valor';
+      datos = await query(`
+        SELECT b.codigo_institucional, b.nombre, b.valor, c.nombre_categoria, u.area
+        FROM bienes b
+        LEFT JOIN categorias c ON b.categoria_id = c.id_categoria
+        LEFT JOIN ubicaciones u ON b.ubicacion_id = u.id_ubicacion
+        WHERE b.valor > 0
+        ORDER BY b.valor DESC
+        LIMIT 50
+      `);
     }
 
-    // Tabla simple
-    let yPos = doc.y;
-    datos.forEach((row, idx) => {
-      if (yPos > 700) {
-        doc.addPage();
-        yPos = 50;
+    // Guardar referencia del reporte
+    const reporte = {
+      id: Date.now(),
+      nombre: `${tituloReporte} - ${new Date().toLocaleDateString('es-EC')}`,
+      tipo: tituloReporte,
+      fecha: new Date().toISOString(),
+      descripcion: `${tituloReporte} generado con ${datos.length} registros`,
+      generadoPor: req.user?.email || 'Sistema',
+      datosCount: datos.length
+    };
+    reportesGenerados.push(reporte);
+
+    // Responder con éxito
+    res.json({
+      success: true,
+      message: "Reporte generado correctamente",
+      data: {
+        id: reporte.id,
+        nombre: reporte.nombre,
+        tipo: reporte.tipo,
+        fecha: reporte.fecha,
+        descripcion: reporte.descripcion,
+        generadoPor: reporte.generadoPor,
+        estado: 'Completado',
+        registros: datos.length
       }
-      const text = Object.values(row).join(" | ");
-      doc.fontSize(9).text(text, 50, yPos);
-      yPos += 15;
     });
 
-    doc.end();
-
-    stream.on("finish", () => {
-      const reporte = {
-        id: Date.now(),
-        nombre: filename,
-        tipo,
-        fecha: new Date().toISOString(),
-        path: filePath,
-      };
-      reportesGenerados.push(reporte);
-
-      res.json({
-        success: true,
-        message: "Reporte generado",
-        data: { id: reporte.id, nombre: reporte.nombre },
-      });
-    });
-
-    stream.on("error", (err) => {
-      res.status(500).json({ success: false, message: "Error generando PDF", error: err.message });
-    });
   } catch (error) {
+    console.error("[ERROR] POST /reportes/generar:", error.message);
     res.status(500).json({ success: false, message: "Error generando reporte", error: error.message });
   }
 });
 
-// GET /reportes/:id/download - Descargar reporte
-router.get("/:id/download", verifyToken, (req, res) => {
-  const { id } = req.params;
-  const reporte = reportesGenerados.find((r) => r.id === parseInt(id));
+// GET /reportes/:id/download - Descargar reporte como PDF
+router.get("/:id/download", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reporte = reportesGenerados.find((r) => r.id === parseInt(id));
 
-  if (!reporte || !fs.existsSync(reporte.path)) {
-    return res.status(404).json({ success: false, message: "Reporte no encontrado" });
+    if (!reporte) {
+      return res.status(404).json({ success: false, message: "Reporte no encontrado" });
+    }
+
+    // Generar PDF en memoria y enviarlo
+    const doc = new PDFDocument();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${reporte.nombre.replace(/[^a-zA-Z0-9]/g, '_')}.pdf"`);
+    
+    doc.pipe(res);
+
+    // Encabezado
+    doc.fontSize(20).text("REPORTE DE BIENES INSTITUCIONALES", { align: "center" });
+    doc.moveDown();
+    doc.fontSize(14).text(reporte.tipo, { align: "center" });
+    doc.moveDown();
+    doc.fontSize(10).text(`Fecha: ${new Date(reporte.fecha).toLocaleDateString("es-EC")}`, { align: "left" });
+    doc.text(`Generado por: ${reporte.generadoPor}`, { align: "left" });
+    doc.text(`Registros: ${reporte.datosCount}`, { align: "left" });
+    doc.moveDown();
+
+    doc.fontSize(12).text("Este reporte fue generado desde el Sistema de Gestión de Bienes.", { align: "center" });
+    
+    doc.end();
+  } catch (error) {
+    console.error("[ERROR] GET /reportes/:id/download:", error.message);
+    res.status(500).json({ success: false, message: "Error descargando reporte" });
   }
-
-  res.download(reporte.path, reporte.nombre);
 });
 
 // DELETE /reportes/:id - Eliminar reporte
@@ -205,12 +241,7 @@ router.delete("/:id", verifyToken, (req, res) => {
     return res.status(404).json({ success: false, message: "Reporte no encontrado" });
   }
 
-  const reporte = reportesGenerados[idx];
-  if (fs.existsSync(reporte.path)) {
-    fs.unlinkSync(reporte.path);
-  }
   reportesGenerados.splice(idx, 1);
-
   res.json({ success: true, message: "Reporte eliminado" });
 });
 
