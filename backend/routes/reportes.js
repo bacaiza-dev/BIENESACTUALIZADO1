@@ -6,7 +6,20 @@ const fs = require("fs");
 const PDFDocument = require("pdfkit");
 const { query } = require("../config/database");
 const { verifyToken } = require("../middleware/auth");
-const { TMP_DIR, ensureDir } = require("../middleware/upload");
+
+// Directorio para reportes (dentro de uploads que tiene permisos correctos)
+const REPORTES_DIR = path.join(__dirname, "..", "uploads", "reportes");
+
+// Función para asegurar que el directorio existe
+const ensureReportesDir = () => {
+  try {
+    if (!fs.existsSync(REPORTES_DIR)) {
+      fs.mkdirSync(REPORTES_DIR, { recursive: true });
+    }
+  } catch (error) {
+    console.warn("[WARNING] Could not create reportes directory:", error.message);
+  }
+};
 
 // Almacenamiento en memoria para reportes generados
 const reportesGenerados = [];
@@ -93,10 +106,10 @@ router.post("/generar", verifyToken, async (req, res) => {
   try {
     const { tipo, filtros } = req.body;
 
-    ensureDir(TMP_DIR);
+    ensureReportesDir();
 
     const filename = `reporte_${tipo}_${Date.now()}.pdf`;
-    const filePath = path.join(TMP_DIR, filename);
+    const filePath = path.join(REPORTES_DIR, filename);
 
     const doc = new PDFDocument();
     const stream = fs.createWriteStream(filePath);

@@ -224,25 +224,28 @@ const openItem = (item) => {
       router.push({ name: 'BienDetail', params: { id: item.id } })
       break
     case 'Ubicación':
-      router.push({ name: 'Ubicaciones' })
+      router.push({ name: 'UbicacionesList' })
       break
     case 'Usuario':
-      router.push({ name: 'Usuarios' })
+      router.push({ name: 'UsuariosList' })
       break
     case 'Mantenimiento':
-      router.push({ name: 'Mantenimientos' })
+      router.push({ name: 'MantenimientosList' })
       break
     case 'Alerta':
-      router.push({ name: 'Alertas' })
+      router.push({ name: 'AlertasList' })
       break
     case 'Categoría':
-      router.push({ name: 'Categorias' })
+      router.push({ name: 'CategoriasList' })
       break
     case 'Período':
-      router.push({ name: 'PeriodosAcademicos' })
+      router.push({ name: 'PeriodosList' })
       break
     case 'Aula Asignada':
       router.push({ name: 'AulasAsignadas' })
+      break
+    case 'Departamento':
+      router.push({ name: 'ConfiguracionView' })
       break
     default:
       toast.info(`Item seleccionado: ${item.titulo}`)
