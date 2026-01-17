@@ -1,6 +1,6 @@
 -- =====================================================
--- SCHEMA NORMALIZADO - Sistema de Gestión de Bienes INT
--- Versión: 2.0 - Sin redundancias ni bucles circulares
+-- SCHEMA NORMALIZADO V3 - SIN CICLOS CIRCULARES
+-- Sistema de Gestión de Bienes INT
 -- =====================================================
 
 -- Crear base de datos si no existe
@@ -8,17 +8,14 @@ CREATE DATABASE IF NOT EXISTS `intbienes`
   CHARACTER SET utf8mb4 
   COLLATE utf8mb4_unicode_ci;
 
--- Usar la base de datos
 USE `intbienes`;
 
--- Deshabilitar verificaciones FK temporalmente
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- =====================================================
--- 1. TABLAS BASE (Sin dependencias)
+-- NIVEL 0: TABLAS INDEPENDIENTES (Sin FK a otras)
 -- =====================================================
 
--- Departamentos
 DROP TABLE IF EXISTS `departamentos`;
 CREATE TABLE `departamentos` (
   `id_departamento` INT AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +26,6 @@ CREATE TABLE `departamentos` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Roles
 DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id_rol` INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,7 +33,6 @@ CREATE TABLE `roles` (
   `descripcion` VARCHAR(255)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Permisos
 DROP TABLE IF EXISTS `permisos`;
 CREATE TABLE `permisos` (
   `id_permiso` INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,7 +40,6 @@ CREATE TABLE `permisos` (
   `descripcion` TEXT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Categorías
 DROP TABLE IF EXISTS `categorias`;
 CREATE TABLE `categorias` (
   `id_categoria` INT AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +53,6 @@ CREATE TABLE `categorias` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Ubicaciones
 DROP TABLE IF EXISTS `ubicaciones`;
 CREATE TABLE `ubicaciones` (
   `id_ubicacion` INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,7 +68,6 @@ CREATE TABLE `ubicaciones` (
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Períodos Académicos
 DROP TABLE IF EXISTS `periodos_academicos`;
 CREATE TABLE `periodos_academicos` (
   `id_periodo` INT AUTO_INCREMENT PRIMARY KEY,
@@ -92,7 +84,7 @@ CREATE TABLE `periodos_academicos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 2. TABLA DE USUARIOS (Depende de: departamentos, roles)
+-- NIVEL 1: USUARIOS (Depende solo de NIVEL 0)
 -- =====================================================
 
 DROP TABLE IF EXISTS `usuarios`;
@@ -110,19 +102,18 @@ CREATE TABLE `usuarios` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  -- Foreign Keys
   CONSTRAINT `fk_usuarios_departamento` FOREIGN KEY (`departamento_id`) 
     REFERENCES `departamentos`(`id_departamento`) ON DELETE SET NULL,
   CONSTRAINT `fk_usuarios_rol` FOREIGN KEY (`rol_id`) 
     REFERENCES `roles`(`id_rol`) ON DELETE SET NULL,
   
-  -- Índices
   INDEX `idx_usuarios_email` (`email`),
   INDEX `idx_usuarios_cedula` (`cedula`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 3. TABLA DE BIENES (Depende de: categorias, periodos, ubicaciones, usuarios)
+-- NIVEL 2: BIENES (Depende de NIVEL 0 y NIVEL 1)
+-- SIN FK a usuarios para evitar ciclos
 -- =====================================================
 
 DROP TABLE IF EXISTS `bienes`;
@@ -150,38 +141,52 @@ CREATE TABLE `bienes` (
   `anio_fabricacion` INT,
   `clase_de_bien` VARCHAR(150),
   
-  -- FK: Relaciones directas (SIN REDUNDANCIA)
+  -- FK solo a tablas de NIVEL 0 (sin ciclos)
   `categoria_id` INT,
   `ubicacion_id` INT,
-  `responsable_id` INT,
   `periodo_id` INT,
   
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  -- Foreign Keys (AHORA SÍ DEFINIDOS)
   CONSTRAINT `fk_bienes_categoria` FOREIGN KEY (`categoria_id`) 
     REFERENCES `categorias`(`id_categoria`) ON DELETE SET NULL,
   CONSTRAINT `fk_bienes_ubicacion` FOREIGN KEY (`ubicacion_id`) 
     REFERENCES `ubicaciones`(`id_ubicacion`) ON DELETE SET NULL,
-  CONSTRAINT `fk_bienes_responsable` FOREIGN KEY (`responsable_id`) 
-    REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL,
   CONSTRAINT `fk_bienes_periodo` FOREIGN KEY (`periodo_id`) 
     REFERENCES `periodos_academicos`(`id_periodo`) ON DELETE SET NULL,
   
-  -- Índices
   INDEX `idx_bienes_codigo` (`codigo_institucional`),
   INDEX `idx_bienes_estado` (`estado`),
   INDEX `idx_bienes_categoria` (`categoria_id`),
-  INDEX `idx_bienes_ubicacion` (`ubicacion_id`),
-  INDEX `idx_bienes_responsable` (`responsable_id`)
+  INDEX `idx_bienes_ubicacion` (`ubicacion_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 4. TABLAS DEPENDIENTES DE BIENES
+-- NIVEL 3: TABLAS DE RELACIÓN (Dependen de NIVEL 1 y 2)
+-- Estas NO crean ciclos porque son hojas del árbol
 -- =====================================================
 
--- Alertas
+-- Asignación de responsable a bien (reemplaza bienes.responsable_id)
+DROP TABLE IF EXISTS `asignaciones_bien`;
+CREATE TABLE `asignaciones_bien` (
+  `id_asignacion` INT AUTO_INCREMENT PRIMARY KEY,
+  `id_bien` INT NOT NULL,
+  `id_usuario` INT NOT NULL,
+  `fecha_asignacion` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `fecha_devolucion` TIMESTAMP NULL,
+  `activo` TINYINT(1) DEFAULT 1,
+  `observaciones` TEXT,
+  
+  CONSTRAINT `fk_asigbien_bien` FOREIGN KEY (`id_bien`) 
+    REFERENCES `bienes`(`id_bien`) ON DELETE CASCADE,
+  CONSTRAINT `fk_asigbien_usuario` FOREIGN KEY (`id_usuario`) 
+    REFERENCES `usuarios`(`id_usuario`) ON DELETE CASCADE,
+  
+  UNIQUE KEY `uk_bien_activo` ((CASE WHEN `activo` = 1 THEN `id_bien` ELSE NULL END))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Alertas (hoja - solo depende de bienes)
 DROP TABLE IF EXISTS `alertas`;
 CREATE TABLE `alertas` (
   `id_alerta` INT AUTO_INCREMENT PRIMARY KEY,
@@ -197,7 +202,7 @@ CREATE TABLE `alertas` (
     REFERENCES `bienes`(`id_bien`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Mantenimientos
+-- Mantenimientos (hoja - depende de bienes y usuarios sin crear ciclo)
 DROP TABLE IF EXISTS `mantenimientos`;
 CREATE TABLE `mantenimientos` (
   `id_mantenimiento` INT AUTO_INCREMENT PRIMARY KEY,
@@ -208,7 +213,7 @@ CREATE TABLE `mantenimientos` (
   `fecha_limite` DATE,
   `fecha_realizada` DATE,
   `estado` ENUM('programado','en_proceso','completado','cancelado') DEFAULT 'programado',
-  `responsable_id` INT,
+  `tecnico_id` INT,
   `costo_estimado` DECIMAL(12,2),
   `costo_real` DECIMAL(12,2),
   `prioridad` ENUM('baja','media','alta','critica') DEFAULT 'media',
@@ -216,13 +221,13 @@ CREATE TABLE `mantenimientos` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_mantenimientos_bien` FOREIGN KEY (`id_bien`) 
+  CONSTRAINT `fk_mant_bien` FOREIGN KEY (`id_bien`) 
     REFERENCES `bienes`(`id_bien`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mantenimientos_responsable` FOREIGN KEY (`responsable_id`) 
+  CONSTRAINT `fk_mant_tecnico` FOREIGN KEY (`tecnico_id`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Documentos de bienes
+-- Documentos (hoja)
 DROP TABLE IF EXISTS `documentos_bien`;
 CREATE TABLE `documentos_bien` (
   `id_documento` INT AUTO_INCREMENT PRIMARY KEY,
@@ -237,16 +242,13 @@ CREATE TABLE `documentos_bien` (
   `uploaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_documentos_bien` FOREIGN KEY (`id_bien`) 
+  CONSTRAINT `fk_doc_bien` FOREIGN KEY (`id_bien`) 
     REFERENCES `bienes`(`id_bien`) ON DELETE CASCADE,
-  CONSTRAINT `fk_documentos_usuario` FOREIGN KEY (`subido_por`) 
+  CONSTRAINT `fk_doc_usuario` FOREIGN KEY (`subido_por`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- =====================================================
--- 5. TABLAS DE ASIGNACIONES (Aulas)
--- =====================================================
-
+-- Aulas asignadas (hoja)
 DROP TABLE IF EXISTS `aulas_asignadas`;
 CREATE TABLE `aulas_asignadas` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -269,7 +271,7 @@ CREATE TABLE `aulas_asignadas` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 6. TABLAS DE ROLES Y PERMISOS
+-- NIVEL 4: TABLAS DE SISTEMA (Solo dependen de usuarios)
 -- =====================================================
 
 DROP TABLE IF EXISTS `rol_permiso`;
@@ -278,20 +280,16 @@ CREATE TABLE `rol_permiso` (
   `id_permiso` INT NOT NULL,
   PRIMARY KEY (`id_rol`, `id_permiso`),
   
-  CONSTRAINT `fk_rolpermiso_rol` FOREIGN KEY (`id_rol`) 
+  CONSTRAINT `fk_rp_rol` FOREIGN KEY (`id_rol`) 
     REFERENCES `roles`(`id_rol`) ON DELETE CASCADE,
-  CONSTRAINT `fk_rolpermiso_permiso` FOREIGN KEY (`id_permiso`) 
+  CONSTRAINT `fk_rp_permiso` FOREIGN KEY (`id_permiso`) 
     REFERENCES `permisos`(`id_permiso`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================
--- 7. TABLAS DE AUDITORÍA Y SISTEMA
--- =====================================================
 
 DROP TABLE IF EXISTS `auditoria`;
 CREATE TABLE `auditoria` (
   `id_auditoria` INT AUTO_INCREMENT PRIMARY KEY,
-  `tabla_afectada` ENUM('usuarios','bienes','ubicaciones','categorias','mantenimientos','alertas') NOT NULL,
+  `tabla_afectada` VARCHAR(50) NOT NULL,
   `id_registro` INT,
   `accion` ENUM('CREATE','UPDATE','DELETE','LOGIN','LOGOUT','TRANSFER','VIEW') NOT NULL,
   `usuario_id` INT,
@@ -303,12 +301,11 @@ CREATE TABLE `auditoria` (
   `descripcion` TEXT,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_auditoria_usuario` FOREIGN KEY (`usuario_id`) 
+  CONSTRAINT `fk_audit_usuario` FOREIGN KEY (`usuario_id`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL,
   
-  INDEX `idx_auditoria_tabla` (`tabla_afectada`,`id_registro`),
-  INDEX `idx_auditoria_usuario` (`usuario_id`),
-  INDEX `idx_auditoria_fecha` (`created_at`)
+  INDEX `idx_audit_tabla` (`tabla_afectada`,`id_registro`),
+  INDEX `idx_audit_fecha` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS `reportes`;
@@ -321,7 +318,7 @@ CREATE TABLE `reportes` (
   `ruta_archivo` VARCHAR(500),
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_reportes_usuario` FOREIGN KEY (`usuario_id`) 
+  CONSTRAINT `fk_rep_usuario` FOREIGN KEY (`usuario_id`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -333,7 +330,7 @@ CREATE TABLE `settings` (
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_settings_usuario` FOREIGN KEY (`updated_by`) 
+  CONSTRAINT `fk_set_usuario` FOREIGN KEY (`updated_by`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -349,62 +346,74 @@ CREATE TABLE `support_messages` (
   `estado` ENUM('pendiente','en_proceso','resuelto','cerrado') DEFAULT 'pendiente',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   
-  CONSTRAINT `fk_support_usuario` FOREIGN KEY (`usuario_id`) 
+  CONSTRAINT `fk_sup_usuario` FOREIGN KEY (`usuario_id`) 
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
--- 8. DATOS INICIALES
+-- DATOS INICIALES
 -- =====================================================
 
--- Departamentos
 INSERT INTO `departamentos` (`id_departamento`, `nombre`, `descripcion`) VALUES
 (1, 'Administración', 'Departamento administrativo'),
 (2, 'Sistemas', 'Departamento de tecnología');
 
--- Roles
 INSERT INTO `roles` (`id_rol`, `nombre_rol`, `descripcion`) VALUES
 (1, 'Administrador', 'Acceso total al sistema'),
 (2, 'Usuario', 'Usuario estándar');
 
--- Permisos
 INSERT INTO `permisos` (`id_permiso`, `nombre_permiso`, `descripcion`) VALUES
 (1, 'ver_bienes', 'Puede ver bienes'),
 (2, 'editar_bienes', 'Puede editar bienes'),
 (3, 'eliminar_bienes', 'Puede eliminar bienes');
 
--- Rol-Permiso
 INSERT INTO `rol_permiso` (`id_rol`, `id_permiso`) VALUES
 (1, 1), (1, 2), (1, 3);
 
--- Categorías
 INSERT INTO `categorias` (`id_categoria`, `nombre_categoria`, `codigo`, `tipo`, `descripcion`) VALUES
 (1, 'Computadores', 'CAT-001', 'tecnologia', 'Equipos de cómputo'),
 (2, 'Muebles', 'CAT-002', 'mobiliario', 'Mobiliario institucional');
 
--- Ubicaciones
 INSERT INTO `ubicaciones` (`id_ubicacion`, `area`, `numero_aula`, `piso`, `sede`, `descripcion`, `tipo`, `capacidad`) VALUES
 (1, 'Laboratorio 1', 'A101', '1', 'Sede Central', 'Laboratorio de computación', 'laboratorio', 30),
 (2, 'Biblioteca', 'B201', '2', 'Sede Central', 'Biblioteca principal', 'biblioteca', 50);
 
--- Períodos
 INSERT INTO `periodos_academicos` (`id_periodo`, `nombre_periodo`, `fecha_inicio`, `fecha_fin`, `anio`, `tipo`) VALUES
 (1, '2024-2025', '2024-09-01', '2025-07-31', 2024, 'anual'),
 (2, '2025-1', '2025-01-01', '2025-06-30', 2025, 'semestre'),
 (3, '2025-2', '2025-07-01', '2025-12-31', 2025, 'semestre');
 
--- Usuario Admin
 INSERT INTO `usuarios` (`id_usuario`, `nombres`, `apellidos`, `cedula`, `email`, `telefono`, `password_hash`, `rol_id`, `departamento_id`) VALUES
 (1, 'Administrador', 'Sistema', '1234567890', 'admin@intsuperior.edu.ec', '0987654321', '$2b$12$5AGjCq9lxaaD47rArFQRm.3fxWV/ysWApaxAnxSkg7Zx/tMQu6Dte', 1, 2);
 
--- Bien de ejemplo
-INSERT INTO `bienes` (`id_bien`, `codigo_institucional`, `nombre`, `descripcion`, `marca`, `modelo`, `serie`, `estado`, `valor`, `categoria_id`, `ubicacion_id`, `responsable_id`) VALUES
-(1, 'INT-TEST-0001', 'Laptop de Prueba', 'Equipo portátil para pruebas', 'Dell', 'Inspiron 15', 'SN123456', 'ACTIVO', 1000.00, 1, 1, 1);
+INSERT INTO `bienes` (`id_bien`, `codigo_institucional`, `nombre`, `descripcion`, `marca`, `modelo`, `serie`, `estado`, `valor`, `categoria_id`, `ubicacion_id`) VALUES
+(1, 'INT-TEST-0001', 'Laptop de Prueba', 'Equipo portátil para pruebas', 'Dell', 'Inspiron 15', 'SN123456', 'ACTIVO', 1000.00, 1, 1);
 
--- Habilitar verificaciones FK
+-- Asignar responsable al bien (usando la nueva tabla)
+INSERT INTO `asignaciones_bien` (`id_bien`, `id_usuario`, `observaciones`) VALUES
+(1, 1, 'Asignación inicial');
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =====================================================
--- NOTA: Las tablas `bien_ubicacion` y `bien_usuario` 
--- fueron ELIMINADAS porque eran redundantes
+-- ESTRUCTURA JERÁRQUICA SIN CICLOS:
+--
+-- NIVEL 0: departamentos, roles, permisos, categorias, 
+--          ubicaciones, periodos_academicos
+--          (Sin dependencias)
+--
+-- NIVEL 1: usuarios
+--          (Depende de: departamentos, roles)
+--
+-- NIVEL 2: bienes
+--          (Depende de: categorias, ubicaciones, periodos)
+--          [NO depende de usuarios - evita ciclo]
+--
+-- NIVEL 3: asignaciones_bien, alertas, mantenimientos,
+--          documentos_bien, aulas_asignadas
+--          (Hojas del árbol - no generan ciclos)
+--
+-- NIVEL 4: auditoria, reportes, settings, support_messages
+--          (Solo dependen de usuarios)
+--
 -- =====================================================
