@@ -11,33 +11,6 @@
             </p>
           </div>
           <div class="flex items-center space-x-4">
-            <button
-              @click="toggleDarkMode"
-              class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            >
-              <svg
-                v-if="!isDarkMode"
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                ></path>
-              </svg>
-              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                ></path>
-              </svg>
-            </button>
           </div>
         </div>
       </div>
@@ -48,50 +21,27 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Profile Card -->
         <div class="lg:col-span-1">
-          <div
-            class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <div class="text-center">
               <div class="relative inline-block">
                 <div
-                  class="h-24 w-24 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center mx-auto mb-4"
-                >
+                  class="h-24 w-24 rounded-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center mx-auto mb-4">
                   <span class="text-2xl font-bold text-white">
-                    {{ userProfile.nombre.charAt(0).toUpperCase()
-                    }}{{ userProfile.apellido.charAt(0).toUpperCase() }}
+                    {{ userProfile.nombre.charAt(0).toUpperCase() }}{{ userProfile.apellido.charAt(0).toUpperCase() }}
                   </span>
                 </div>
-                <button
-                  @click="avatarInput?.click()"
-                  class="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600 dark:text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                    ></path>
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                    ></path>
+                <button @click="avatarInput?.click()"
+                  class="absolute bottom-0 right-0 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   </svg>
                 </button>
-                <input
-                  ref="avatarInput"
-                  type="file"
-                  accept="image/*"
-                  @change="handleAvatarChange"
-                  class="hidden"
-                />
+                <input ref="avatarInput" type="file" accept="image/*" @change="handleAvatarChange" class="hidden" />
               </div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                 {{ userProfile.nombre }} {{ userProfile.apellido }}
@@ -102,12 +52,9 @@
 
             <div class="mt-6 space-y-4">
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >Estado de la cuenta</span
-                >
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Estado de la cuenta</span>
                 <span
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                >
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                   Activa
                 </span>
               </div>
@@ -119,76 +66,54 @@
         <div class="lg:col-span-2">
           <div class="space-y-6">
             <!-- Personal Information -->
-            <div
-              class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-            >
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                   Información Personal
                 </h3>
-                <button
-                  v-if="authStore.isAdmin"
-                  @click="editPersonalInfo"
-                  class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 text-sm font-medium"
-                >
+                <button v-if="authStore.isAdmin" @click="editPersonalInfo"
+                  class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 text-sm font-medium">
                   {{ editingPersonal ? 'Cancelar' : 'Editar' }}
                 </button>
               </div>
 
-              <form v-if="editingPersonal" @submit.prevent="savePersonalInfo" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Nombre
-                    </label>
-                    <input
-                      v-model="personalForm.nombre"
-                      type="text"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
+              <div v-if="editingPersonal" class="space-y-4">
+                <form @submit.prevent="savePersonalInfo" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Nombre
+                      </label>
+                      <input v-model="personalForm.nombre" type="text" required
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Apellido
+                      </label>
+                      <input v-model="personalForm.apellido" type="text" required
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                    </div>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Apellido
+                      Email
                     </label>
-                    <input
-                      v-model="personalForm.apellido"
-                      type="text"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
+                    <input v-model="personalForm.email" type="email" required
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
                   </div>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Email
-                  </label>
-                  <input
-                    v-model="personalForm.email"
-                    type="email"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div class="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    @click="cancelPersonalEdit"
-                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    :disabled="saving"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
-                  >
-                    {{ saving ? 'Guardando...' : 'Guardar' }}
-                  </button>
-                </div>
-              </form>
-
+                  <div class="flex justify-end space-x-3">
+                    <button type="button" @click="cancelPersonalEdit"
+                      class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                      Cancelar
+                    </button>
+                    <button type="submit" :disabled="saving"
+                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors">
+                      {{ saving ? 'Guardando...' : 'Guardar' }}
+                    </button>
+                  </div>
+                </form>
+              </div>
               <div v-else class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -213,79 +138,99 @@
               </div>
             </div>
 
-            <!-- Change Password -->
-            <div
-              class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                  Cambiar Contraseña
-                </h3>
-                <button
-                  @click="showPasswordForm = !showPasswordForm"
-                  class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 text-sm font-medium"
-                >
-                  {{ showPasswordForm ? 'Cancelar' : 'Cambiar' }}
-                </button>
-              </div>
+           <!-- Change Password -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+      Cambiar Contraseña
+    </h3>
+    <button @click="showPasswordForm = !showPasswordForm"
+      class="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 text-sm font-medium">
+      {{ showPasswordForm ? 'Cancelar' : 'Cambiar' }}
+    </button>
+  </div>
 
-              <form v-if="showPasswordForm" @submit.prevent="changePassword" class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Contraseña Actual
-                  </label>
-                  <input
-                    v-model="passwordForm.currentPassword"
-                    type="password"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Nueva Contraseña
-                  </label>
-                  <input
-                    v-model="passwordForm.newPassword"
-                    type="password"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Confirmar Nueva Contraseña
-                  </label>
-                  <input
-                    v-model="passwordForm.confirmPassword"
-                    type="password"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-                <div class="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    @click="cancelPasswordChange"
-                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    :disabled="changingPassword"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
-                  >
-                    {{ changingPassword ? 'Cambiando...' : 'Cambiar Contraseña' }}
-                  </button>
-                </div>
-              </form>
-            </div>
+  <form v-if="showPasswordForm" @submit.prevent="changePassword" class="space-y-4">
+    <!-- Actual -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Contraseña Actual
+      </label>
+      <div class="relative">
+        <input v-model="passwordForm.currentPassword"
+          :type="showCurrentPassword ? 'text' : 'password'" required
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white pr-10" />
+        <button type="button" @click="showCurrentPassword = !showCurrentPassword"
+          class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+          <template v-if="showCurrentPassword">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7" />
+            </svg>
+          </template>
+          <template v-else>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13.875 18.825A10.05 10.05 0 0112 19" />
+            </svg>
+          </template>
+        </button>
+      </div>
+    </div>
+
+    <!-- Nueva -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Nueva Contraseña
+      </label>
+      <div class="relative">
+        <input v-model="passwordForm.newPassword"
+          :type="showNewPassword ? 'text' : 'password'" required
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white pr-10" />
+        <button type="button" @click="showNewPassword = !showNewPassword"
+          class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+          <!-- iconos iguales -->
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirmar -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        Confirmar Nueva Contraseña
+      </label>
+      <div class="relative">
+        <input v-model="passwordForm.confirmPassword"
+          :type="showConfirmPassword ? 'text' : 'password'" required
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white pr-10" />
+        <button type="button" @click="showConfirmPassword = !showConfirmPassword"
+          class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+          <!-- iconos iguales -->
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-3">
+      <button type="button" @click="cancelPasswordChange"
+        class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+        Cancelar
+      </button>
+      <button type="submit" :disabled="changingPassword"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors">
+        {{ changingPassword ? 'Cambiando...' : 'Cambiar Contraseña' }}
+      </button>
+    </div>
+  </form>
+</div>
+
+            
 
             <!-- Preferences -->
-            <div
-              class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-            >
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Preferencias</h3>
 
               <div class="space-y-4">
@@ -298,21 +243,16 @@
                       Recibir notificaciones importantes por email
                     </p>
                   </div>
-                  <button
-                    @click="toggleEmailNotifications"
-                    :class="[
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      preferences.emailNotifications
-                        ? 'bg-blue-600'
-                        : 'bg-gray-200 dark:bg-gray-700',
-                    ]"
-                  >
-                    <span
-                      :class="[
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        preferences.emailNotifications ? 'translate-x-6' : 'translate-x-1',
-                      ]"
-                    ></span>
+                  <button @click="toggleEmailNotifications" :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    preferences.emailNotifications
+                      ? 'bg-blue-600'
+                      : 'bg-gray-200 dark:bg-gray-700',
+                  ]">
+                    <span :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                      preferences.emailNotifications ? 'translate-x-6' : 'translate-x-1',
+                    ]"></span>
                   </button>
                 </div>
 
@@ -325,21 +265,16 @@
                       Recibir notificaciones en tiempo real
                     </p>
                   </div>
-                  <button
-                    @click="togglePushNotifications"
-                    :class="[
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      preferences.pushNotifications
-                        ? 'bg-blue-600'
-                        : 'bg-gray-200 dark:bg-gray-700',
-                    ]"
-                  >
-                    <span
-                      :class="[
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        preferences.pushNotifications ? 'translate-x-6' : 'translate-x-1',
-                      ]"
-                    ></span>
+                  <button @click="togglePushNotifications" :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    preferences.pushNotifications
+                      ? 'bg-blue-600'
+                      : 'bg-gray-200 dark:bg-gray-700',
+                  ]">
+                    <span :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                      preferences.pushNotifications ? 'translate-x-6' : 'translate-x-1',
+                    ]"></span>
                   </button>
                 </div>
 
@@ -352,28 +287,21 @@
                       Usar tema oscuro por defecto
                     </p>
                   </div>
-                  <button
-                    @click="toggleDarkModePreference"
-                    :class="[
-                      'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-                      preferences.darkMode ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700',
-                    ]"
-                  >
-                    <span
-                      :class="[
-                        'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-                        preferences.darkMode ? 'translate-x-6' : 'translate-x-1',
-                      ]"
-                    ></span>
+                  <button @click="toggleDarkModePreference" :class="[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+                    preferences.darkMode ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700',
+                  ]">
+                    <span :class="[
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                      preferences.darkMode ? 'translate-x-6' : 'translate-x-1',
+                    ]"></span>
                   </button>
                 </div>
               </div>
             </div>
 
             <!-- Security -->
-            <div
-              class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-            >
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Seguridad</h3>
 
               <div class="space-y-4">
@@ -386,10 +314,8 @@
                       Agregar una capa extra de seguridad
                     </p>
                   </div>
-                  <button
-                    @click="setupTwoFactor"
-                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
-                  >
+                  <button @click="setupTwoFactor"
+                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
                     Configurar
                   </button>
                 </div>
@@ -403,10 +329,8 @@
                       Gestionar dispositivos conectados
                     </p>
                   </div>
-                  <button
-                    @click="viewActiveSessions"
-                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
+                  <button @click="viewActiveSessions"
+                    class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
                     Ver Sesiones
                   </button>
                 </div>
@@ -439,6 +363,9 @@ const saving = ref(false)
 const changingPassword = ref(false)
 const loading = ref(false)
 const avatarInput = ref<HTMLInputElement | null>(null)
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 // Form data
 const personalForm = ref({
@@ -498,7 +425,7 @@ const loadUserProfile = async () => {
         created_at: userData.created_at || '',
         updated_at: userData.updated_at || '',
       }
-      
+
       // También actualizar el formulario personal
       personalForm.value = {
         nombre: userData.nombre,
@@ -608,8 +535,14 @@ const cancelPersonalEdit = () => {
 const savePersonalInfo = async () => {
   saving.value = true
   try {
-    const response = await apiClient.put('/auth/profile', personalForm.value)
-    
+    const response = await apiClient.put('/auth/profile', {
+      nombre: personalForm.value.nombre,
+      apellido: personalForm.value.apellido,
+      email: personalForm.value.email,
+      cedula: userProfile.value.documento || '',
+      telefono: userProfile.value.telefono || ''
+    })
+
     if (response.success) {
       // Actualizar el perfil con los datos devueltos
       userProfile.value = { ...userProfile.value, ...personalForm.value }
@@ -648,7 +581,7 @@ const changePassword = async () => {
 
   changingPassword.value = true
   try {
-    const response = await apiClient.put('/auth/change-password', {
+    const response = await apiClient.post('/auth/change-password', {
       currentPassword: passwordForm.value.currentPassword,
       newPassword: passwordForm.value.newPassword,
     })

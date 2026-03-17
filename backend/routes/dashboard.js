@@ -273,4 +273,111 @@ router.get("/top-value", verifyToken, async (req, res) => {
   }
 });
 
+// GET /dashboard/bienes-por-estado - Bienes agrupados por estado/condición
+router.get("/bienes-por-estado", verifyToken, async (req, res) => {
+  try {
+    const data = await query(`
+      SELECT estado, COUNT(*) as cantidad
+      FROM bienes
+      GROUP BY estado
+      ORDER BY cantidad DESC
+    `);
+    
+    const colors = {
+      'ACTIVO': '#10b981',
+      'NUEVO': '#3b82f6',
+      'MANTENIMIENTO': '#f59e0b',
+      'DESCARTADO': '#ef4444',
+      'DEFECTUOSO': '#ec4899',
+      'REPARACION': '#f97316',
+      'DADO.BAJA': '#8b5cf6',
+      'INACTIVO': '#6b7280',
+      'PENDIENTE': '#06b6d4'
+    };
+    
+    const result = data.map(item => ({
+      estado: item.estado || 'Sin estado',
+      cantidad: item.cantidad,
+      porcentaje: 0,
+      color: colors[item.estado] || '#84cc16'
+    }));
+    
+    const total = result.reduce((sum, item) => sum + item.cantidad, 0);
+    result.forEach(item => {
+      item.porcentaje = total > 0 ? Math.round((item.cantidad / total) * 100) : 0;
+    });
+    
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("[ERROR] bienes-por-estado:", error.message);
+    res.json({ success: true, data: [] });
+  }
+});
+
+// GET /dashboard/actividad-reciente - Últimas acciones en el sistema
+router.get("/actividad-reciente", verifyToken, async (req, res) => {
+  try {
+    const data = await query(`
+      SELECT 
+        l.id_log as id,
+        u.nombre as usuario,
+        CASE 
+          WHEN l.tabla = 'bienes' AND l.accion = 'INSERT' THEN 'Creó un nuevo bien'
+          WHEN l.tabla = 'bienes' AND l.accion = 'UPDATE' THEN 'Actualizó un bien'
+          WHEN l.tabla = 'bienes' AND l.accion = 'DELETE' THEN 'Eliminó un bien'
+          WHEN l.tabla = 'bienes' THEN 'Modificó inventario'
+          ELSE l.accion
+        END as accion,
+        CONCAT(l.tabla, ': ', COALESCE(l.detalles, '')) as detalle,
+        l.fecha_creacion as tiempo
+      FROM logs l
+      LEFT JOIN usuarios u ON l.usuario_id = u.id_usuario
+      WHERE l.tabla IN ('bienes', 'ubicaciones', 'usuarios')
+      ORDER BY l.fecha_creacion DESC
+      LIMIT 10
+    `);
+    
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error("[ERROR] actividad-reciente:", error.message);
+    res.json({ success: true, data: [] });
+  }
+});
+
+// GET /dashboard/movimientos-recientes - Últimos movimientos de bienes
+router.get("/movimientos-recientes", verifyToken, async (req, res) => {
+  try {
+    const data = await query(`
+      SELECT 
+        m.id_movimiento as id,
+        b.nombre as bien_nombre,
+        b.codigo_institucional as bien_codigo,
+        CASE 
+          WHEN m.tipo_movimiento = 'ASIGNACION' THEN 'Asignación'
+          WHEN m.tipo_movimiento = 'TRASLADO' THEN 'Traslado'
+          WHEN m.tipo_movimiento = 'DEVOLUCION' THEN 'Devolución'
+          WHEN m.tipo_movimiento = 'REPARACION' THEN 'Reparación'
+          ELSE m.tipo_movimiento
+        END as tipo_movimiento,
+        COALESCE(u1.area, 'Almacén') as desde,
+        COALESCE(u2.area, 'Almacén') as hacia,
+        u.nombre as usuario,
+        m.fecha_movimiento as fecha
+      FROM movimientos m
+      LEFT JOIN bienes b ON m.bien_id = b.id_bien
+      LEFT JOIN ubicaciones u1 ON m.ubicacion_anterior_id = u1.id_ubicacion
+      LEFT JOIN ubicaciones u2 ON m.ubicacion_nueva_id = u2.id_ubicacion
+      LEFT JOIN usuarios u ON m.usuario_id = u.id_usuario
+      WHERE m.fecha_movimiento >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      ORDER BY m.fecha_movimiento DESC
+      LIMIT 15
+    `);
+    
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error("[ERROR] movimientos-recientes:", error.message);
+    res.json({ success: true, data: [] });
+  }
+});
+
 module.exports = router;

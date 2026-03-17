@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-sugerencia de Fechas - Tutorial Interactivo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/boxicons/2.1.4/css/boxicons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h2 i {
+            font-size: 1.5em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        select, input[type="number"], input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        .btn-suggest {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 47px;
+            width: 47px;
+        }
+        
+        .btn-suggest:hover:not(:disabled) {
+            background: #764ba2;
+        }
+        
+        .btn-suggest:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .suggested-dates {
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #1976d2;
+            display: none;
+        }
+        
+        .suggested-dates.show {
+            display: block;
+        }
+        
+        .suggested-dates i {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .examples {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .examples h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .example-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+            border-radius: 4px;
+        }
+        
+        .example-item strong {
+            color: #667eea;
+        }
+        
+        .features {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .feature i {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .feature h3 {
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .feature p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Auto-sugerencia de Fechas</h1>
+            <p>Tutorial interactivo - Gestión de Períodos Académicos</p>
+        </div>
+        
+        <div class="content">
+            <!-- Columna 1: Formulario Interactivo -->
+            <div class="card">
+                <h2><i class='bx bx-edit'></i> Prueba el Formulario</h2>
+                
+                <div class="form-group">
+                    <label>Nombre del Período *</label>
+                    <input type="text" id="nombre" placeholder="Ej: Primer Semestre 2026">
+                </div>
+                
+                <div class="form-group">
+                    <label>Año *</label>
+                    <input type="number" id="anio" min="2020" max="2031" value="2026">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de Período *</label>
+                    <select id="tipo" onchange="habilitarBoton()">
+                        <option value="">Seleccionar tipo</option>
+                        <option value="semestre">Semestre</option>
+                        <option value="trimestre">Trimestre</option>
+                        <option value="cuatrimestre">Cuatrimestre</option>
+                        <option value="anual">Anual</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Fechas del Período</label>
+                    <div class="input-group">
+                        <input type="date" id="fechaInicio" readonly style="background: #f5f5f5;">
+                        <span style="color: #999;">a</span>
+                        <input type="date" id="fechaFin" readonly style="background: #f5f5f5;">
+                        <button class="btn-suggest" id="btnSuggest" onclick="sugerirFechas()" disabled title="Auto-sugerir fechas">
+                            <i class='bx bx-refresh'></i>
+                        </button>
+                    </div>
+                    <div class="suggested-dates" id="mensajeSugeridas">
+                        <i class='bx bx-check-circle'></i> Fechas sugeridas automáticamente
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna 2: Información -->
+            <div class="card">
+                <h2><i class='bx bx-info-circle'></i> ¿Cómo Funciona?</h2>
+                
+                <p style="margin-bottom: 20px; color: #666;">
+                    El sistema sugiere automáticamente fechas según el tipo de período y el año seleccionado.
+                </p>
+                
+                <div class="examples">
+                    <h3>📅 Ejemplos de Fechas Sugeridas</h3>
+                    
+                    <div class="example-item">
+                        <strong>📌 Semestre 2026</strong><br>
+                        Ene-Jun: <span id="semester1">01/01 - 30/06</span><br>
+                        Jul-Dic: <span id="semester2">01/07 - 31/12</span>
+                    </div>
+                    
+                    <div class="example-item">
+                        <strong>📌 Trimestre 2026</strong><br>
+                        Trimestre actual: <span id="trimestreMes">Q1 (Ene-Mar)</span>
+                    </div>
+                    
+                    <div class="example-item">
+                        <strong>📌 Cuatrimestre 2026</strong><br>
+                        Cuatrimestre actual: <span id="cuatrimestre">C1 (Ene-Abr)</span>
+                    </div>
+                    
+                    <div class="example-item">
+                        <strong>📌 Anual 2026</strong><br>
+                        01/01 - 31/12
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Características -->
+        <div class="features">
+            <div class="feature">
+                <i class='bx bx-time'></i>
+                <h3>Ahorra Tiempo</h3>
+                <p>No necesitas calcular manualmente las fechas de cada período</p>
+            </div>
+            
+            <div class="feature">
+                <i class='bx bx-check-circle'></i>
+                <h3>Sin Errores</h3>
+                <p>El sistema calcula automáticamente períodos correctos y consistentes</p>
+            </div>
+            
+            <div class="feature">
+                <i class='bx bx-edit-alt'></i>
+                <h3>Editable</h3>
+                <p>Puedes ajustar manualmente las fechas si necesitas casos especiales</p>
+            </div>
+            
+            <div class="feature">
+                <i class='bx bx-brain'></i>
+                <h3>Inteligente</h3>
+                <p>Detecta el período actual según la fecha del sistema</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <h3>💡 Pasos para Usar</h3>
+            <ol style="text-align: left; display: inline-block; line-height: 1.8;">
+                <li>Completa el nombre del período</li>
+                <li>Selecciona el año</li>
+                <li>Elige el tipo de período (Semestre, Trimestre, etc.)</li>
+                <li>Haz clic en el botón 🔄 para sugerir fechas</li>
+                <li>Revisa y confirma las fechas sugeridas</li>
+                <li>¡Listo! Guarda el período</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script>
+        function habilitarBoton() {
+            const tipo = document.getElementById('tipo').value;
+            const anio = document.getElementById('anio').value;
+            const btn = document.getElementById('btnSuggest');
+            btn.disabled = !tipo || !anio;
+        }
+        
+        function sugerirFechas() {
+            const tipo = document.getElementById('tipo').value;
+            const anio = parseInt(document.getElementById('anio').value);
+            
+            if (!tipo || !anio) {
+                alert('Por favor selecciona tipo y año');
+                return;
+            }
+            
+            let fechaInicio, fechaFin;
+            const hoy = new Date();
+            const mesActual = hoy.getMonth() + 1;
+            
+            switch (tipo) {
+                case 'semestre':
+                    if (mesActual <= 6) {
+                        fechaInicio = `${anio}-01-01`;
+                        fechaFin = `${anio}-06-30`;
+                    } else {
+                        fechaInicio = `${anio}-07-01`;
+                        fechaFin = `${anio}-12-31`;
+                    }
+                    break;
+                    
+                case 'trimestre':
+                    const trimestre = Math.ceil(mesActual / 3);
+                    const mesInicio = (trimestre - 1) * 3 + 1;
+                    const mesFin = trimestre * 3;
+                    fechaInicio = `${anio}-${String(mesInicio).padStart(2, '0')}-01`;
+                    const ultimoDia = new Date(anio, mesFin, 0).getDate();
+                    fechaFin = `${anio}-${String(mesFin).padStart(2, '0')}-${ultimoDia}`;
+                    break;
+                    
+                case 'cuatrimestre':
+                    const cuatr = Math.ceil(mesActual / 4);
+                    const mesInicioCuat = (cuatr - 1) * 4 + 1;
+                    const mesFinCuat = Math.min(cuatr * 4, 12);
+                    fechaInicio = `${anio}-${String(mesInicioCuat).padStart(2, '0')}-01`;
+                    const ultimoDiaCuat = new Date(anio, mesFinCuat, 0).getDate();
+                    fechaFin = `${anio}-${String(mesFinCuat).padStart(2, '0')}-${ultimoDiaCuat}`;
+                    break;
+                    
+                case 'anual':
+                    fechaInicio = `${anio}-01-01`;
+                    fechaFin = `${anio}-12-31`;
+                    break;
+            }
+            
+            document.getElementById('fechaInicio').value = fechaInicio;
+            document.getElementById('fechaFin').value = fechaFin;
+            document.getElementById('mensajeSugeridas').classList.add('show');
+        }
+        
+        // Actualizar información inicial
+        window.addEventListener('load', () => {
+            const hoy = new Date();
+            const mesActual = hoy.getMonth() + 1;
+            const anio = 2026;
+            
+            // Trimestre
+            const trimestre = Math.ceil(mesActual / 3);
+            document.getElementById('trimestreMes').textContent = `Q${trimestre} (${getTrimesterRange(trimestre)})`;
+            
+            // Cuatrimestre
+            const cuatr = Math.ceil(mesActual / 4);
+            document.getElementById('cuatrimestre').textContent = `C${cuatr} (${getCuatrimestreRange(cuatr)})`;
+        });
+        
+        function getTrimesterRange(q) {
+            const ranges = ['Ene-Mar', 'Abr-Jun', 'Jul-Sep', 'Oct-Dic'];
+            return ranges[q - 1];
+        }
+        
+        function getCuatrimestreRange(c) {
+            const ranges = ['Ene-Abr', 'May-Ago', 'Sep-Dic'];
+            return ranges[c - 1];
+        }
+    </script>
+</body>
+</html>

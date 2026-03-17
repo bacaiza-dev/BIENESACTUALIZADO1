@@ -3,100 +3,58 @@
     <!-- Header -->
     <BaseCard variant="elevated" size="lg" class="mb-6">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1
-              class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-            >
-              Dashboard Ejecutivo
-            </h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">
-              Panel de control y métricas clave del sistema de gestión de bienes
-            </p>
-            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-              <span>Última actualización: {{ formatTime(new Date()) }}</span>
-              <span>•</span>
-              <span>Usuario: {{ authStore.user?.nombre }}</span>
-            </div>
-          </div>
-          <div class="mt-4 sm:mt-0">
-            <BaseButton
-              @click="cargarDatos"
-              :loading="cargando"
-              :disabled="cargando"
-              variant="primary"
-              size="md"
-              icon="bx bx-refresh"
-              class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl"
-            >
-              {{ cargando ? 'Cargando...' : 'Actualizar' }}
-            </BaseButton>
+        <div>
+          <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Sistema Gestión de Bienes 
+          </h1>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">
+            Panel de control y métricas clave del sistema de gestión de bienes
+          </p>
+          <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+            <span>Última actualización: {{ formatTime(new Date()) }}</span>
+            <span>•</span>
+            <span>Usuario: {{ authStore.user?.nombre }}</span>
           </div>
         </div>
+        <div class="mt-4 sm:mt-0">
+          <BaseButton @click="cargarDatos" :loading="cargando" :disabled="cargando" variant="primary" size="md"
+            icon="bx bx-refresh"
+            class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl">
+            {{ cargando ? 'Cargando...' : 'Actualizar' }}
+          </BaseButton>
+        </div>
+      </div>
     </BaseCard>
+
 
     <!-- Métricas Principales -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-      <MetricCard
-        title="Total Bienes"
-        :value="metricas.totalBienes"
-        :change="metricas.incrementoBienes"
-        change-type="increase"
-        icon="bx-package"
-        color="blue"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Valor Total"
-        :value="formatCurrency(metricas.valorTotal)"
-        :change="metricas.incrementoValor"
-        change-type="increase"
-        icon="bx-dollar-circle"
-        color="green"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Alertas Activas"
-        :value="metricas.alertasActivas"
-        :subtitle="`${metricas.alertasCriticas} críticas`"
-        icon="bx-error-circle"
-        color="yellow"
-        :loading="cargando"
-      />
-      <MetricCard
-        title="Usuarios Activos"
-        :value="metricas.usuariosActivos"
-        :subtitle="`${metricas.nuevosUsuarios} nuevos`"
-        icon="bx-group"
-        color="purple"
-        :loading="cargando"
-      />
+      <MetricCard title="Total Bienes" :value="metricas.totalBienes" :change="metricas.incrementoBienes"
+        change-type="increase" icon="bx-package" color="blue" :loading="cargando" />
+      <MetricCard title="Valor Total" :value="formatCurrency(metricas.valorTotal)" :change="metricas.incrementoValor"
+        change-type="increase" icon="bx-dollar-circle" color="green" :loading="cargando" />
+      <MetricCard title="Alertas Activas" :value="metricas.alertasActivas"
+        :subtitle="`${metricas.alertasCriticas} críticas`" icon="bx-error-circle" color="yellow" :loading="cargando" />
+      <MetricCard title="Usuarios Activos" :value="metricas.usuariosActivos"
+        :subtitle="`${metricas.nuevosUsuarios} nuevos`" icon="bx-group" color="purple" :loading="cargando" />
     </div>
 
     <!-- Resumen Adicional -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center">
           <div class="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-            <svg
-              class="w-6 h-6 text-green-600 dark:text-green-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-              ></path>
+            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1">
+              </path>
             </svg>
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Valor Total</p>
             <p class="text-2xl font-bold text-gray-900 dark:text-white">
-              ${{ (metricas.valorTotal as number).toLocaleString() }}
+              {{ formatCurrency(metricas.valorTotal) }}
             </p>
             <p class="text-sm text-green-600 dark:text-green-400">
               +{{ metricas.incrementoValor }}% este mes
@@ -104,23 +62,14 @@
           </div>
         </div>
       </div>
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center">
           <div class="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-            <svg
-              class="w-6 h-6 text-yellow-600 dark:text-yellow-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              ></path>
+            <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z">
+              </path>
             </svg>
           </div>
           <div class="ml-4">
@@ -134,23 +83,14 @@
           </div>
         </div>
       </div>
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-      >
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-center">
           <div class="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-            <svg
-              class="w-6 h-6 text-purple-600 dark:text-purple-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              ></path>
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+              </path>
             </svg>
           </div>
           <div class="ml-4">
@@ -166,257 +106,57 @@
       </div>
     </div>
 
-    <!-- Espacios Físicos -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Aulas</h3>
-          <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-              {{ (espacios?.aulas?.total ?? 0) }} aulas
-            </span>
-            <router-link
-              :to="{ name: 'SalasList' }"
-              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              title="Gestionar salas"
-            >
-              Salas
-            </router-link>
-          </div>
+    <!-- Bienes por Estado/Condición -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        Bienes por Estado
+      </h3>
+      <div class="space-y-3">
+        <div v-if="bienesEstado.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          Cargando datos...
         </div>
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Bienes: {{ espacios?.aulas?.bienes_total ?? 0 }} · Capacidad total: {{ espacios?.aulas?.capacidad_total ?? 0 }}
-        </div>
-        <div v-if="(espacios?.aulas?.top?.length ?? 0) === 0" class="text-sm text-gray-500 dark:text-gray-400">
-          Sin datos de aulas
-        </div>
-        <div v-else class="space-y-2">
-          <div
-            v-for="u in espacios?.aulas?.top ?? []"
-            :key="u.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/40"
-          >
-            <div class="min-w-0">
-              <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {{ u.nombre }}
+        <div v-else class="space-y-4">
+          <div v-for="estado in bienesEstado" :key="estado.estado" class="group">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: estado.color }"></div>
+                <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ estado.estado }}</span>
               </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {{ u.edificio || '—' }}{{ u.aula ? ` · ${u.aula}` : '' }}
-              </div>
+              <span class="px-3 py-1 text-sm font-bold rounded-full text-white" :style="{ backgroundColor: estado.color }">
+                {{ estado.cantidad }}
+              </span>
             </div>
-            <div class="text-sm font-semibold text-gray-900 dark:text-white">
-              {{ u.bienesAsignados ?? 0 }}
+            <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" :style="{
+                width: estado.porcentaje + '%',
+                backgroundColor: estado.color,
+              }"></div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Laboratorios</h3>
-          <div class="flex items-center gap-3">
-            <span class="text-sm text-gray-600 dark:text-gray-400">
-              {{ espacios?.laboratorios?.total ?? 0 }} laboratorios
-            </span>
-            <router-link
-              :to="{ name: 'SalasList' }"
-              class="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-              title="Gestionar salas"
-            >
-              Salas
-            </router-link>
-          </div>
-        </div>
-        <div class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Bienes: {{ espacios?.laboratorios?.bienes_total ?? 0 }} · Capacidad total: {{ espacios?.laboratorios?.capacidad_total ?? 0 }}
-        </div>
-        <div v-if="espacios.laboratorios.top.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
-          Sin datos de laboratorios
-        </div>
-        <div v-else class="space-y-2">
-          <div
-            v-for="u in espacios?.laboratorios?.top ?? []"
-            :key="u.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700/40"
-          >
-            <div class="min-w-0">
-              <div class="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {{ u.nombre }}
-              </div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                {{ u.edificio || '—' }}{{ u.aula ? ` · ${u.aula}` : '' }}
-              </div>
-            </div>
-            <div class="text-sm font-semibold text-gray-900 dark:text-white">
-              {{ u.bienesAsignados ?? 0 }}
+            <div class="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <span></span>
+              <span>{{ estado.porcentaje }}%</span>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Gráficos y Estadísticas -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Gráfico de Bienes por Categoría -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-      >
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Bienes por Categoría
-        </h3>
+    <!-- Actividad Reciente del Sistema -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Actividad Reciente del Sistema</h3>
+      </div>
+      <div class="p-6">
         <div class="space-y-4">
-          <div
-            v-for="categoria in bienesPorCategoria"
-            :key="categoria.nombre"
-            class="flex items-center justify-between"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-4 h-4 rounded-full mr-3"
-                :style="{ backgroundColor: categoria.color }"
-              ></div>
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ categoria.nombre }}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  class="h-2 rounded-full"
-                  :style="{
-                    width: categoria.porcentaje + '%',
-                    backgroundColor: categoria.color,
-                  }"
-                ></div>
-              </div>
-              <span class="text-sm font-medium text-gray-900 dark:text-white w-12 text-right">
-                {{ categoria.cantidad }}
-              </span>
-            </div>
+          <div v-if="actividadReciente.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+            Sin actividad registrada
           </div>
-        </div>
-      </div>
-
-      <!-- Gráfico de Valor por Ubicación -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-      >
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Valor por Ubicación
-        </h3>
-        <div class="space-y-4">
-          <div
-            v-for="ubicacion in valorPorUbicacion"
-            :key="ubicacion.nombre"
-            class="flex items-center justify-between"
-          >
-            <div class="flex items-center">
-              <div
-                class="w-4 h-4 rounded-full mr-3"
-                :style="{ backgroundColor: ubicacion.color }"
-              ></div>
-              <span class="text-sm text-gray-700 dark:text-gray-300">{{ ubicacion.nombre }}</span>
-            </div>
-            <div class="flex items-center space-x-2">
-              <div class="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  class="h-2 rounded-full"
-                  :style="{
-                    width: ubicacion.porcentaje + '%',
-                    backgroundColor: ubicacion.color,
-                  }"
-                ></div>
-              </div>
-              <span class="text-sm font-medium text-gray-900 dark:text-white w-20 text-right">
-                ${{ ubicacion.valor.toLocaleString() }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alertas y Actividades -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Alertas Recientes -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-      >
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Alertas Recientes</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
-            <div
-              v-for="alerta in alertasRecientes ?? []"
-              :key="alerta.id"
-              class="flex items-start space-x-3"
-            >
+          <div v-else>
+            <div v-for="actividad in actividadReciente" :key="actividad.id" class="flex items-start space-x-3 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0">
               <div class="flex-shrink-0">
-                <div
-                  :class="getAlertaIconClass(alerta.tipo)"
-                  class="w-8 h-8 rounded-full flex items-center justify-center"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 dark:text-white">
-                  {{ alerta.titulo }}
-                </p>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ alerta.descripcion }}</p>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  {{ formatTime(alerta.tiempo) }}
-                </p>
-              </div>
-              <div class="flex-shrink-0">
-                <span
-                  :class="getAlertaStatusClass(alerta.tipo)"
-                  class="px-2 py-1 text-xs font-medium rounded-full"
-                >
-                  {{ alerta.tipo }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actividades Recientes -->
-      <div
-        class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-      >
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Actividades Recientes</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
-            <div
-              v-for="actividad in actividadesRecientes ?? []"
-              :key="actividad.id"
-              class="flex items-start space-x-3"
-            >
-              <div class="flex-shrink-0">
-                <div
-                  class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center"
-                >
-                  <svg
-                    class="w-4 h-4 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    ></path>
+                <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                   </svg>
                 </div>
               </div>
@@ -427,7 +167,7 @@
                 </p>
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ actividad.detalle }}</p>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  {{ formatTime(actividad.tiempo) }}
+                  {{ formatTimeAgo(actividad.tiempo) }}
                 </p>
               </div>
             </div>
@@ -435,6 +175,52 @@
         </div>
       </div>
     </div>
+
+    <!-- Movimientos Recientes -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Movimientos Recientes</h3>
+      </div>
+      <div class="p-6">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">Bien</th>
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">Movimiento</th>
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">De</th>
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">A</th>
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">Usuario</th>
+                <th class="text-left text-xs font-medium text-gray-600 dark:text-gray-400 pb-3">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="movimientosRecientes.length === 0">
+                <td colspan="6" class="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+                  Sin movimientos registrados
+                </td>
+              </tr>
+              <tr v-for="movimiento in movimientosRecientes" :key="movimiento.id" class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td class="py-3">
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ movimiento.bien_nombre }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">{{ movimiento.bien_codigo }}</div>
+                </td>
+                <td class="py-3">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                    {{ movimiento.tipo_movimiento }}
+                  </span>
+                </td>
+                <td class="py-3 text-sm text-gray-600 dark:text-gray-400">{{ movimiento.desde }}</td>
+                <td class="py-3 text-sm text-gray-600 dark:text-gray-400">{{ movimiento.hacia }}</td>
+                <td class="py-3 text-sm text-gray-600 dark:text-gray-400">{{ movimiento.usuario }}</td>
+                <td class="py-3 text-sm text-gray-600 dark:text-gray-400">{{ formatTimeAgo(movimiento.fecha) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -447,42 +233,6 @@ import { useErrorHandler } from '@/composables/useErrorHandler'
 import MetricCard from '@/components/shared/MetricCard.vue'
 import BaseCard from '@/components/shared/BaseCard.vue'
 import BaseButton from '@/components/shared/BaseButton.vue'
-
-interface CategoryData {
-  nombre: string
-  cantidad: number
-  porcentaje: number
-  color: string
-}
-
-interface LocationData {
-  nombre: string
-  valor: number
-  cantidad: number
-  porcentaje: number
-  color: string
-}
-
-interface RecentAlert {
-  id: number
-  tipo: string
-  titulo: string
-  descripcion: string
-  tiempo: string
-}
-
-interface RecentActivity {
-  id: number
-  usuario: string
-  accion: string
-  detalle: string
-  tiempo: string
-}
-
-interface EspaciosDashboard {
-  aulas: { total: number; bienes_total: number; capacidad_total: number; top: any[] }
-  laboratorios: { total: number; bienes_total: number; capacidad_total: number; top: any[] }
-}
 
 const authStore = useAuthStore()
 const uiStore = useUIStore()
@@ -504,24 +254,47 @@ const metricas = reactive({
   nuevosUsuarios: 0,
 })
 
+// Interfaces
+interface ActividadReciente {
+  id: number
+  usuario: string
+  accion: string
+  detalle: string
+  tiempo: string
+}
+
+interface EstadoBien {
+  estado: string
+  cantidad: number
+  porcentaje: number
+  color: string
+}
+
+interface Movimiento {
+  id: number
+  bien_nombre: string
+  bien_codigo: string
+  tipo_movimiento: string
+  desde: string
+  hacia: string
+  usuario: string
+  fecha: string
+}
+
 // Datos de gráficos
-const bienesPorCategoria = ref<CategoryData[]>([])
-const valorPorUbicacion = ref<LocationData[]>([])
-const alertasRecientes = ref<RecentAlert[]>([])
-const actividadesRecientes = ref<RecentActivity[]>([])
-const espacios = reactive<EspaciosDashboard>({
-  aulas: { total: 0, bienes_total: 0, capacidad_total: 0, top: [] },
-  laboratorios: { total: 0, bienes_total: 0, capacidad_total: 0, top: [] },
-})
+const actividadReciente = ref<ActividadReciente[]>([])
+const bienesEstado = ref<EstadoBien[]>([])
+const movimientosRecientes = ref<Movimiento[]>([])
 
 // Computadas
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('es-ES', {
+const formatCurrency = (value: number | string | null | undefined) => {
+  const num = Number(value) || 0
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(num)
 }
 
 import apiClient from '@/api/client'
@@ -535,11 +308,9 @@ const cargarDatos = async () => {
     // Cargar métricas del dashboard
     await Promise.all([
       cargarMetricas(),
-      cargarBienesPorCategoria(),
-      cargarValorPorUbicacion(),
-      cargarEspacios(),
-      cargarAlertasRecientes(),
-      cargarActividadesRecientes(),
+      cargarBienesEstado(),
+      cargarActividadReciente(),
+      cargarMovimientosRecientes(),
     ])
 
     handleSuccess('Dashboard actualizado correctamente')
@@ -574,73 +345,6 @@ const cargarMetricas = async () => {
   }
 }
 
-const cargarBienesPorCategoria = async () => {
-  try {
-    const response = await apiClient.get('/dashboard/bienes-por-categoria')
-
-    const data = response
-    if (data.success) {
-      bienesPorCategoria.value = data.data
-    }
-  } catch (error) {
-    bienesPorCategoria.value = []
-  }
-}
-
-const cargarValorPorUbicacion = async () => {
-  try {
-    const response = await apiClient.get('/dashboard/valor-por-ubicacion')
-
-    const data = response
-    if (data.success) {
-      valorPorUbicacion.value = data.data
-    }
-  } catch (error) {
-    valorPorUbicacion.value = []
-  }
-}
-
-const cargarEspacios = async () => {
-  try {
-    const response = await apiClient.get('/dashboard/espacios')
-
-    const data = response
-    if (data.success && data.data) {
-      if (data.data.aulas) espacios.aulas = data.data.aulas
-      if (data.data.laboratorios) espacios.laboratorios = data.data.laboratorios
-    }
-  } catch (error) {
-    espacios.aulas = { total: 0, bienes_total: 0, capacidad_total: 0, top: [] }
-    espacios.laboratorios = { total: 0, bienes_total: 0, capacidad_total: 0, top: [] }
-  }
-}
-
-const cargarAlertasRecientes = async () => {
-  try {
-    const response = await apiClient.get('/dashboard/alertas-recientes')
-
-    const data = response
-    if (data.success) {
-      alertasRecientes.value = data.data
-    }
-  } catch (error) {
-    alertasRecientes.value = []
-  }
-}
-
-const cargarActividadesRecientes = async () => {
-  try {
-    const response = await apiClient.get('/dashboard/actividades-recientes')
-
-    const data = response
-    if (data.success) {
-      actividadesRecientes.value = data.data
-    }
-  } catch (error) {
-    actividadesRecientes.value = []
-  }
-}
-
 const getAlertaIconClass = (tipo: string) => {
   switch (tipo) {
     case 'Crítica':
@@ -667,19 +371,67 @@ const getAlertaStatusClass = (tipo: string) => {
   }
 }
 
-const formatTime = (time: string | Date) => {
+const cargarBienesEstado = async () => {
+  try {
+    const response = await apiClient.get('/dashboard/bienes-por-estado')
+    const data = response
+    if (data.success) {
+      bienesEstado.value = data.data
+    }
+  } catch (error) {
+    console.error('Error cargando bienes por estado:', error)
+    bienesEstado.value = []
+  }
+}
+
+const cargarActividadReciente = async () => {
+  try {
+    const response = await apiClient.get('/dashboard/actividad-reciente')
+    const data = response
+    if (data.success) {
+      actividadReciente.value = data.data
+    }
+  } catch (error) {
+    console.error('Error cargando actividad reciente:', error)
+    actividadReciente.value = []
+  }
+}
+
+const cargarMovimientosRecientes = async () => {
+  try {
+    const response = await apiClient.get('/dashboard/movimientos-recientes')
+    const data = response
+    if (data.success) {
+      movimientosRecientes.value = data.data
+    }
+  } catch (error) {
+    console.error('Error cargando movimientos recientes:', error)
+    movimientosRecientes.value = []
+  }
+}
+
+const formatTimeAgo = (time: string | Date) => {
   const date = new Date(time)
   const now = new Date()
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+  const diffInMinutes = Math.floor(diffInSeconds / 60)
+  const diffInHours = Math.floor(diffInMinutes / 60)
+  const diffInDays = Math.floor(diffInHours / 24)
 
-  if (diffInHours < 1) {
-    return 'Hace unos minutos'
+  if (diffInSeconds < 60) {
+    return 'Hace unos segundos'
+  } else if (diffInMinutes < 60) {
+    return `Hace ${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''}`
   } else if (diffInHours < 24) {
-    return `Hace ${diffInHours} horas`
+    return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`
+  } else if (diffInDays < 7) {
+    return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`
   } else {
     return date.toLocaleDateString('es-ES')
   }
 }
+
+
 
 // Lifecycle
 onMounted(async () => {
@@ -687,7 +439,7 @@ onMounted(async () => {
   setTimeout(() => {
     uiStore.setLoading(false)
   }, 2000)
-  
+
   await cargarDatos()
 })
 </script>

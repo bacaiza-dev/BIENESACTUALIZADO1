@@ -99,6 +99,38 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
+// GET /documentos/:id/view - Ver documento en el navegador
+router.get("/:id/view", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [doc] = await query("SELECT * FROM documentos_bien WHERE id_documento = ?", [id]);
+    
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Documento no encontrado" });
+    }
+
+    const filePath = doc.url_archivo && fs.existsSync(doc.url_archivo) 
+      ? doc.url_archivo 
+      : (UPLOAD_DIR && fs.existsSync(path.join(UPLOAD_DIR, doc.nombre_archivo))
+        ? path.join(UPLOAD_DIR, doc.nombre_archivo)
+        : null);
+
+    if (!filePath) {
+      return res.status(404).json({ success: false, message: "Archivo físico no encontrado" });
+    }
+
+    // Set headers para mostrar en el navegador (inline) en lugar de descargar
+    res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${doc.nombre_archivo}"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("[ERROR] GET /documentos/:id/view:", error.message);
+    res.status(500).json({ success: false, message: "Error viendo documento", error: error.message });
+  }
+});
+
 // GET /documentos/:id/download
 router.get("/:id/download", verifyToken, async (req, res) => {
   try {
@@ -141,6 +173,33 @@ router.post("/", verifyToken, uploadDocument.single("file"), async (req, res) =>
     res.json({ success: true, message: "Documento subido", data: { id: result.insertId, filename } });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error subiendo documento", error: error.message });
+  }
+});
+
+// PUT /documentos/:id - Actualizar documento
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bien_id, tipo, descripcion } = req.body;
+
+    const [doc] = await query("SELECT * FROM documentos_bien WHERE id_documento = ?", [id]);
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Documento no encontrado" });
+    }
+
+    // Actualizar solo los campos permitidos (no cambiar archivo)
+    await query(
+      `UPDATE documentos_bien 
+       SET id_bien = ?, tipo_documento = ?, descripcion = ? 
+       WHERE id_documento = ?`,
+      [bien_id || null, tipo || 'otro', descripcion || null, id]
+    );
+
+    res.json({ success: true, message: "Documento actualizado", data: { id } });
+  } catch (error) {
+    console.error("[ERROR] PUT /documentos/:id:", error.message);
+    res.status(500).json({ success: false, message: "Error actualizando documento", error: error.message });
   }
 });
 

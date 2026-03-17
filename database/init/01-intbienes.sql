@@ -1,7 +1,3 @@
--- =====================================================
--- SCHEMA NORMALIZADO V3 - SIN CICLOS CIRCULARES
--- Sistema de Gestión de Bienes INT
--- =====================================================
 
 -- Crear base de datos si no existe
 CREATE DATABASE IF NOT EXISTS `intbienes` 
@@ -13,7 +9,7 @@ USE `intbienes`;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- =====================================================
--- NIVEL 0: TABLAS INDEPENDIENTES (Sin FK a otras)
+-- NIVEL 0: Tablas sin dependencias
 -- =====================================================
 
 DROP TABLE IF EXISTS `departamentos`;
@@ -125,7 +121,7 @@ CREATE TABLE `bienes` (
   `marca` VARCHAR(100),
   `modelo` VARCHAR(100),
   `serie` VARCHAR(100),
-  `estado` ENUM('ACTIVO','INACTIVO','BAJA','MANTENIMIENTO','TRANSFERIDO') NOT NULL DEFAULT 'ACTIVO',
+  `estado` VARCHAR(50) NOT NULL DEFAULT 'ACTIVO',
   `valor` DECIMAL(12,2) DEFAULT 0.00,
   `fecha_adquisicion` DATE,
   `vida_util` INT,
@@ -350,6 +346,26 @@ CREATE TABLE `support_messages` (
     REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Logs del Sistema (separado de auditoría)
+DROP TABLE IF EXISTS `logs_sistema`;
+CREATE TABLE `logs_sistema` (
+  `id_log` INT AUTO_INCREMENT PRIMARY KEY,
+  `nivel` ENUM('info','warning','error','debug') NOT NULL DEFAULT 'info',
+  `modulo` VARCHAR(50) NOT NULL,
+  `mensaje` TEXT NOT NULL,
+  `detalles` TEXT,
+  `usuario_id` INT,
+  `ip_address` VARCHAR(45),
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) 
+    REFERENCES `usuarios`(`id_usuario`) ON DELETE SET NULL,
+  
+  INDEX `idx_logs_nivel` (`nivel`),
+  INDEX `idx_logs_modulo` (`modulo`),
+  INDEX `idx_logs_fecha` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- =====================================================
 -- DATOS INICIALES
 -- =====================================================
@@ -394,26 +410,3 @@ INSERT INTO `asignaciones_bien` (`id_bien`, `id_usuario`, `observaciones`) VALUE
 (1, 1, 'Asignación inicial');
 
 SET FOREIGN_KEY_CHECKS = 1;
-
--- =====================================================
--- ESTRUCTURA JERÁRQUICA SIN CICLOS:
---
--- NIVEL 0: departamentos, roles, permisos, categorias, 
---          ubicaciones, periodos_academicos
---          (Sin dependencias)
---
--- NIVEL 1: usuarios
---          (Depende de: departamentos, roles)
---
--- NIVEL 2: bienes
---          (Depende de: categorias, ubicaciones, periodos)
---          [NO depende de usuarios - evita ciclo]
---
--- NIVEL 3: asignaciones_bien, alertas, mantenimientos,
---          documentos_bien, aulas_asignadas
---          (Hojas del árbol - no generan ciclos)
---
--- NIVEL 4: auditoria, reportes, settings, support_messages
---          (Solo dependen de usuarios)
---
--- =====================================================

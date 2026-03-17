@@ -18,7 +18,8 @@ const dashboardRoutes = require("./dashboard"); // Nuevo módulo de dashboard
 const logsRoutes = require("./logs");
 const exportRoutes = require("./export");
 const rolesRoutes = require("./roles");
-const departamentosRoutes = require("./departamentos");
+const campusRoutes = require("./campus");
+const areasRoutes = require("./areas");
 const movimientosRoutes = require("./movimientos");
 const alertasRoutes = require("./alertas");
 const documentosRoutes = require("./documentos");
@@ -93,7 +94,12 @@ router.use("/logs", logsRoutes);
 
 // Roles y Departamentos
 router.use("/roles", rolesRoutes);
-router.use("/departamentos", departamentosRoutes);
+// Mantener compatibilidad: exponer `/departamentos` usando las rutas de `/campus`
+router.use("/departamentos", campusRoutes);
+router.use("/campus", campusRoutes);
+
+// Áreas
+router.use("/areas", areasRoutes);
 
 // Movimientos y Alertas
 router.use("/movimientos", movimientosRoutes);

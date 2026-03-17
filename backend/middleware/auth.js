@@ -10,7 +10,12 @@ const JWT_SECRET = process.env.JWT_SECRET || "sistema_bienes_jwt_secret_2024";
 async function verifyToken(req, res, next) {
   try {
     const authHeader = req.headers.authorization || req.headers.Authorization;
+    
+    // DEBUG AUTH
+    console.log(`[AUTH] Header received: ${authHeader ? 'YES' : 'NO'} - ${authHeader ? authHeader.substring(0, 20) + '...' : ''}`);
+    
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log('[AUTH] Token missing or invalid format');
       return res.status(401).json({
         success: false,
         message: "Token no proporcionado",

@@ -12,20 +12,27 @@
               Administra los períodos académicos institucionales
             </p>
           </div>
-          <button
-            @click="showCreateModal = true"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            Nuevo Período
-          </button>
+          <div class="flex items-center">
+            <button
+              @click="openInactiveModal"
+              class="inline-flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-800 text-white font-medium rounded-lg transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 12v7a1 1 0 01-1 1h-2a1 1 0 01-1-1v-7L3.293 6.707A1 1 0 013 6V4z" />
+              </svg>
+              Ver Inactivos
+            </button>
+
+            <button
+              @click="showCreateModal = true"
+              class="ml-3 inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Nuevo Período
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -42,18 +49,7 @@
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
-          <div>
-            <select
-              v-model="filters.estado"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Todos los estados</option>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-              <option value="finalizado">Finalizado</option>
-              <option value="planificado">Planificado</option>
-            </select>
-          </div>
+
           <div>
             <select
               v-model="filters.tipo"
@@ -165,7 +161,12 @@
                 {{ periodo.duracion }} días
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                {{ periodo.bienesAsignados }} bienes
+                <button
+                  @click="viewBienesPeriodo(periodo)"
+                  class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 dark:text-blue-400 dark:bg-blue-900 dark:hover:bg-blue-800 rounded-lg transition-colors font-medium"
+                >
+                  {{ periodo.bienesAsignados }} bienes
+                </button>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
@@ -249,6 +250,26 @@
       </div>
     </div>
 
+    <!-- Modal de confirmación de eliminación -->
+    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-60" @click.self="closeDeleteConfirm">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white text-center">
+          ¿Estás seguro de que quieres eliminar este período?
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+          Esta acción no se puede deshacer.
+        </p>
+        <div class="mt-6 flex gap-3 justify-center">
+          <button @click="confirmDelete" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
+            Eliminar
+          </button>
+          <button @click="closeDeleteConfirm" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white font-medium transition-colors">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal de creación/edición -->
     <div
       v-if="showCreateModal || showEditModal"
@@ -281,6 +302,7 @@
                 type="number"
                 min="2020"
                 :max="new Date().getFullYear() + 5"
+                @change="updatePeriodoType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
               />
@@ -291,6 +313,7 @@
               >
               <select
                 v-model="form.tipo"
+                @change="updatePeriodoType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
               >
@@ -321,12 +344,26 @@
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >Fecha de Inicio *</label
               >
-              <input
-                v-model="form.fechaInicio"
-                type="date"
-                required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-              />
+              <div class="flex gap-2">
+                <input
+                  v-model="form.fechaInicio"
+                  type="date"
+                  required
+                  class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                />
+                <button
+                  type="button"
+                  @click="autoSuggestDates"
+                  :disabled="!form.tipo || !form.anio"
+                  class="px-3 py-2 bg-blue-100 hover:bg-blue-200 disabled:bg-gray-100 text-blue-700 dark:text-blue-400 disabled:text-gray-500 dark:bg-blue-900 dark:hover:bg-blue-800 dark:disabled:bg-gray-700 rounded-lg transition-colors font-medium text-sm"
+                  title="Auto-sugerir fechas basándose en el tipo de período y año"
+                >
+                  <i class="bx bx-refresh text-lg"></i>
+                </button>
+              </div>
+              <p v-if="suggestedDates" class="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                ✓ Fechas sugeridas automáticamente
+              </p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -379,7 +416,92 @@
       </div>
     </div>
 
-    <!-- Modal de detalles -->
+    <!-- Modal de alerta de error -->
+    <div v-if="deleteErrorMessage" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" @click.self="closeDeleteConfirm">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 dark:bg-red-900 rounded-full">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white text-center">
+          Período en uso
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+          {{ deleteErrorMessage }}
+        </p>
+        <div class="mt-6 flex justify-center">
+          <button @click="closeDeleteConfirm" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de alerta de error -->
+    <div v-if="deleteErrorMessage" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" @click.self="closeDeleteConfirm">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+        <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 dark:bg-red-900 rounded-full">
+          <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white text-center">
+          Período en uso
+        </h3>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+          {{ deleteErrorMessage }}
+        </p>
+        <div class="mt-6 flex justify-center">
+          <button @click="closeDeleteConfirm" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Modal de Períodos Inactivos -->
+    <div v-if="showInactiveModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50" @click.self="showInactiveModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[80vh] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Períodos inactivos</h2>
+        <div class="mb-4">
+          <input v-model="inactiveSearch" type="text" placeholder="Buscar por nombre o año..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
+        </div>
+        <div v-if="filteredInactivePeriodos.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Período</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Año</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Tipo</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Bienes</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="p in filteredInactivePeriodos" :key="p.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">{{ p.nombre }}</td>
+                <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">{{ p.anio }}</td>
+                <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{{ p.tipo }}</td>
+                <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">{{ p.bienes_count || p.bienesAsignados || 0 }}</td>
+                <td class="px-4 py-2 text-sm font-medium">
+                  <div class="flex space-x-2">
+                    <button @click="reactivatePeriodo(p.id)" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg">Reactivar</button>
+                    <button @click="openPermanentDeleteConfirm(p.id)" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg">Eliminar </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="text-center py-8">
+          <p class="text-gray-500 dark:text-gray-400">No hay períodos inactivos</p>
+        </div>
+        <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <button @click="showInactiveModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
     <div
       v-if="showViewModal"
       class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
@@ -476,6 +598,74 @@
               Cerrar
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de bienes asignados -->
+    <div
+      v-if="showBienesModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="closeBienesModal"
+    >
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          Bienes Asignados - {{ selectedBienesPeriodo?.nombre }}
+        </h2>
+        
+        <div v-if="bienesList.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                  Código
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                  Nombre
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                  Categoría
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                  Estado
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="bien in bienesList" :key="bien.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-mono">
+                  {{ bien.codigo }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                  {{ bien.nombre }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                  {{ bien.categoria }}
+                </td>
+                <td class="px-4 py-3 text-sm">
+                  <span
+                    class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                    :class="getEstadoBienClass(bien.estado)"
+                  >
+                    {{ bien.estado }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div v-else class="text-center py-8">
+          <p class="text-gray-500 dark:text-gray-400">No hay bienes asignados a este período</p>
+        </div>
+        
+        <div class="flex justify-end pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            @click="closeBienesModal"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </div>

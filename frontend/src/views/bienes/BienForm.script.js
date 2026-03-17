@@ -23,11 +23,12 @@ export default {
     // Estado del formulario
     const isEditing = ref(false)
     const showConfirmModal = ref(false)
+    const showDeleteConfirmModal = ref(false)
+    const documentToDelete = ref(null)
     const form = ref({
       id: null,
       codigo: '',
       nombre: '',
-      clase_de_bien: '',
       categoria: '',
       estado: '',
       ubicacion: '',
@@ -43,11 +44,9 @@ export default {
       periodo_id: '',
       modelo: '',
       serie: '',
-      anioFabricacion: '',
       valorAdquisicion: '',
       valorActual: '',
       fechaAdquisicion: '',
-      proveedor: '',
       descripcion: '',
       observaciones: '',
       frecuenciaMantenimiento: '',
@@ -55,6 +54,12 @@ export default {
     })
 
     const errors = ref({})
+
+    // Estado de evidencias
+    const evidenciasPendientes = ref([])
+    const evidenciasExistentes = ref([]) // Para edición
+    const imagenesPreview = ref([])
+    const isDragging = ref(false)
 
     // Reactive objects for Multiselect
     const selectedCategoria = ref(null)
@@ -72,14 +77,7 @@ export default {
     const categorias = ref([])
     const ubicaciones = ref([])
 
-    const clasesBienOptions = ref([
-      'EQUIPO DE COMPUTO',
-      'MOBILIARIO',
-      'EQUIPO AUDIOVISUAL',
-      'EQUIPO DE LABORATORIO',
-      'HERRAMIENTAS',
-      'OTROS',
-    ])
+    // clasesBienOptions removed
 
     // Watchers to sync Multiselect objects with form IDs
     watch(selectedCategoria, (newVal) => {
@@ -134,14 +132,20 @@ export default {
       return (
         form.value.codigo &&
         form.value.nombre &&
-        form.value.clase_de_bien &&
         form.value.categoria &&
         form.value.estado &&
-        form.value.ubicacion &&
-        form.value.responsable &&
+        // form.value.responsable && // Opcional
+        form.value.marca &&
+        form.value.modelo &&
+        form.value.serie &&
         form.value.valorAdquisicion &&
         form.value.vida_util &&
-        form.value.fechaAdquisicion
+        form.value.fechaAdquisicion &&
+        form.value.nro_acta_entrega_recepcion &&
+        form.value.nro_acta_constatacion_fisica &&
+        form.value.color &&
+        form.value.material &&
+        form.value.periodo_id
       )
     })
 
@@ -160,10 +164,6 @@ export default {
         errors.value.nombre = 'El nombre es requerido'
       }
 
-      if (!form.value.clase_de_bien) {
-        errors.value.clase_de_bien = 'La clase de bien es requerida'
-      }
-
       if (!form.value.categoria) {
         errors.value.categoria = 'La categoría es requerida'
       }
@@ -172,13 +172,7 @@ export default {
         errors.value.estado = 'El estado es requerido'
       }
 
-      if (!form.value.ubicacion) {
-        errors.value.ubicacion = 'La ubicación es requerida'
-      }
-
-      if (!form.value.responsable) {
-        errors.value.responsable = 'El responsable es requerido'
-      }
+      /* Responsable es opcional */
 
       if (!form.value.valorAdquisicion || form.value.valorAdquisicion <= 0) {
         errors.value.valorAdquisicion = 'El valor de adquisición debe ser mayor a 0'
@@ -192,6 +186,25 @@ export default {
         errors.value.vida_util = 'La vida útil debe ser mayor a 0'
       }
 
+      if (!form.value.marca) errors.value.marca = 'La marca es requerida';
+      if (!form.value.modelo) errors.value.modelo = 'El modelo es requerido';
+      if (!form.value.serie) errors.value.serie = 'La serie es requerida';
+      // Allow 'N/A' (no aplica) to be used by multiple bienes
+      // `codigo_senescyt` es opcional: validar solo si se proporcionó
+      if (form.value.codigo_senescyt) {
+        const sn = String(form.value.codigo_senescyt).trim()
+        if (sn.length === 0) {
+          errors.value.codigo_senescyt = 'El código SENESCYT es requerido'
+        }
+        // 'N/A' será tratado como no aplicable durante el envío (mapeo en saveBien)
+      }
+      if (!form.value.color) errors.value.color = 'El color es requerido';
+      if (!form.value.material) errors.value.material = 'El material es requerido';
+      if (!form.value.nro_acta_entrega_recepcion) errors.value.nro_acta_entrega_recepcion = 'El Nro. Acta Entrega es requerido';
+      if (!form.value.nro_acta_constatacion_fisica) errors.value.nro_acta_constatacion_fisica = 'El Nro. Acta Constatación es requerido';
+      if (!form.value.periodo_id) errors.value.periodo_id = 'El período académico es requerido';
+
+
       return Object.keys(errors.value).length === 0
     }
 
@@ -202,8 +215,8 @@ export default {
 
     const saveBien = async () => {
       // Validaciones básicas
-      if (!form.value.codigo || !form.value.nombre || !form.value.clase_de_bien || !form.value.categoria || !form.value.estado) {
-        toast.error('Por favor completa los campos obligatorios')
+      if (!isFormValid.value) {
+        toast.error('Por favor completa TODOS los campos obligatorios')
         return
       }
 
@@ -213,7 +226,6 @@ export default {
         const payload = {
             codigo_institucional: form.value.codigo,
             nombre: form.value.nombre,
-            clase_de_bien: form.value.clase_de_bien,
             descripcion: form.value.descripcion,
             marca: form.value.marca,
             modelo: form.value.modelo,
@@ -224,17 +236,16 @@ export default {
             vida_util: parseInt(form.value.vida_util),
             valor_residual: parseFloat(form.value.valor_residual) || 0,
             categoria_id: parseInt(form.value.categoria),
-            ubicacion_id: parseInt(form.value.ubicacion),
-            responsable_id: parseInt(form.value.responsable),
+            ubicacion_id: form.value.ubicacion ? parseInt(form.value.ubicacion) : null,
+            responsable_id: form.value.responsable ? parseInt(form.value.responsable) : null,
             periodo_id: form.value.periodo_id ? parseInt(form.value.periodo_id) : null,
             observaciones: form.value.observaciones,
-            codigo_senescyt: form.value.codigo_senescyt,
+            // Treat 'N/A' (case-insensitive) as not-applicable -> send null to DB
+            codigo_senescyt: (function(v){ const s = String(v || '').trim(); return (/^n\/?a$/i.test(s) || s === '') ? null : s })(form.value.codigo_senescyt),
             nro_acta_entrega_recepcion: form.value.nro_acta_entrega_recepcion,
             nro_acta_constatacion_fisica: form.value.nro_acta_constatacion_fisica,
             color: form.value.color,
             material: form.value.material,
-            proveedor: form.value.proveedor || null,
-            anio_fabricacion: form.value.anioFabricacion ? parseInt(form.value.anioFabricacion, 10) : null,
             depreciacion_acumulada:
               depreciacionCalculada.value !== null && depreciacionCalculada.value !== undefined
                 ? Number(depreciacionCalculada.value)
@@ -250,21 +261,99 @@ export default {
 
         const data = response
         if (data.success) {
+          // Clear previous server validation errors
+          errors.value = {}
+
           const mensaje = isEditing.value
             ? 'Bien actualizado correctamente'
             : 'Bien guardado correctamente'
           toast.success(mensaje)
+
+          // Subir evidencias si hay archivos pendientes
+          if (evidenciasPendientes.value.length > 0) {
+            const bienId = data.data?.id || data.data?.id_bien || form.value.id
+            const count = evidenciasPendientes.value.length; // Capture count
+            if (bienId) {
+              await uploadEvidencias(bienId)
+              toast.info(`${count} evidencias subidas`)
+            }
+          }
+
           if (isEditing.value) {
             router.push(`/bienes/${form.value.id}`)
           } else {
             router.push('/bienes')
           }
-        } else {
-          throw new Error(data.message || 'Error al guardar bien')
+
+          return
         }
+
+        // --- Manejo de error informado por el backend (sin lanzar excepción) ---
+        const serverMsg = data?.message || 'Error al guardar el bien'
+        // Si el backend envía errores de validación, mapearlos al objeto `errors` usado por el formulario
+        const serverErrors = (data && (data.errors || data.data?.errors)) || null
+        if (serverErrors && typeof serverErrors === 'object') {
+          // Mapeo conocido de campos del backend -> campos del formulario
+          const fieldMap = {
+            codigo_institucional: 'codigo',
+            codigo_senescyt: 'codigo_senescyt',
+            categoria_id: 'categoria',
+            ubicacion_id: 'ubicacion',
+            responsable_id: 'responsable',
+            vida_util: 'vida_util',
+            valor: 'valorAdquisicion',
+            periodo_id: 'periodo_id',
+            nro_acta_entrega_recepcion: 'nro_acta_entrega_recepcion',
+            nro_acta_constatacion_fisica: 'nro_acta_constatacion_fisica',
+            modelo: 'modelo',
+            serie: 'serie',
+            marca: 'marca',
+            nombre: 'nombre',
+            codigo_senescyt_unico: 'codigo_senescyt'
+          }
+          Object.entries(serverErrors).forEach(([k, v]) => {
+            const target = fieldMap[k] || k
+            // v puede ser array o string
+            errors.value[target] = Array.isArray(v) ? v.join(', ') : String(v)
+          })
+        }
+
+        // Mostrar mensaje específico del backend cuando exista
+        if (serverMsg) {
+          toast.error(serverMsg)
+          console.warn('Backend validation / error:', serverErrors || serverMsg)
+          return
+        }
+
       } catch (error) {
+        // Capturar errores lanzados (axios, network, etc.) y mostrar mensaje concreto si está disponible
         console.error('Error saving bien:', error)
-        toast.error('Error al guardar el bien')
+        const resp = error?.response?.data
+        // Priorizar message del backend
+        const msg = resp?.message || error?.message || 'Error al guardar el bien'
+
+        // Mapear errores de validación si vienen en response.data.errors
+        const validation = resp?.errors || resp?.data?.errors || null
+        if (validation && typeof validation === 'object') {
+          const fieldMap = {
+            codigo_institucional: 'codigo',
+            codigo_senescyt: 'codigo_senescyt',
+            categoria_id: 'categoria',
+            ubicacion_id: 'ubicacion',
+            responsable_id: 'responsable',
+            vida_util: 'vida_util',
+            valor: 'valorAdquisicion',
+            periodo_id: 'periodo_id',
+            nro_acta_entrega_recepcion: 'nro_acta_entrega_recepcion',
+            nro_acta_constatacion_fisica: 'nro_acta_constatacion_fisica',
+          }
+          Object.entries(validation).forEach(([k, v]) => {
+            const target = fieldMap[k] || k
+            errors.value[target] = Array.isArray(v) ? v.join(', ') : String(v)
+          })
+        }
+
+        toast.error(msg)
       }
     }
 
@@ -303,23 +392,15 @@ export default {
             id: bien.id ?? bien.id_bien,
             codigo: bien.codigo_institucional || bien.codigo || '',
             nombre: bien.nombre,
-            clase_de_bien: bien.clase_de_bien || '',
             categoria: bien.categoria_id?.toString() || '',
-            estado: bien.estado?.toLowerCase() || 'activo',
+            estado: bien.estado?.toLowerCase() || 'bueno',
             ubicacion: bien.ubicacion_id?.toString() || '',
             responsable: bien.responsable_id?.toString() || '',
             marca: bien.marca || '',
             modelo: bien.modelo || '',
             serie: bien.serie || '',
-            anioFabricacion:
-              bien.anio_fabricacion !== null && bien.anio_fabricacion !== undefined && bien.anio_fabricacion !== ''
-                ? String(bien.anio_fabricacion)
-                : bien.fecha_adquisicion
-                  ? new Date(bien.fecha_adquisicion).getFullYear().toString()
-                  : '',
             valorAdquisicion: bien.valor?.toString() || '',
             fechaAdquisicion: bien.fecha_adquisicion || '',
-            proveedor: bien.proveedor || '',
             descripcion: bien.descripcion || '',
             observaciones: bien.observaciones || '',
             codigo_senescyt: bien.codigo_senescyt || '',
@@ -344,6 +425,11 @@ export default {
           }
           if (bien.responsable_id) {
             selectedResponsable.value = usuarios.value.find(u => u.id == bien.responsable_id)
+          }
+
+          // Cargar evidencias existentes
+          if (bien.documentos && Array.isArray(bien.documentos)) {
+            evidenciasExistentes.value = bien.documentos
           }
         } else {
           throw new Error(data.message || 'Error al cargar bien')
@@ -434,6 +520,7 @@ export default {
       } catch (error) {
         console.error('Error loading ubicaciones:', error)
         ubicaciones.value = []
+        ubicaciones.value = []
       }
     }
 
@@ -443,6 +530,165 @@ export default {
         return
       }
       showConfirmModal.value = true
+    }
+
+    // ========== FUNCIONES DE EVIDENCIAS ==========
+    
+    const handleFileSelect = (event) => {
+      const files = Array.from(event.target.files)
+      addFiles(files)
+    }
+
+    const handleFileDrop = (event) => {
+      isDragging.value = false
+      const files = Array.from(event.dataTransfer.files)
+      addFiles(files)
+    }
+
+    const addFiles = (files) => {
+      const validTypes = ['image/', 'application/pdf', 'application/vnd.ms-excel', 
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      
+      for (const file of files) {
+        const isValid = validTypes.some(type => file.type.startsWith(type))
+        if (!isValid) {
+          toast.warning(`Archivo ${file.name} no es un tipo válido`)
+          continue
+        }
+        if (file.size > 20 * 1024 * 1024) {
+          toast.warning(`Archivo ${file.name} excede 20MB`)
+          continue
+        }
+        
+        // Agregar tipoEvidencia al archivo
+        file.tipoEvidencia = file.type.startsWith('image/') ? 'foto' : 'otro'
+        evidenciasPendientes.value.push(file)
+        
+        // Generar preview si es imagen
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            imagenesPreview.value.push({ url: e.target.result, name: file.name })
+          }
+          reader.readAsDataURL(file)
+        }
+      }
+    }
+
+    const removeFile = (index) => {
+      const file = evidenciasPendientes.value[index]
+      evidenciasPendientes.value.splice(index, 1)
+      
+      // Remover preview si es imagen
+      if (file.type.startsWith('image/')) {
+        const previewIndex = imagenesPreview.value.findIndex(p => p.name === file.name)
+        if (previewIndex > -1) {
+          imagenesPreview.value.splice(previewIndex, 1)
+        }
+      }
+    }
+
+    const requestDeleteDocument = (id, index) => {
+        documentToDelete.value = { id, index }
+        showDeleteConfirmModal.value = true
+    }
+
+    const cancelDeleteDocument = () => {
+        showDeleteConfirmModal.value = false
+        documentToDelete.value = null
+    }
+
+    const confirmDeleteDocument = async () => {
+        if (!documentToDelete.value) return
+        
+        const { id, index } = documentToDelete.value
+        
+        try {
+            const response = await apiClient.delete(`/documentos/${id}`)
+            // Siempre eliminar de la vista, ya sea éxito o error (optimista/limpieza)
+            evidenciasExistentes.value.splice(index, 1);
+            toast.success('Documento eliminado');
+        } catch (e) {
+            console.error(e)
+            // Si falla, igual lo quitamos de la vista porque probablemente ya no existe o hay error de permisos
+            evidenciasExistentes.value.splice(index, 1);
+            toast.warning('Documento eliminado de la vista');
+        } finally {
+            showDeleteConfirmModal.value = false
+            documentToDelete.value = null
+        }
+    }
+
+    const getFileIcon = (mimeType) => {
+      if (!mimeType) return 'bx bx-file text-gray-500'
+      if (mimeType.startsWith('image/')) return 'bx bx-image text-blue-500'
+      if (mimeType.includes('pdf')) return 'bx bxs-file-pdf text-red-500'
+      if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'bx bxs-file-export text-green-500'
+      if (mimeType.includes('word') || mimeType.includes('document')) return 'bx bxs-file-doc text-blue-600'
+      return 'bx bx-file text-gray-500'
+    }
+
+    const formatFileSize = (bytes) => {
+      if (!bytes) return '0 B'
+      if (bytes < 1024) return bytes + ' B'
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
+    }
+
+    const uploadEvidencias = async (bienId) => {
+      if (evidenciasPendientes.value.length === 0) return
+      
+      for (const file of evidenciasPendientes.value) {
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('id_bien', bienId)
+          formData.append('tipo_documento', file.tipoEvidencia || 'foto')
+          formData.append('descripcion', `Evidencia de entrega - ${file.name}`)
+          
+          await fetch('/api/documentos', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: formData
+          })
+        } catch (error) {
+          console.error('Error subiendo evidencia:', error)
+        }
+      }
+      
+      // Limpiar después de subir
+      evidenciasPendientes.value = []
+      imagenesPreview.value = []
+    }
+
+    const downloadDocument = async (doc) => {
+      try {
+        toast.info('Iniciando descarga...')
+        const response = await apiClient.get(doc.url, { 
+          responseType: 'blob', 
+          baseURL: '' 
+        })
+        
+        const blob = response
+        if (!(blob instanceof Blob)) {
+           throw new Error('El archivo no es válido')
+        }
+
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', doc.nombre_archivo || doc.nombre || 'documento')
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Error descargando documento:', error)
+        toast.error('Error al descargar documento')
+      }
     }
 
     const confirmSave = async () => {
@@ -455,12 +701,18 @@ export default {
       isEditing,
       showConfirmModal,
       form,
+      downloadDocument,
+      // Delete modal exports
+      showDeleteConfirmModal,
+      requestDeleteDocument,
+      cancelDeleteDocument,
+      confirmDeleteDocument,
       errors,
       usuarios,
       periodos,
       categorias,
       ubicaciones,
-      clasesBienOptions,
+
       depreciacionCalculada,
       porcentajeDepreciacion,
       isFormValid,
@@ -472,7 +724,17 @@ export default {
       selectedCategoria,
       selectedUbicacion,
       selectedPeriodo,
-      selectedResponsable
+      selectedResponsable,
+      // Evidencias
+      evidenciasPendientes,
+      evidenciasExistentes,
+      imagenesPreview,
+      isDragging,
+      handleFileSelect,
+      handleFileDrop,
+      removeFile,
+      getFileIcon,
+      formatFileSize
     }
-  },
+  }
 }

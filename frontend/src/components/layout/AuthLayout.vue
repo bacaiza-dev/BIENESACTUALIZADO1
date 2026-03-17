@@ -1,7 +1,6 @@
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 transition-all duration-300"
-  >
+    class="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center px-4 transition-all duration-300">
     <div class="max-w-md w-full space-y-8">
       <!-- Logo -->
       <div class="text-center">
@@ -12,18 +11,15 @@
 
       <!-- Form Container -->
       <div
-        class="bg-white dark:bg-gray-800 py-8 px-6 shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105"
-      >
-        <router-view />
+        class="bg-white dark:bg-gray-800 py-8 px-6 shadow-2xl rounded-2xl border border-gray-200 dark:border-gray-700 transform transition-all duration-300 hover:scale-105">
+        <slot />
       </div>
 
       <!-- Theme Toggle -->
       <div class="text-center">
-        <button
-          @click="uiStore.toggleDarkMode"
+        <button @click="uiStore.toggleDarkMode"
           class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-lg transition-all duration-200 hover:scale-105"
-          title="Alternar modo oscuro"
-        >
+          title="Alternar modo oscuro">
           <i :class="['bx text-lg', uiStore.isDarkMode ? 'bx-sun' : 'bx-moon']"></i>
         </button>
       </div>

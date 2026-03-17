@@ -39,6 +39,10 @@ COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
 # Copiar código fuente
 COPY --chown=nodejs:nodejs . .
 
+# Crear directorio de uploads con permisos correctos
+RUN mkdir -p uploads/documents \
+    && chown -R nodejs:nodejs uploads
+
 # Cambiar a usuario no-root
 USER nodejs
 

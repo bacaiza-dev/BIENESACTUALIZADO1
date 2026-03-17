@@ -50,18 +50,17 @@ router.get("/", verifyToken, async (req, res) => {
         id_ubicacion as id,
         'Ubicación' as tipo,
         area as titulo,
-        CONCAT('Tipo: ', tipo, ' | Sede: ', COALESCE(sede, 'N/A'), 
+        CONCAT('Tipo: N/A', ' | Sede: ', COALESCE(sede, 'N/A'), 
                COALESCE(CONCAT(' | Aula: ', numero_aula), ''),
                COALESCE(CONCAT(' | Piso: ', piso), '')) as descripcion,
         created_at as fecha
       FROM ubicaciones
       WHERE area LIKE ?
-         OR tipo LIKE ?
          OR sede LIKE ?
          OR numero_aula LIKE ?
          OR descripcion LIKE ?
       LIMIT ?
-    `, [searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, limitNum]);
+    `, [searchTerm, searchTerm, searchTerm, searchTerm, limitNum]);
     resultados = resultados.concat(ubicaciones);
 
     // 3. Buscar USUARIOS (solo admin)
@@ -183,20 +182,6 @@ router.get("/", verifyToken, async (req, res) => {
     `, [searchTerm, searchTerm, searchTerm, limitNum]);
     resultados = resultados.concat(periodos);
 
-    // 9. Buscar DEPARTAMENTOS
-    const departamentos = await query(`
-      SELECT 
-        id_departamento as id,
-        'Departamento' as tipo,
-        nombre as titulo,
-        COALESCE(descripcion, 'Sin descripción') as descripcion,
-        created_at as fecha
-      FROM departamentos
-      WHERE nombre LIKE ?
-         OR descripcion LIKE ?
-      LIMIT ?
-    `, [searchTerm, searchTerm, limitNum]);
-    resultados = resultados.concat(departamentos);
 
     // 10. Buscar ROLES (solo admin)
     if (isAdmin) {

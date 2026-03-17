@@ -43,11 +43,15 @@
           <!-- Reportes (Solo Admin) -->
           <NavGroup v-if="authStore.isAdmin" icon="bx-bar-chart-alt-2" label="Reportes" :items="reportesItems" />
 
-          <!-- Mantenimiento (Solo Admin) -->
-          <NavGroup v-if="authStore.isAdmin" icon="bx-wrench" label="Mantenimiento" :items="mantenimientoItems" />
 
-          <!-- Aulas por Custodio (Solo Usuario normal) -->
-          <NavItem v-if="!authStore.isAdmin" :to="{ name: 'AulasAsignadas' }" icon="bx-door-open" label="Mis Aulas" />
+
+          <!-- Espacios (Salas para todos) -->
+          <NavGroup icon="bx-building" label="Espacios" :items="espaciosItems" />
+
+          <!-- Documentación (Solo Admin) -->
+          <NavGroup v-if="authStore.isAdmin" icon="bx-folder" label="Documentación" :items="documentacionItems" />
+
+
 
           <!-- Profile -->
           <NavItem :to="{ name: 'Profile' }" icon="bx-user-circle" label="Mi Perfil" />
@@ -59,8 +63,9 @@
 
       <!-- Logout Button -->
       <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+
         <button @click="handleLogout"
-          class="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
+          class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200">
           <i class="bx bx-log-out mr-3 text-lg"></i>
           <span class="truncate">Cerrar Sesión</span>
         </button>
@@ -121,17 +126,30 @@ const usuariosItems = computed(() => [
 const configuracionItems = computed(() => {
   const items = [
     { to: { name: 'UbicacionesList' }, icon: 'bx-map', label: 'Ubicaciones' },
-    { to: { name: 'SalasList' }, icon: 'bx-building-house', label: 'Salas' },
-    { to: { name: 'AulasAsignadas' }, icon: 'bx-door-open', label: 'Aulas por Custodio' },
   ]
 
   if (authStore.isAdmin) {
     items.push(
+      { to: { name: 'AreasList' }, icon: 'bx-category', label: 'Áreas' },
       { to: { name: 'CategoriasList' }, icon: 'bx-category', label: 'Categorías' },
       { to: { name: 'PeriodosList' }, icon: 'bx-calendar', label: 'Períodos' },
       { to: { name: 'AlertasList' }, icon: 'bx-bell', label: 'Alertas' },
       { to: { name: 'SystemSettings' }, icon: 'bx-cog', label: 'Sistema' }
     )
+  }
+
+  return items
+})
+
+const espaciosItems = computed(() => {
+  const items = [
+    { to: { name: 'CampusList' }, icon: 'bx-building', label: 'Gestión de Campus' },
+  ]
+
+  if (!authStore.isAdmin) {
+    items.push({ to: { name: 'AulasAsignadas' }, icon: 'bx-door-open', label: 'Mis Aulas Asignadas' })
+  } else {
+    items.push({ to: { name: 'AulasAsignadas' }, icon: 'bx-door-open', label: 'Aulas Asignadas' })
   }
 
   return items
@@ -143,10 +161,9 @@ const reportesItems = computed(() => [
   { to: { name: 'SystemLogs' }, icon: 'bx-list-ul', label: 'Logs del Sistema' },
 ])
 
-const mantenimientoItems = computed(() => [
-  { to: { name: 'MantenimientosList' }, icon: 'bx-wrench', label: 'Mantenimientos' },
+const documentacionItems = computed(() => [
+  // Elementos de documentación relacionados a mantenimientos
   { to: { name: 'DocumentosList' }, icon: 'bx-file', label: 'Documentos' },
-  { to: { name: 'AsignacionesList' }, icon: 'bx-user-pin', label: 'Asignaciones' },
 ])
 
 const handleLogout = async () => {

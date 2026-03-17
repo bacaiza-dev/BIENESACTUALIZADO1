@@ -10,17 +10,11 @@
               Centro de ayuda para el Sistema de Gestión de Bienes INT Nelson Torres
             </p>
           </div>
-          <button
-            @click="contactSupport"
-            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 hover:scale-105"
-          >
+          <button @click="contactSupport"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 hover:scale-105">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             Contactar Soporte
           </button>
@@ -34,17 +28,12 @@
         <!-- Sidebar de navegación -->
         <div class="lg:col-span-1">
           <nav class="sticky top-8 space-y-2">
-            <button
-              v-for="section in sections"
-              :key="section.id"
-              @click="activeSection = section.id"
-              :class="[
-                'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
-                activeSection === section.id
-                  ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-l-4 border-red-500'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white',
-              ]"
-            >
+            <button v-for="section in sections" :key="section.id" @click="activeSection = section.id" :class="[
+              'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200',
+              activeSection === section.id
+                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-l-4 border-red-500'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white',
+            ]">
               <div class="flex items-center">
                 <span class="mr-3">{{ section.icon }}</span>
                 {{ section.title }}
@@ -56,71 +45,43 @@
         <!-- Panel principal -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Búsqueda -->
-          <div
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
+                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Buscar en la documentación..."
-                class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
-              />
+              <input v-model="searchQuery" type="text" placeholder="Buscar en la documentación..."
+                class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200" />
             </div>
           </div>
 
           <!-- Guía de Inicio Rápido -->
-          <div
-            v-show="activeSection === 'quickstart'"
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div v-show="activeSection === 'quickstart'"
+            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               🚀 Guía de Inicio Rápido
             </h2>
 
             <div class="space-y-6">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div
-                  v-for="step in quickstartSteps"
-                  :key="step.id"
-                  class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow duration-200"
-                >
+                <div v-for="step in quickstartSteps" :key="step.id"
+                  class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow duration-200">
                   <div class="flex items-start">
                     <div class="flex-shrink-0">
-                      <div
-                        class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center"
-                      >
-                        <span class="text-sm font-bold text-red-600 dark:text-red-400">{{
-                          step.id
-                        }}</span>
+                      <div class="w-8 h-8 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
+                        <span class="text-sm font-bold text-red-600 dark:text-red-400">{{ step.id }}</span>
                       </div>
                     </div>
                     <div class="ml-4">
-                      <h3 class="text-sm font-medium text-gray-900 dark:text-white">
-                        {{ step.title }}
-                      </h3>
+                      <h3 class="text-sm font-medium text-gray-900 dark:text-white">{{ step.title }}</h3>
                       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         {{ step.description }}
                       </p>
-                      <button
-                        @click="openGuide(step.guide)"
-                        class="mt-2 text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 font-medium"
-                      >
+                      <button @click="openGuide(step.guide)"
+                        class="mt-2 text-xs text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 font-medium">
                         Ver guía →
                       </button>
                     </div>
@@ -131,69 +92,42 @@
           </div>
 
           <!-- Preguntas Frecuentes -->
-          <div
-            v-show="activeSection === 'faq'"
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div v-show="activeSection === 'faq'"
+            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               ❓ Preguntas Frecuentes
             </h2>
 
             <div class="space-y-4">
-              <div
-                v-for="faq in filteredFAQs"
-                :key="faq.id"
-                class="border border-gray-200 dark:border-gray-600 rounded-lg"
-              >
-                <button
-                  @click="toggleFAQ(faq.id)"
-                  class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                >
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{
-                    faq.question
-                  }}</span>
-                  <svg
-                    :class="[
-                      'w-5 h-5 text-gray-400 transition-transform duration-200',
-                      openFAQs.includes(faq.id) ? 'rotate-180' : '',
-                    ]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M19 9l-7 7-7-7"
-                    />
+              <div v-for="faq in filteredFAQs" :key="faq.id"
+                class="border border-gray-200 dark:border-gray-600 rounded-lg">
+                <button @click="toggleFAQ(faq.id)"
+                  class="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ faq.question }}</span>
+                  <svg :class="[
+                    'w-5 h-5 text-gray-400 transition-transform duration-200',
+                    openFAQs.includes(faq.id) ? 'rotate-180' : '',
+                  ]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                <div
-                  v-show="openFAQs.includes(faq.id)"
-                  class="px-4 pb-3 text-sm text-gray-600 dark:text-gray-400"
-                  v-html="faq.answer"
-                ></div>
+                <div v-show="openFAQs.includes(faq.id)" class="px-4 pb-3 text-sm text-gray-600 dark:text-gray-400"
+                  v-html="faq.answer"></div>
               </div>
             </div>
           </div>
 
           <!-- Documentación -->
-          <div
-            v-show="activeSection === 'docs'"
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div v-show="activeSection === 'docs'"
+            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               📚 Documentación
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div
-                v-for="doc in documentation"
-                :key="doc.id"
+              <div v-for="doc in documentation" :key="doc.id"
                 class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md transition-shadow duration-200 cursor-pointer"
-                @click="openDocumentation(doc)"
-              >
+                @click="openDocumentation(doc)">
                 <div class="flex items-start">
                   <div class="flex-shrink-0">
                     <span class="text-2xl">{{ doc.icon }}</span>
@@ -217,44 +151,29 @@
           </div>
 
           <!-- Videos Tutoriales -->
-          <div
-            v-show="activeSection === 'videos'"
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div v-show="activeSection === 'videos'"
+            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               🎥 Videos Tutoriales
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div
-                v-for="video in videos"
-                :key="video.id"
-                class="group cursor-pointer"
-                @click="playVideo(video)"
-              >
+              <div v-for="video in videos" :key="video.id" class="group cursor-pointer" @click="playVideo(video)">
                 <div class="relative">
-                  <img
-                    :src="video.thumbnail"
-                    :alt="video.title"
-                    class="w-full h-32 object-cover rounded-lg"
-                  />
+                  <img :src="video.thumbnail" :alt="video.title" class="w-full h-32 object-cover rounded-lg" />
                   <div
-                    class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                  >
+                    class="absolute inset-0 bg-black bg-opacity-40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </div>
-                  <div
-                    class="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded"
-                  >
+                  <div class="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
                     {{ video.duration }}
                   </div>
                 </div>
                 <div class="mt-3">
                   <h3
-                    class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors"
-                  >
+                    class="text-sm font-medium text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                     {{ video.title }}
                   </h3>
                   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -266,10 +185,8 @@
           </div>
 
           <!-- Contacto -->
-          <div
-            v-show="activeSection === 'contact'"
-            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6"
-          >
+          <div v-show="activeSection === 'contact'"
+            class="bg-white dark:bg-gray-800 shadow-lg rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">
               📞 Contacto y Soporte
             </h2>
@@ -282,18 +199,10 @@
                 </h3>
                 <div class="space-y-4">
                   <div class="flex items-start">
-                    <svg
-                      class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
+                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                     <div class="ml-3">
                       <p class="text-sm font-medium text-gray-900 dark:text-white">Email</p>
@@ -303,18 +212,10 @@
                     </div>
                   </div>
                   <div class="flex items-start">
-                    <svg
-                      class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                      />
+                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                     <div class="ml-3">
                       <p class="text-sm font-medium text-gray-900 dark:text-white">Teléfono</p>
@@ -322,18 +223,10 @@
                     </div>
                   </div>
                   <div class="flex items-start">
-                    <svg
-                      class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
+                    <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="ml-3">
                       <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -357,11 +250,8 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Asunto
                     </label>
-                    <select
-                      v-model="supportForm.subject"
-                      required
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    >
+                    <select v-model="supportForm.subject" required
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500">
                       <option value="">Seleccionar asunto</option>
                       <option value="bug">Reporte de Error</option>
                       <option value="feature">Solicitud de Funcionalidad</option>
@@ -374,19 +264,12 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Mensaje
                     </label>
-                    <textarea
-                      v-model="supportForm.message"
-                      required
-                      rows="4"
+                    <textarea v-model="supportForm.message" required rows="4"
                       placeholder="Describe tu consulta o problema..."
-                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    ></textarea>
+                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
                   </div>
-                  <button
-                    type="submit"
-                    :disabled="loading"
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
+                  <button type="submit" :disabled="loading"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
                     {{ loading ? 'Enviando...' : 'Enviar Mensaje' }}
                   </button>
                 </form>
@@ -602,9 +485,9 @@ const sendSupportMessage = async () => {
   loading.value = true
   try {
     const response = await apiClient.post('/support/message', {
-        ...supportForm.value,
-        userId: authStore.user?.id,
-        userEmail: authStore.user?.email,
+      ...supportForm.value,
+      userId: authStore.user?.id,
+      userEmail: authStore.user?.email,
     })
 
     const data = response
@@ -616,10 +499,10 @@ const sendSupportMessage = async () => {
     }
   } catch (error: any) {
     if (error.response?.status === 404) {
-        toast.info('Funcionalidad de soporte (backend) no implementada aún. Enviando por email...')
-        // Fallback behavior if needed, or just info
+      toast.info('Funcionalidad de soporte (backend) no implementada aún. Enviando por email...')
+      // Fallback behavior if needed, or just info
     } else {
-        toast.error('Error al enviar el mensaje. Intenta nuevamente.')
+      toast.error('Error al enviar el mensaje. Intenta nuevamente.')
     }
   } finally {
     loading.value = false

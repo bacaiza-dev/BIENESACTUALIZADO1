@@ -7,58 +7,51 @@ const { verifyToken, JWT_SECRET } = require("../middleware/auth");
 const { verifyPassword, hashPassword } = require("../helpers/password");
 const { mapUserRow } = require("../helpers/mappers");
 
+// Función para registrar logs del sistema
+async function logSystemEvent(nivel, modulo, mensaje, detalles = null, usuarioId = null, ipAddress = null) {
+  try {
+    await query(
+      `INSERT INTO logs_sistema (nivel, modulo, mensaje, detalles, usuario_id, ip_address) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [nivel, modulo, mensaje, detalles, usuarioId, ipAddress]
+    );
+  } catch (error) {
+    console.error('[ERROR] logSystemEvent:', error.message);
+  }
+}
+
 async function getRolesByUserId(userId) {
   try {
+    // Schema uses usuarios.rol_id directly, NOT usuario_rol table
     const rows = await query(
       `SELECT r.id_rol as id, r.nombre_rol as nombre, r.descripcion
        FROM roles r
-       JOIN usuario_rol ur ON r.id_rol = ur.rol_id
-       WHERE ur.usuario_id = ?`,
+       JOIN usuarios u ON r.id_rol = u.rol_id
+       WHERE u.id_usuario = ?`,
       [userId]
     );
     return rows;
   } catch (e) {
-    if (e.code === 'ER_NO_SUCH_TABLE') {
-      try {
-        const [user] = await query("SELECT rol_id FROM usuarios WHERE id_usuario = ?", [userId]);
-        if (user && user.rol_id) {
-          const roles = await query("SELECT id_rol as id, nombre_rol as nombre FROM roles WHERE id_rol = ?", [user.rol_id]);
-          if (roles.length) return roles;
-        }
-      } catch (err) {
-        console.warn('[WARN] Getting roles fallback failed:', err.message);
-      }
-      return [];
-    }
-    throw e;
+    console.error('[ERROR] getRolesByUserId:', e.message);
+    return [];
   }
 }
 
 async function getPermissionsByUserId(userId) {
   try {
+    // Schema uses usuarios.rol_id directly and permisos.nombre_permiso
     const rows = await query(
-      `SELECT DISTINCT p.id_permiso as id, p.nombre, p.descripcion
+      `SELECT DISTINCT p.id_permiso as id, p.nombre_permiso as nombre, p.descripcion
        FROM permisos p
        JOIN rol_permiso rp ON p.id_permiso = rp.permiso_id
-       JOIN usuario_rol ur ON rp.rol_id = ur.rol_id
-       WHERE ur.usuario_id = ?`,
+       JOIN usuarios u ON rp.rol_id = u.rol_id
+       WHERE u.id_usuario = ?`,
       [userId]
     );
     return rows;
   } catch (e) {
-    if (e.code === 'ER_NO_SUCH_TABLE') {
-      try {
-        const [user] = await query("SELECT rol_id FROM usuarios WHERE id_usuario = ?", [userId]);
-        if (user && user.rol_id) {
-          const rs = await query("SELECT DISTINCT p.id_permiso as id, p.nombre, p.descripcion FROM permisos p JOIN rol_permiso rp ON p.id_permiso = rp.permiso_id WHERE rp.rol_id = ?", [user.rol_id]);
-          if (rs.length) return rs;
-        }
-      } catch (err) {
-        return [];
-      }
-      return [];
-    }
-    throw e;
+    console.error('[ERROR] getPermissionsByUserId:', e.message);
+    return [];
   }
 }
 
@@ -75,11 +68,15 @@ router.post('/login', async (req, res) => {
 
     const users = await query("SELECT * FROM usuarios WHERE LOWER(email) = ? AND activo = 1 LIMIT 1", [email]);
     if (!users.length) {
+      // Log failed login attempt
+      await logSystemEvent('warning', 'auth', `Intento de login fallido: usuario no encontrado`, `Email: ${email}`, null, req.ip);
       return res.status(401).json({ success: false, message: 'Usuario no encontrado o inactivo' });
     }
 
     const user = users[0];
     if (!verifyPassword(password, user.password_hash)) {
+      // Log failed password attempt
+      await logSystemEvent('warning', 'auth', `Intento de login fallido: contraseña incorrecta`, `Usuario: ${user.email}`, user.id_usuario, req.ip);
       return res.status(401).json({ success: false, message: 'Contraseña incorrecta' });
     }
 
@@ -93,6 +90,9 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign({ id: user.id_usuario, email: user.email, roles: roles.map(r => r.nombre) }, JWT_SECRET, { expiresIn: '24h' });
     const permissions = await getPermissionsByUserId(user.id_usuario);
+
+    // Log successful login
+    await logSystemEvent('info', 'auth', `Login exitoso`, `Usuario: ${user.email}, Rol: ${roles.map(r => r.nombre).join(', ')}`, user.id_usuario, req.ip);
 
     res.json({ success: true, message: 'Login exitoso', data: {
       token,
@@ -155,7 +155,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 router.put('/profile', verifyToken, async (req, res) => {
   try {
     const { nombre, apellido, email, cedula, telefono } = req.body;
-    await query("UPDATE usuarios SET nombre = ?, apellido = ?, email = ?, cedula = ?, telefono = ? WHERE id_usuario = ?", [nombre, apellido || null, email, cedula || null, telefono || null, req.user.id]);
+    await query("UPDATE usuarios SET nombres = ?, apellidos = ?, email = ?, cedula = ?, telefono = ? WHERE id_usuario = ?", [nombre, apellido || null, email, cedula || null, telefono || null, req.user.id]);
     res.json({ success: true, message: 'Perfil actualizado correctamente' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Error actualizando perfil', error: err.message });

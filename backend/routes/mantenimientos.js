@@ -10,13 +10,13 @@ router.get("/", verifyToken, async (req, res) => {
   try {
     const { id_bien, estado, year, month } = req.query;
     
-    // Esquema real: id_mantenimiento, id_bien, responsable_id, fecha_realizada
+    // Esquema V3: id_mantenimiento, id_bien, tecnico_id, fecha_realizada
     let sql = `
       SELECT m.*, b.nombre as bien_nombre, b.codigo_institucional as bien_codigo, 
-             CONCAT(u.nombres, ' ', u.apellidos) as responsable_nombre
+             CONCAT(u.nombres, ' ', u.apellidos) as tecnico_nombre
       FROM mantenimientos m
       LEFT JOIN bienes b ON m.id_bien = b.id_bien
-      LEFT JOIN usuarios u ON m.responsable_id = u.id_usuario
+      LEFT JOIN usuarios u ON m.tecnico_id = u.id_usuario
       WHERE 1=1
     `;
     const params = [];
@@ -71,10 +71,10 @@ router.get("/:id", verifyToken, async (req, res) => {
     const { id } = req.params;
     const rows = await query(`
       SELECT m.*, b.nombre as bien_nombre, b.codigo_institucional as bien_codigo,
-             CONCAT(u.nombres, ' ', u.apellidos) as responsable_nombre
+             CONCAT(u.nombres, ' ', u.apellidos) as tecnico_nombre
       FROM mantenimientos m
       LEFT JOIN bienes b ON m.id_bien = b.id_bien
-      LEFT JOIN usuarios u ON m.responsable_id = u.id_usuario
+      LEFT JOIN usuarios u ON m.tecnico_id = u.id_usuario
       WHERE m.id_mantenimiento = ?
     `, [id]);
 
@@ -102,9 +102,9 @@ router.post("/", verifyToken, async (req, res) => {
 
     const result = await query(
       `INSERT INTO mantenimientos 
-       (id_bien, responsable_id, tipo, descripcion, estado, fecha_programada, fecha_limite, 
+       (id_bien, tecnico_id, tipo, descripcion, estado, fecha_programada, fecha_limite, 
         costo_estimado, prioridad, observaciones)
-       VALUES (?, ?, ?, ?, 'PENDIENTE', ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, 'programado', ?, ?, ?, ?, ?)`,
       [
         id_bien, 
         req.user.id, 

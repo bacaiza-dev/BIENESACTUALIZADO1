@@ -11,7 +11,7 @@ router.get('/', verifyToken, async (req, res) => {
     const rows = await query(`
       SELECT id_departamento, nombre, descripcion, activo 
       FROM departamentos 
-      WHERE activo = 1 
+      WHERE activo = 1
       ORDER BY nombre
     `);
     
@@ -20,8 +20,7 @@ router.get('/', verifyToken, async (req, res) => {
       id: r.id_departamento,
       id_departamento: r.id_departamento,
       nombre: r.nombre,
-      descripcion: r.descripcion,
-      activo: r.activo === 1
+      descripcion: r.descripcion
     }));
     
     res.json({ success: true, data });
@@ -29,8 +28,8 @@ router.get('/', verifyToken, async (req, res) => {
     console.error("[ERROR] GET /departamentos:", error.message);
     // Fallback si hay error
     res.json({ success: true, data: [
-      { id: 1, id_departamento: 1, nombre: 'Administracion', activo: true },
-      { id: 2, id_departamento: 2, nombre: 'Sistemas', activo: true }
+      { id: 1, id_departamento: 1, nombre: 'Administracion' },
+      { id: 2, id_departamento: 2, nombre: 'Sistemas' }
     ]});
   }
 });
@@ -75,27 +74,55 @@ router.post('/', verifyToken, requireAdmin, async (req, res) => {
 router.put('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, descripcion, activo } = req.body;
+    const { nombre, descripcion } = req.body;
     
+    // Obtener el nombre anterior para actualizar ubicaciones
+    const [dept] = await query('SELECT nombre FROM departamentos WHERE id_departamento = ?', [id]);
+    const nombreAnterior = dept?.nombre;
+    
+    // Actualizar el departamento
     await query(
-      'UPDATE departamentos SET nombre = ?, descripcion = ?, activo = ? WHERE id_departamento = ?',
-      [nombre, descripcion || null, activo !== false ? 1 : 0, id]
+      'UPDATE departamentos SET nombre = ?, descripcion = ? WHERE id_departamento = ?',
+      [nombre, descripcion || null, id]
     );
     
-    res.json({ success: true, message: 'Departamento actualizado' });
+    // Si cambió el nombre, actualizar también las ubicaciones que usen este campus
+    if (nombreAnterior && nombreAnterior !== nombre) {
+      await query(
+        'UPDATE ubicaciones SET sede = ? WHERE sede = ?',
+        [nombre, nombreAnterior]
+      );
+    }
+    
+    res.json({ success: true, message: 'Campus actualizado' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error actualizando', error: error.message });
   }
 });
 
-// DELETE /departamentos/:id
+// DELETE /departamentos/:id - Desactivar departamento
 router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Verificar si el campus está en uso (tiene ubicaciones asociadas)
+    const ubicaciones = await query(
+      'SELECT COUNT(*) as count FROM ubicaciones WHERE sede = (SELECT nombre FROM departamentos WHERE id_departamento = ?)',
+      [id]
+    );
+    
+    if (ubicaciones[0].count > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Campus en uso: hay ${ubicaciones[0].count} ubicación(es) asignada(s)`
+      });
+    }
+    
+    // Desactivar el campus
     await query('UPDATE departamentos SET activo = 0 WHERE id_departamento = ?', [id]);
-    res.json({ success: true, message: 'Departamento desactivado' });
+    res.json({ success: true, message: 'Campus desactivado' });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Error eliminando', error: error.message });
+    res.status(500).json({ success: false, message: 'Error desactivando campus', error: error.message });
   }
 });
 

@@ -67,7 +67,7 @@ router.post('/:tabla', verifyToken, requireAdmin, upload.single('file'), async (
     // Mapeos de columnas esperadas por tabla
     const tablaMappings = {
       bienes: {
-        cols: ['codigo_institucional', 'nombre', 'marca', 'modelo', 'serie', 'estado', 'valor', 'categoria_id', 'ubicacion_id'],
+        cols: ['codigo_institucional', 'nombre', 'marca', 'modelo', 'serie', 'estado', 'valor', 'categoria_id', 'ubicacion_id', 'cedula_responsable'],
         insertQuery: `INSERT INTO bienes (codigo_institucional, nombre, marca, modelo, serie, estado, valor, categoria_id, ubicacion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
       },
       usuarios: {
@@ -91,17 +91,27 @@ router.post('/:tabla', verifyToken, requireAdmin, upload.single('file'), async (
       try {
         const row = sheet.getRow(rowNum);
         const values = [];
+        let responsableInfo = null;
 
         // Extraer valores de la fila
         for (let col = 1; col <= mapping.cols.length; col++) {
           const cellValue = row.getCell(col).value;
+          let val = null;
           // Manejar diferentes tipos de valores de ExcelJS
           if (cellValue && typeof cellValue === 'object' && cellValue.result !== undefined) {
-            values.push(cellValue.result);
+            val = cellValue.result;
           } else if (cellValue && typeof cellValue === 'object' && cellValue.text !== undefined) {
-            values.push(cellValue.text);
+            val = cellValue.text;
           } else {
-            values.push(cellValue ?? null);
+            val = cellValue ?? null;
+          }
+
+          // Special partial handling for 'bienes' optional responsible column
+          // Assuming 'cedula_responsable' is the last column if configured
+          if (tabla === 'bienes' && mapping.cols[col - 1] === 'cedula_responsable') {
+             responsableInfo = val;
+          } else {
+             values.push(val);
           }
         }
 
@@ -110,8 +120,21 @@ router.post('/:tabla', verifyToken, requireAdmin, upload.single('file'), async (
           continue; // Saltar filas vacías
         }
 
-        await query(mapping.insertQuery, values);
+        const result = await query(mapping.insertQuery, values);
         inserted++;
+
+        // Handle Bienes Assignment
+        if (tabla === 'bienes' && result && result.insertId && responsableInfo) {
+           // Find user by cedula
+           const [user] = await query("SELECT id_usuario FROM usuarios WHERE cedula = ? LIMIT 1", [responsableInfo.toString()]);
+           if (user) {
+             await query(
+               "INSERT INTO asignaciones_bien (id_bien, id_usuario, activo, observaciones) VALUES (?, ?, 1, 'Importación masiva')",
+               [result.insertId, user.id_usuario]
+             );
+           }
+        }
+
       } catch (rowError) {
         errors++;
         errorDetails.push({ row: rowNum, error: rowError.message });

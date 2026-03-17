@@ -21,6 +21,15 @@
               </p>
             </div>
             <div class="flex space-x-3">
+              <!-- Botón Volver -->
+              <button @click="goBack"
+                class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Volver a Bienes
+              </button>
               <!-- Botones según rol -->
               <button v-if="isAdmin" @click="showQRModal = true"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
@@ -109,6 +118,18 @@
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Responsable</label>
                   <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ bien.responsable }}</p>
                 </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de Creación</label>
+                  <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                    {{ bien.created_at ? new Date(bien.created_at).toLocaleString() : '-' }}
+                  </p>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Última Actualización</label>
+                  <p class="mt-1 text-sm text-gray-900 dark:text-white">
+                    {{ bien.updated_at ? new Date(bien.updated_at).toLocaleString() : '-' }}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -137,13 +158,16 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor Adquisición</label>
                   <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                    ${{ bien.valorAdquisicion.toLocaleString() }}
+                    ${{ bien.valorAdquisicion.toLocaleString('en-US', {
+                      minimumFractionDigits: 2, maximumFractionDigits:
+                    2 }) }}
                   </p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Valor Actual</label>
                   <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                    ${{ bien.valorActual.toLocaleString() }}
+                    ${{ bien.valorActual.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                    }}
                   </p>
                 </div>
               </div>
@@ -179,21 +203,15 @@
               <div class="space-y-3">
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600 dark:text-gray-400">Condición</span>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{
-                    bien.condicion
-                  }}</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ bien.condicion }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600 dark:text-gray-400">Último Mantenimiento</span>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{
-                    bien.ultimoMantenimiento
-                  }}</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ bien.ultimoMantenimiento }}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-sm text-gray-600 dark:text-gray-400">Próximo Mantenimiento</span>
-                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{
-                    bien.proximoMantenimiento
-                  }}</span>
+                  <span class="text-sm font-medium text-gray-900 dark:text-white">{{ bien.proximoMantenimiento }}</span>
                 </div>
               </div>
             </div>
@@ -205,12 +223,21 @@
                 <div v-for="doc in bien.documentos" :key="doc.id"
                   class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <span class="text-sm text-gray-900 dark:text-white">{{ doc.nombre }}</span>
-                  <button class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </button>
+                  <div class="flex items-center space-x-2">
+                    <button @click="viewDocument(doc)"
+                      class="p-1 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                      title="Ver documento">
+                      <i class="bx bx-show text-lg"></i>
+                    </button>
+                    <button @click="downloadDocument(doc)"
+                      class="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      title="Descargar documento">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

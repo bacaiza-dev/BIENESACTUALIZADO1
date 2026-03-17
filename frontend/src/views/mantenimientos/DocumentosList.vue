@@ -16,19 +16,10 @@
             <span>{{ totalSize }}</span>
           </div>
         </div>
-        <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-          <button
-            @click="exportarDatos"
-            class="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
-            <i class="bx bx-download text-lg"></i>
-            <span class="hidden sm:inline">Exportar</span>
-          </button>
-          <button
-            v-if="canUploadDocuments"
-            @click="mostrarModalSubida = true"
-            class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-          >
+        <div
+          class="mt-4 sm:mt-0 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          <button v-if="canUploadDocuments" @click="mostrarModalSubida = true"
+            class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
             <i class="bx bx-upload text-lg"></i>
             <span>Subir Documento</span>
           </button>
@@ -97,29 +88,16 @@
     </div>
 
     <!-- DataTable -->
-    <DataTable
-      title="Lista de Documentos"
-      :data="documentosFiltrados"
-      :columns="columns"
-      :loading="cargando"
-      :search-term="filtros.busqueda"
-      :page-size="filtros.limite"
-      :selectable="canEditDocuments"
-      :has-actions="true"
+    <DataTable title="Lista de Documentos" :data="documentosFiltrados" :columns="columns" :loading="cargando"
+      :search-term="filtros.busqueda" :page-size="filtros.limite" :selectable="canEditDocuments" :has-actions="true"
       empty-message="No hay documentos registrados"
       search-placeholder="Buscar por bien, tipo de documento, nombre de archivo..."
-      @update:search-term="filtros.busqueda = $event"
-      @update:page-size="filtros.limite = $event"
-      @edit="editarDocumento"
-      @view="verDocumento"
-      @delete="eliminarDocumento"
-    >
+      @update:search-term="filtros.busqueda = $event" @update:page-size="filtros.limite = $event"
+      @edit="editarDocumento" @view="verDocumento" @delete="requestDeleteDocumento">
       <template #header-actions>
         <div class="flex items-center space-x-2">
-          <select
-            v-model="filtros.tipo"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-          >
+          <select v-model="filtros.tipo"
+            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
             <option value="">Todos los tipos</option>
             <option value="factura">Factura</option>
             <option value="garantia">Garantía</option>
@@ -129,16 +107,11 @@
             <option value="foto">Fotografía</option>
             <option value="otro">Otro</option>
           </select>
-          <input
-            v-model="filtros.fechaDesde"
-            type="date"
+          <input v-model="filtros.fechaDesde" type="date"
             class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
-            placeholder="Fecha desde"
-          />
-          <button
-            @click="limpiarFiltros"
-            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-          >
+            placeholder="Fecha desde" />
+          <button @click="limpiarFiltros"
+            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">
             <i class="bx bx-refresh text-sm"></i>
             <span>Limpiar</span>
           </button>
@@ -146,12 +119,16 @@
       </template>
       <template #cell-bien="{ value }">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+          <div class="flex-shrink-0">
             <i class="bx bx-laptop text-primary-600 dark:text-primary-400 text-sm"></i>
           </div>
           <div>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ value?.nombre || 'N/A' }}</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ value?.codigo || 'N/A' }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+              {{ value?.nombre ? value.nombre : 'Sin bien asociado' }}
+            </p>
+            <p v-if="value?.codigo" class="text-xs text-gray-500 dark:text-gray-400">
+              {{ value.codigo }}
+            </p>
           </div>
         </div>
       </template>
@@ -182,47 +159,28 @@
 
       <template #actions="{ item }">
         <div class="flex items-center space-x-2">
-          <button
-            @click="descargarDocumento(item)"
+          <button @click="descargarDocumento(item)"
             class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
-            title="Descargar documento"
-          >
+            title="Descargar documento">
             <i class="bx bx-download text-lg"></i>
           </button>
-          <button
-            @click="verDocumento(item)"
+          <button @click="verDocumento(item)"
             class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 dark:hover:bg-green-900 rounded-lg transition-colors"
-            title="Ver documento"
-          >
+            title="Ver documento">
             <i class="bx bx-show text-lg"></i>
           </button>
-          <button
-            v-if="canEditDocuments"
-            @click="editarDocumento(item)"
-            class="p-2 text-orange-600 hover:text-orange-800 hover:bg-orange-50 dark:hover:bg-orange-900 rounded-lg transition-colors"
-            title="Editar documento"
-          >
-            <i class="bx bx-edit text-lg"></i>
-          </button>
-          <button
-            v-if="canDeleteDocuments"
-            @click="eliminarDocumento(item)"
+          <button v-if="canDeleteDocuments" @click="requestDeleteDocumento(item)"
             class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-            title="Eliminar documento"
-          >
+            title="Eliminar documento">
             <i class="bx bx-trash text-lg"></i>
           </button>
         </div>
       </template>
     </DataTable>
 
-    <!-- Modal de Subir/Editar Documento -->
-    <BaseModal
-      :show="mostrarModalSubida || mostrarModalEdicion"
-      :title="documentoActual ? 'Editar Documento' : 'Subir Nuevo Documento'"
-      size="large"
-      @close="cerrarModal"
-    >
+    <!-- Modal de Subir Documento -->
+    <BaseModal :show="mostrarModalSubida"
+      title="Subir Nuevo Documento" size="large" @close="cerrarModal">
 
       <form @submit.prevent="guardarDocumento" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -230,11 +188,8 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Bien *
             </label>
-            <select
-              v-model="formulario.bien_id"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="formulario.bien_id" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
               <option value="">Selecciona un bien</option>
               <option v-for="bien in bienes" :key="bien.id" :value="bien.id">
                 {{ bien.nombre }} ({{ bien.codigo }})
@@ -246,11 +201,8 @@
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tipo de Documento *
             </label>
-            <select
-              v-model="formulario.tipo"
-              required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            >
+            <select v-model="formulario.tipo" required
+              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
               <option value="">Selecciona el tipo</option>
               <option value="factura">Factura</option>
               <option value="garantia">Garantía</option>
@@ -263,23 +215,20 @@
           </div>
         </div>
 
-        <div v-if="!documentoActual">
+        <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Archivo *
           </label>
-          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl hover:border-primary-400 transition-colors">
+          <div
+            class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-xl hover:border-primary-400 transition-colors">
             <div class="space-y-1 text-center">
               <i class="bx bx-cloud-upload text-4xl text-gray-400"></i>
               <div class="flex text-sm text-gray-600 dark:text-gray-400">
-                <label class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
+                <label
+                  class="relative cursor-pointer bg-white dark:bg-gray-700 rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
                   <span class="px-2">Subir archivo</span>
-                  <input
-                    type="file"
-                    @change="handleFileChange"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xlsx,.xls"
-                    :required="!documentoActual"
-                    class="sr-only"
-                  />
+                  <input type="file" @change="handleFileChange" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.xlsx,.xls"
+                    required class="sr-only" />
                 </label>
                 <p class="pl-1">o arrastra y suelta</p>
               </div>
@@ -299,32 +248,42 @@
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Descripción
           </label>
-          <textarea
-            v-model="formulario.descripcion"
-            rows="3"
+          <textarea v-model="formulario.descripcion" rows="3"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Descripción del documento"
-          ></textarea>
+            placeholder="Descripción del documento"></textarea>
         </div>
 
         <div class="flex justify-end space-x-3 pt-4">
-          <BaseButton
-            type="button"
-            variant="secondary"
-            @click="cerrarModal"
-          >
+          <BaseButton type="button" variant="secondary" @click="cerrarModal">
             Cancelar
           </BaseButton>
-          <BaseButton
-            type="submit"
-            variant="primary"
-            :loading="guardando"
-          >
-            {{ guardando ? 'Guardando...' : (documentoActual ? 'Actualizar' : 'Subir') }}
+          <BaseButton type="submit" variant="primary" :loading="guardando">
+            {{ guardando ? 'Subiendo...' : 'Subir' }}
           </BaseButton>
         </div>
       </form>
     </BaseModal>
+
+    <!-- Modal confirmación eliminar documento -->
+    <div v-if="mostrarModalEliminar" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md">
+        <div class="text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900 mb-4">
+            <i class="bx bx-trash text-2xl text-red-600 dark:text-red-400"></i>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">¿Eliminar documento?</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            ¿Estás seguro de que quieres eliminar el documento <strong>{{ documentoAEliminar?.nombre_archivo }}</strong>? Esta acción no se puede deshacer.
+          </p>
+          <div class="flex justify-center space-x-3">
+            <button @click="cancelDeleteDocumento"
+              class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200">Cancelar</button>
+            <button @click="confirmDeleteDocumento"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Eliminar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -359,14 +318,12 @@ interface Documento {
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
-const { canUploadDocuments, canEditDocuments, canDeleteDocuments } = useAuth()
+const { canUploadDocuments, canDeleteDocuments } = useAuth()
 
 // Estado del componente
 const cargando = ref(false)
 const guardando = ref(false)
 const mostrarModalSubida = ref(false)
-const mostrarModalEdicion = ref(false)
-const documentoActual = ref<Documento | null>(null)
 const archivoSeleccionado = ref<File | null>(null)
 
 // Filtros
@@ -401,13 +358,13 @@ const documentosPorTipo = computed(() => {
     manual: 0,
     foto: 0,
   }
-  
+
   documentos.value.forEach((doc: Documento) => {
     if (conteo.hasOwnProperty(doc.tipo)) {
       conteo[doc.tipo as keyof typeof conteo]++
     }
   })
-  
+
   return conteo
 })
 
@@ -459,7 +416,17 @@ const cargarDocumentos = async () => {
 
     const data = response
     if (data.success) {
-      documentos.value = data.data || []
+      documentos.value = (data.data || []).map((d: any) => ({
+        ...d,
+        fecha_subida: d.created_at,
+        bien: {
+          nombre: d.bien_nombre,
+          codigo: d.bien_codigo
+        },
+        usuario: {
+          nombre: d.subido_por_nombre
+        }
+      }))
     }
   } catch (error) {
     console.error('Error loading documentos:', error)
@@ -487,7 +454,7 @@ const cargarBienes = async () => {
 const handleFileChange = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
-  
+
   if (file) {
     if (file.size > 10 * 1024 * 1024) { // 10MB
       toast.error('El archivo es demasiado grande. Máximo 10MB.')
@@ -502,40 +469,27 @@ const guardarDocumento = async () => {
   guardando.value = true
   try {
     const formData = new FormData()
-    formData.append('bien_id', formulario.bien_id)
-    formData.append('tipo', formulario.tipo)
+    // El backend espera el campo `id_bien`
+    formData.append('id_bien', formulario.bien_id)
+    formData.append('tipo_documento', formulario.tipo)
     formData.append('descripcion', formulario.descripcion)
-    
-    if (archivoSeleccionado.value && !documentoActual.value) {
-      formData.append('archivo', archivoSeleccionado.value)
+
+    if (archivoSeleccionado.value) {
+      formData.append('file', archivoSeleccionado.value)
     }
 
-    const endpoint = documentoActual.value 
-      ? `/documentos/${documentoActual.value.id}` 
-      : '/documentos'
-
-    // Use apiClient.post/put but need to let browser handle Content-Type for FormData
-    // We pass 'undefined' as Content-Type to override default application/json
     const config = {
-        headers: {
-            'Content-Type': undefined 
-        } as any
+      headers: {
+        'Content-Type': undefined
+      } as any
     }
 
-    let response;
-    if (documentoActual.value) {
-        response = await apiClient.put(endpoint, formData, config)
-    } else {
-        response = await apiClient.post(endpoint, formData, config)
-    }
+    const response = await apiClient.post('/documentos', formData, config)
 
     const data = response
     if (data.success) {
       await cargarDocumentos()
-      toast.success(documentoActual.value 
-        ? 'Documento actualizado correctamente' 
-        : 'Documento subido correctamente'
-      )
+      toast.success('Documento subido correctamente')
       cerrarModal()
     }
   } catch (error) {
@@ -582,39 +536,48 @@ const verDocumento = async (documento: Documento) => {
 }
 
 const editarDocumento = (documento: Documento) => {
-  documentoActual.value = documento
-  Object.assign(formulario, {
-    bien_id: documento.bien_id.toString(),
-    tipo: documento.tipo,
-    descripcion: documento.descripcion || '',
-  })
-  mostrarModalEdicion.value = true
+  // Función deshabilitada - no se puede editar documentos
+  console.log('Edición deshabilitada', documento)
 }
 
-const eliminarDocumento = async (documento: Documento) => {
-  if (confirm(`¿Estás seguro de eliminar el documento "${documento.nombre_archivo}"?`)) {
-    try {
-      const response = await apiClient.delete(`/documentos/${documento.id}`)
+// Delete flow using modal confirmation
+const documentoAEliminar = ref<Documento | null>(null)
+const mostrarModalEliminar = ref(false)
 
-      const data = response
-      if (data.success) {
-        const index = documentos.value.findIndex((d: Documento) => d.id === documento.id)
-        if (index > -1) {
-          documentos.value.splice(index, 1)
-        }
-        toast.success('Documento eliminado correctamente')
-      }
-    } catch (error) {
-      console.error('Error deleting documento:', error)
-      toast.error('Error al eliminar el documento')
+const requestDeleteDocumento = (documento: Documento) => {
+  documentoAEliminar.value = documento
+  mostrarModalEliminar.value = true
+}
+
+const cancelDeleteDocumento = () => {
+  documentoAEliminar.value = null
+  mostrarModalEliminar.value = false
+}
+
+const confirmDeleteDocumento = async () => {
+  if (!documentoAEliminar.value) return
+  const documento = documentoAEliminar.value
+  mostrarModalEliminar.value = false
+  try {
+    const response = await apiClient.delete(`/documentos/${documento.id}`)
+    const data = response
+    if (data.success) {
+      const index = documentos.value.findIndex((d: Documento) => d.id === documento.id)
+      if (index > -1) documentos.value.splice(index, 1)
+      toast.success('Documento eliminado correctamente')
+    } else {
+      toast.error(data.message || 'Error al eliminar el documento')
     }
+  } catch (error) {
+    console.error('Error deleting documento:', error)
+    toast.error('Error al eliminar el documento')
+  } finally {
+    documentoAEliminar.value = null
   }
 }
 
 const cerrarModal = () => {
   mostrarModalSubida.value = false
-  mostrarModalEdicion.value = false
-  documentoActual.value = null
   archivoSeleccionado.value = null
   Object.assign(formulario, {
     bien_id: '',
@@ -630,28 +593,6 @@ const limpiarFiltros = () => {
     fechaDesde: '',
     limite: 10,
   })
-}
-
-const exportarDatos = async () => {
-  try {
-    toast.info('Exportando datos...')
-    const response = await apiClient.get('/documentos/export', { responseType: 'blob' })
-
-    const blob = response as any
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `documentos_${new Date().toISOString().split('T')[0]}.xlsx`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    window.URL.revokeObjectURL(url)
-
-    toast.success('Datos exportados correctamente')
-  } catch (error) {
-    console.error('Error exporting documentos:', error)
-    toast.error('Error al exportar los datos')
-  }
 }
 
 // Helpers
@@ -710,11 +651,11 @@ const formatDate = (fecha: string) => {
 
 const formatFileSize = (bytes: number) => {
   if (!bytes || bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 

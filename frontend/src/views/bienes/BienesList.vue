@@ -46,7 +46,7 @@
               </button>
             </div>
           </div>
-          <button v-if="canCreateAsset" @click="mostrarModalCrear = true"
+          <button v-if="canCreateAsset" @click="router.push('/bienes/create')"
             class="flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             title="Crear nuevo bien institucional">
             <i class="bx bx-plus-circle text-lg"></i>
@@ -56,114 +56,32 @@
       </div>
     </div>
 
-    <!-- Mobile Filters Panel -->
-    <div v-if="mostrarFiltrosMobile"
-      class="lg:hidden bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Filtros</h3>
-        <button @click="mostrarFiltrosMobile = false"
-          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <i class="bx bx-x text-xl"></i>
-        </button>
-      </div>
 
-      <div class="grid grid-cols-1 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
-          <select v-model="filtros.categoria"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todas las categorías</option>
-            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-              {{ categoria.nombre }}
-            </option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estado</label>
-          <select v-model="filtros.estado"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todos los estados</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-            <option value="mantenimiento">Mantenimiento</option>
-            <option value="baja">De baja</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
-          <select v-model="filtros.ubicacion"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todas las ubicaciones</option>
-            <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
-              {{ ubicacion.nombre }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex space-x-2">
-          <button @click="limpiarFiltros"
-            class="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm">
-            Limpiar
-          </button>
-          <button @click="mostrarFiltrosMobile = false"
-            class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm">
-            Aplicar
-          </button>
-        </div>
-      </div>
-    </div>
 
     <!-- DataTable -->
-    <DataTable title="Lista de Bienes" :data="bienes" :columns="columns" :loading="cargando"
-      :search-term="filtros.busqueda" :page-size="filtros.limite" :selectable="canEditAsset" :has-actions="true"
-      empty-message="No hay bienes registrados" search-placeholder="Buscar por código, nombre, responsable..."
-      @update:search-term="filtros.busqueda = $event" @update:page-size="filtros.limite = $event" @edit="editarBien"
-      @view="verBien" @delete="eliminarBien" @selection-change="bienesSeleccionados = $event">
-      <template #header-actions>
-        <!-- Desktop filters -->
-        <div class="hidden lg:flex items-center space-x-2">
-          <select v-model="filtros.categoria"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todas las categorías</option>
-            <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-              {{ categoria.nombre }}
-            </option>
-          </select>
-          <select v-model="filtros.estado"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todos los estados</option>
-            <option value="activo">Activo</option>
-            <option value="inactivo">Inactivo</option>
-            <option value="mantenimiento">Mantenimiento</option>
-            <option value="baja">De baja</option>
-          </select>
-          <select v-model="filtros.ubicacion"
-            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
-            <option value="">Todas las ubicaciones</option>
-            <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
-              {{ ubicacion.nombre }}
-            </option>
-          </select>
-          <button @click="limpiarFiltros"
-            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-            title="Limpiar todos los filtros">
-            <i class="bx bx-refresh text-sm"></i>
-            <span>Limpiar</span>
-          </button>
-        </div>
+    <DataTable
+      title="Lista de Bienes"
+      :data="bienes"
+      :columns="columns"
+      :loading="cargando"
+      :search-term="filtros.busqueda"
+      :page-size="filtros.limite"
+      :current-page="paginaActual"
+      :selectable="canEditAsset"
+      :has-actions="true"
+      :selected-items="bienesSeleccionados"
+      empty-message="No hay bienes registrados"
+      search-placeholder="Buscar por código, nombre, responsable..."
+      @update:search-term="filtros.busqueda = $event"
+      @update:page-size="filtros.limite = $event"
+      @update:currentPage="paginaActual = $event"
+      @edit="editarBien"
+      @view="verBien"
+      @delete="eliminarBien"
+      @update:selectedItems="bienesSeleccionados = $event"
+      @bulk-delete="eliminarSeleccionados"
+    >
 
-        <!-- Mobile filters button -->
-        <div class="lg:hidden">
-          <button @click="mostrarFiltrosMobile = !mostrarFiltrosMobile"
-            class="flex items-center space-x-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-            :title="mostrarFiltrosMobile ? 'Ocultar filtros' : 'Mostrar filtros'">
-            <i :class="mostrarFiltrosMobile ? 'bx bx-filter-alt' : 'bx bx-filter'" class="text-lg"></i>
-            <span>Filtros</span>
-          </button>
-        </div>
-      </template>
 
       <template #cell-codigo_institucional="{ value }">
         <span class="font-mono text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-200 px-2 py-1 rounded">
@@ -181,6 +99,12 @@
       <template #cell-valor_adquisicion="{ value }">
         <span class="font-medium text-green-600 dark:text-green-400">
           {{ formatCurrency(value) }}
+        </span>
+      </template>
+
+      <template #cell-fecha_adquisicion="{ value }">
+        <span class="text-sm text-gray-900 dark:text-gray-200">
+          {{ value ? new Date(value).toLocaleDateString() : '-' }}
         </span>
       </template>
 
@@ -217,189 +141,20 @@
           </button>
         </div>
       </template>
-    </DataTable>
 
-    <!-- Modal de Crear/Editar Bien -->
-    <div v-if="mostrarModalCrear || mostrarModalEditar"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div
-        class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
-            {{ bienActual ? 'Editar Bien' : 'Nuevo Bien' }}
-          </h2>
-          <button @click="cerrarModal"
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-            <i class="bx bx-x text-2xl"></i>
+      <!-- Bulk actions slot: muestra botón controlado por permisos -->
+      <template #bulk-actions="{ selectedItems }">
+        <div class="flex items-center space-x-2">
+          <button v-if="canDeleteAsset && selectedItems && selectedItems.length" @click.prevent="eliminarSeleccionados(selectedItems)"
+            class="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors">
+            <i class="bx bx-trash mr-1"></i>
+            Eliminar seleccionados
           </button>
         </div>
+      </template>
+    </DataTable>
 
-        <form @submit.prevent="guardarBien" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Código Institucional
-              </label>
-              <input v-model="formulario.codigo_institucional" type="text" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Código SENESCYT
-              </label>
-              <input v-model="formulario.codigo_senescyt" type="text" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Nombre del Bien
-            </label>
-            <input v-model="formulario.nombre" type="text" required
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Descripción
-            </label>
-            <textarea v-model="formulario.descripcion" rows="3"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Marca
-              </label>
-              <input v-model="formulario.marca" type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Modelo
-              </label>
-              <input v-model="formulario.modelo" type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Número de Serie
-              </label>
-              <input v-model="formulario.serie" type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Categoría
-              </label>
-              <select v-model="formulario.categoria_id" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Selecciona una categoría</option>
-                <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                  {{ categoria.nombre }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Ubicación
-              </label>
-              <select v-model="formulario.ubicacion_id"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Selecciona una ubicación</option>
-                <option v-for="ubicacion in ubicaciones" :key="ubicacion.id" :value="ubicacion.id">
-                  {{ ubicacion.nombre }}
-                </option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Estado
-              </label>
-              <select v-model="formulario.estado" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="activo">Activo</option>
-                <option value="inactivo">Inactivo</option>
-                <option value="mantenimiento">Mantenimiento</option>
-                <option value="baja">De baja</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Valor de Adquisición
-              </label>
-              <input v-model.number="formulario.valor_adquisicion" type="number" step="0.01" min="0" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Fecha de Adquisición
-              </label>
-              <input v-model="formulario.fecha_adquisicion" type="date" required
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Color
-              </label>
-              <input v-model="formulario.color" type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Material
-              </label>
-              <input v-model="formulario.material" type="text"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Responsable
-              </label>
-              <select v-model="formulario.responsable_id"
-                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white">
-                <option value="">Sin responsable</option>
-                <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.id">
-                  {{ usuario.nombres }} {{ usuario.apellidos }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Observaciones
-            </label>
-            <textarea v-model="formulario.observaciones" rows="3"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Cualquier observación adicional sobre el bien..."></textarea>
-          </div>
-
-          <div class="flex justify-end space-x-3 pt-4">
-            <button type="button" @click="cerrarModal"
-              class="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
-              Cancelar
-            </button>
-            <button type="submit" :disabled="guardando"
-              class="flex items-center space-x-2 px-6 py-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:opacity-50">
-              <i :class="guardando ? 'bx bx-loader-alt animate-spin' : 'bx bx-save'" class="text-lg"></i>
-              <span>{{ guardando ? 'Guardando...' : 'Guardar' }}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <!-- Modales eliminados, ahora se usa navegación a /bienes/create y /bienes/:id/edit -->
 
     <!-- Modal de código QR -->
     <div v-if="mostrarModalQR" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
@@ -456,6 +211,7 @@ import { useAuth } from '@/composables/useAuth'
 import DataTable from '@/components/shared/DataTable.vue'
 import QRCode from 'qrcode'
 import apiClient from '@/api/client'
+import { confirm } from '@/composables/useConfirm'
 import type { Asset, DataTableColumn, Category, Location, User } from '@/types'
 import { exportToPDF, exportToExcel, exportToCSV } from '@/utils/exportUtils'
 
@@ -466,15 +222,14 @@ const { canCreateAsset, canEditAsset, canDeleteAsset } = useAuth()
 
 // Estado del componente
 const cargando = ref(false)
-const guardando = ref(false)
-const mostrarModalCrear = ref(false)
-const mostrarModalEditar = ref(false)
 const mostrarFiltrosMobile = ref(false)
 const mostrarMenuExportar = ref(false)
 const bienActual = ref<Asset | null>(null)
 const bienesSeleccionados = ref<(string | number)[]>([])
 const mostrarModalQR = ref(false)
 const qrActual = ref<{ codigo: string; url: string } | null>(null)
+// Control de paginación
+const paginaActual = ref(1)
 
 // Filtros
 const filtros = reactive({
@@ -485,25 +240,7 @@ const filtros = reactive({
   limite: 10,
 })
 
-// Formulario
-const formulario = reactive({
-  codigo_institucional: '',
-  codigo_senescyt: '',
-  nombre: '',
-  descripcion: '',
-  marca: '',
-  modelo: '',
-  serie: '',
-  categoria_id: '',
-  ubicacion_id: '',
-  estado: 'activo',
-  valor_adquisicion: 0,
-  fecha_adquisicion: new Date().toISOString().split('T')[0],
-  color: '',
-  material: '',
-  observaciones: '',
-  responsable_id: '',
-})
+// Filtros
 
 // Datos de bienes
 const bienes = ref<Asset[]>([])
@@ -567,115 +304,75 @@ const verBien = (bien: Asset) => {
 }
 
 const editarBien = (bien: Asset) => {
-  bienActual.value = bien
-  Object.assign(formulario, {
-    codigo_institucional: bien.codigo_institucional,
-    codigo_senescyt: bien.codigo_senescyt,
-    nombre: bien.nombre,
-    descripcion: bien.descripcion,
-    marca: bien.marca || '',
-    modelo: bien.modelo || '',
-    serie: bien.serie || '',
-    categoria_id: bien.categoria_id.toString(),
-    ubicacion_id: bien.ubicacion_id?.toString() || '',
-    estado: bien.estado,
-    valor_adquisicion: bien.valor_adquisicion,
-    fecha_adquisicion: bien.fecha_adquisicion,
-    color: bien.color || '',
-    material: bien.material || '',
-    observaciones: bien.observaciones || '',
-    responsable_id: bien.responsable_id?.toString() || '',
-  })
-  mostrarModalEditar.value = true
+  router.push(`/bienes/${bien.id}/edit`)
 }
 
 const eliminarBien = async (bien: Asset) => {
-  if (confirm(`¿Estás seguro de eliminar el bien "${bien.nombre}"?`)) {
-    try {
-      const response = await apiClient.delete(`/bienes/${bien.id}`)
-      if (!response.success) throw new Error(response.message || 'Error al eliminar bien')
-
-      const index = bienes.value.findIndex((b: Asset) => b.id === bien.id)
-      if (index > -1) {
-        bienes.value.splice(index, 1)
-      }
-      toast.success('Bien eliminado correctamente')
-    } catch (error) {
-      toast.error('Error al eliminar el bien')
-    }
-  }
-}
-
-const guardarBien = async () => {
-  guardando.value = true
-  try {
-    const endpoint = bienActual.value ? `/bienes/${bienActual.value.id}` : '/bienes'
-
-    let response
-    if (bienActual.value) {
-      response = await apiClient.put(endpoint, {
-        ...formulario,
-        categoria_id: parseInt(formulario.categoria_id),
-        ubicacion_id: formulario.ubicacion_id ? parseInt(formulario.ubicacion_id) : null,
-        responsable_id: formulario.responsable_id ? parseInt(formulario.responsable_id) : null,
-      })
-    } else {
-      response = await apiClient.post(endpoint, {
-        ...formulario,
-        categoria_id: parseInt(formulario.categoria_id),
-        ubicacion_id: formulario.ubicacion_id ? parseInt(formulario.ubicacion_id) : null,
-        responsable_id: formulario.responsable_id ? parseInt(formulario.responsable_id) : null,
-      })
-    }
-
-    // apiClient returns unwrapped data due to our client.ts
-    const data = response
-
-    // const data = await response.json() // removed
-    if (data.success) {
-      if (bienActual.value) {
-        // Recargar datos para obtener información actualizada
-        await cargarBienes()
-        toast.success('Bien actualizado correctamente')
-      } else {
-        // Recargar datos para obtener el nuevo bien
-        await cargarBienes()
-        toast.success('Bien creado correctamente')
-      }
-      cerrarModal()
-    } else {
-      throw new Error(data.message || 'Error al guardar bien')
-    }
-  } catch (error) {
-    toast.error('Error al guardar el bien')
-  } finally {
-    guardando.value = false
-  }
-}
-
-const cerrarModal = () => {
-  mostrarModalCrear.value = false
-  mostrarModalEditar.value = false
-  bienActual.value = null
-  Object.assign(formulario, {
-    codigo_institucional: '',
-    codigo_senescyt: '',
-    nombre: '',
-    descripcion: '',
-    marca: '',
-    modelo: '',
-    serie: '',
-    categoria_id: '',
-    ubicacion_id: '',
-    estado: 'activo',
-    valor_adquisicion: 0,
-    fecha_adquisicion: new Date().toISOString().split('T')[0],
-    color: '',
-    material: '',
-    observaciones: '',
-    responsable_id: '',
+  const confirmed = await confirm({
+    title: 'Eliminar bien',
+    message: `¿Estás seguro de eliminar el bien "${bien.nombre}"?`,
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    destructive: true,
   })
+  if (!confirmed) return
+
+  try {
+    const response = await apiClient.delete(`/bienes/${bien.id}`)
+    if (!response.success) throw new Error(response.message || 'Error al eliminar bien')
+
+    const index = bienes.value.findIndex((b: Asset) => b.id === bien.id)
+    if (index > -1) {
+      bienes.value.splice(index, 1)
+    }
+    toast.success('Bien eliminado correctamente')
+  } catch (error) {
+    toast.error('Error al eliminar el bien')
+  }
 }
+
+// Eliminación en lote (handler conectado al DataTable)
+const eliminarSeleccionados = async (selectedIds?: Array<string | number>) => {
+  // DataTable emite sin payload desde TablePagination; usamos el estado local si no viene lista
+  const ids = Array.isArray(selectedIds) && selectedIds.length ? selectedIds : bienesSeleccionados.value
+  if (!ids || !ids.length) return
+
+  if (!canDeleteAsset.value) {
+    toast.error('No tienes permisos para eliminar elementos')
+    return
+  }
+
+  const confirmed = await confirm({
+    title: ids.length > 1 ? 'Eliminar bienes' : 'Eliminar bien',
+    message: `¿Eliminar ${ids.length} bien${ids.length > 1 ? 'es' : ''} seleccionad${ids.length > 1 ? 'os' : 'o'}? Esta acción no se puede deshacer.`,
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    destructive: true,
+  })
+  if (!confirmed) return
+
+  const toastId = toast.info(`Eliminando ${ids.length} bien${ids.length > 1 ? 'es' : ''}...`, { timeout: false })
+  try {
+    const response = await apiClient.post('/bienes/bulk-delete', { ids })
+    if (!response.success) throw new Error(response.message || 'Error eliminando en lote')
+
+    // Remover los bienes del estado local
+    const idSet = new Set(ids.map(String))
+    bienes.value = bienes.value.filter((b: any) => !idSet.has(String(b.id)))
+
+    // Limpiar selección
+    bienesSeleccionados.value = []
+
+    toast.dismiss(toastId)
+    toast.success(response.message || `${ids.length} bienes eliminados`)    
+  } catch (error) {
+    console.error('Error bulk delete:', error)
+    toast.dismiss(toastId)
+    toast.error('Error al eliminar bienes seleccionados')
+  }
+}
+
+// Métodos eliminados (guardarBien, cerrarModal) ya no necesarios
 
 const limpiarFiltros = () => {
   Object.assign(filtros, {
@@ -703,56 +400,40 @@ const exportColumns = [
   { key: 'fecha_adquisicion', label: 'Fecha Adquisición' },
 ]
 
-const exportarPDF = async () => {
+const downloadExport = async (format: string) => {
   mostrarMenuExportar.value = false
-  toast.info('Generando PDF...')
+  const toastId = toast.info(`Generando ${format.toUpperCase()}...`, { timeout: false })
+  
   try {
-    await exportToPDF({
-      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
-      title: 'Lista de Bienes Institucionales',
-      columns: exportColumns,
-      data: bienes.value
+    const response = await apiClient.get(`/export/bienes`, {
+      params: { formato: format },
+      responseType: 'blob'
     })
-    toast.success('PDF generado correctamente')
+
+    const blob = response
+    if (!(blob instanceof Blob)) throw new Error('Respuesta inválida')
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `bienes_export_${new Date().toISOString().split('T')[0]}.${format}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    toast.dismiss(toastId)
+    toast.success(`${format.toUpperCase()} descargado correctamente`)
   } catch (error) {
-    console.error('Error al exportar PDF:', error)
-    toast.error('Error al generar el PDF')
+    console.error(`Error exportando ${format}:`, error)
+    toast.dismiss(toastId)
+    toast.error(`Error al generar ${format.toUpperCase()}`)
   }
 }
 
-const exportarExcel = async () => {
-  mostrarMenuExportar.value = false
-  toast.info('Generando Excel...')
-  try {
-    await exportToExcel({
-      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
-      title: 'Lista de Bienes Institucionales',
-      columns: exportColumns,
-      data: bienes.value
-    })
-    toast.success('Excel generado correctamente')
-  } catch (error) {
-    console.error('Error al exportar Excel:', error)
-    toast.error('Error al generar el Excel')
-  }
-}
-
-const exportarCSV = async () => {
-  mostrarMenuExportar.value = false
-  toast.info('Generando CSV...')
-  try {
-    await exportToCSV({
-      filename: `bienes_${new Date().toISOString().split('T')[0]}`,
-      title: 'Lista de Bienes Institucionales',
-      columns: exportColumns,
-      data: bienes.value
-    })
-    toast.success('CSV generado correctamente')
-  } catch (error) {
-    console.error('Error al exportar CSV:', error)
-    toast.error('Error al generar el CSV')
-  }
-}
+const exportarPDF = () => downloadExport('pdf')
+const exportarExcel = () => downloadExport('excel')
+const exportarCSV = () => downloadExport('csv')
 
 const getEstadoClass = (estado: string) => {
   switch (estado) {

@@ -45,6 +45,7 @@ function mapCategoriaRow(row) {
     tipo: row.tipo,
     observaciones: row.observaciones,
     activo: row.activo === 1,
+    bienes_count: row.bienes_count || 0,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -60,7 +61,6 @@ function mapUbicacionRow(row) {
     nombre: row.area || row.descripcion,
     area: row.area,
     descripcion: row.descripcion,
-    tipo: row.tipo,
     sede: row.sede,
     edificio: row.sede,
     piso: row.piso,
@@ -69,6 +69,8 @@ function mapUbicacionRow(row) {
     capacidad: row.capacidad,
     estado: normalizeEstadoUbicacion(row.estado, row.activo),
     activo: row.activo === 1,
+    id_campus: row.id_campus,
+    campus_nombre: row.campus_nombre || null,
     bienes_count: row.bienes_count || 0,
   };
 }
@@ -120,6 +122,7 @@ function mapPeriodoRow(row) {
     fecha_fin: formatDate(row.fecha_fin),
     descripcion: row.descripcion,
     activo: row.activo === 1,
+    bienesAsignados: row.bienes_count || 0,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -176,6 +179,8 @@ function mapBienRow(row) {
       id: row.responsable_id,
       nombre: row.responsable_nombre || 'Sin asignar'
     } : null,
+    // Nombre completo calculado (compatibilidad con frontend)
+    responsable_completo: row.responsable_nombre ? row.responsable_nombre.trim() : (row.responsable_completo || null),
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
@@ -198,15 +203,21 @@ function mapMantenimientoRow(row) {
     costo_estimado: row.costo_estimado,
     costo_real: row.costo_real,
     proveedor: row.proveedor,
-    responsable: row.responsable,
-    responsable_nombre: row.responsable_nombre,
+    tecnico_id: row.tecnico_id,
+    tecnico_nombre: row.tecnico_nombre,
+    // Aliases for compatibility
+    responsable: row.tecnico_nombre,
+    responsable_nombre: row.tecnico_nombre,
     prioridad: row.prioridad,
     observaciones: row.observaciones,
     bien_id: row.id_bien || row.bien_id,
+    bien: row.id_bien ? {
+      id: row.id_bien,
+      nombre: row.bien_nombre,
+      codigo: row.bien_codigo
+    } : null,
     bien_nombre: row.bien_nombre,
     bien_codigo: row.codigo_institucional || row.bien_codigo,
-    usuario_id: row.usuario_id,
-    usuario_nombre: row.usuario_nombre,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };

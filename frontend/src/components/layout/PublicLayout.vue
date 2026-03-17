@@ -82,7 +82,7 @@
 
       <!-- Main Content -->
       <main class="flex-1">
-        <router-view />
+        <slot />
       </main>
 
       <!-- Footer -->
@@ -194,7 +194,7 @@
     </template>
     <template v-else>
       <!-- Si está autenticado, no mostrar nada del layout público -->
-      <router-view />
+      <slot />
     </template>
   </div>
 </template>

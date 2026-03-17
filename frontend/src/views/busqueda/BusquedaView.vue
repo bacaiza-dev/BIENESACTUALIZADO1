@@ -16,7 +16,7 @@
                 <i class="bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <input v-model="query" type="text" placeholder="Buscar en todo el sistema..."
                   class="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  :disabled="loading" />
+                  aria-label="Buscar" :aria-busy="loading" />
               </div>
               <button type="submit"
                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
@@ -134,13 +134,32 @@ const loading = ref(false)
 const results = ref([])
 const searchTerm = ref('')
 
+// --- Real-time search helpers ---
+const DEBOUNCE_MS = 300 // ms
+const MIN_SEARCH_LENGTH = 2 // no buscar si la consulta es menor
+const debounceTimer = ref(null)
+const currentController = ref(null) // AbortController for cancelling in-flight requests
+
+const cancelPendingRequest = () => {
+  if (debounceTimer.value) {
+    clearTimeout(debounceTimer.value)
+    debounceTimer.value = null
+  }
+  if (currentController.value) {
+    try { currentController.value.abort() } catch (e) { /* ignore */ }
+    currentController.value = null
+  }
+}
+
 const hasQuery = computed(() => query.value.trim().length > 0)
 
 const runSearch = async () => {
+  // Ejecutar búsqueda inmediata (usa cancelación y limpia debounce)
+  cancelPendingRequest()
   const q = query.value.trim()
   searchTerm.value = q
 
-  // Persistir en la URL
+  // Persistir en la URL (no bloquear si falla)
   try {
     await router.replace({ name: 'Busqueda', query: q ? { q } : {} })
   } catch {
@@ -152,9 +171,21 @@ const runSearch = async () => {
     return
   }
 
+  // Cancelar/crear controlador para esta petición
+  const controller = new AbortController()
+  currentController.value = controller
+
   loading.value = true
   try {
-    const response = await apiClient.get(`/search?q=${encodeURIComponent(q)}&limit=100`)
+    const response = await apiClient.get(
+      `/search?q=${encodeURIComponent(q)}&limit=100`,
+      { signal: controller.signal }
+    )
+
+    // Si la petición fue abortada, salir silenciosamente
+    if (controller.signal.aborted) {
+      return
+    }
 
     if (!response.success) {
       throw new Error(response.message || 'Error en búsqueda')
@@ -162,10 +193,17 @@ const runSearch = async () => {
 
     results.value = response.data?.resultados || []
   } catch (error) {
+    // Si fue cancelada por AbortController, no mostrar error
+    if (controller.signal && controller.signal.aborted) {
+      return
+    }
+
     console.error('Search error:', error)
     toast.error('Error en la búsqueda')
     results.value = []
   } finally {
+    // Limpiar controlador si sigue siendo el actual
+    if (currentController.value === controller) currentController.value = null
     loading.value = false
   }
 }
@@ -262,6 +300,27 @@ watch(
     }
   }
 )
+
+// Watcher para búsqueda en tiempo real (debounce + mínimo de caracteres)
+watch(query, (next) => {
+  // limpiar peticiones previas y debounce si el usuario borra
+  if (!next || String(next).trim().length < MIN_SEARCH_LENGTH) {
+    cancelPendingRequest()
+    if (!next || String(next).trim().length === 0) {
+      results.value = []
+      searchTerm.value = ''
+      // limpiar query en la URL si estaba
+      router.replace({ name: 'Busqueda', query: {} }).catch(() => {})
+    }
+    return
+  }
+
+  // debounce
+  if (debounceTimer.value) clearTimeout(debounceTimer.value)
+  debounceTimer.value = window.setTimeout(() => {
+    runSearch()
+  }, DEBOUNCE_MS)
+})
 
 onMounted(() => {
   if (query.value.trim()) {
