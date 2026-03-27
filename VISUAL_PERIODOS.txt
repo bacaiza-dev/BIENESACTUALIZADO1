@@ -1,0 +1,189 @@
+# 🎓 Auto-sugerencia de Fechas - Flujo Visual
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    NUEVO PERÍODO ACADÉMICO                                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+PASO 1: LLENAR FORMULARIO
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Nombre *                   │ Primer Semestre 2026                        │
+│ Año *                      │ 2026                                        │
+│ Tipo *                     │ [Semestre ▼]                               │
+│ Estado *                   │ [Activo ▼]                                 │
+└────────────────────────────────────────────────────────────────────────────┘
+                                    ⬇️
+                          Usuario selecciona tipo
+
+PASO 2: HACER CLIC EN BOTÓN DE SUGERENCIA
+┌────────────────────────────────────────────────────────────────────────────┐
+│ Fecha de Inicio *          │ [2026-01-01] │ [🔄] ◄── Botón habilitado    │
+│                            │               │ ✓ Fechas sugeridas           │
+│ Fecha de Fin *             │ [2026-06-30]  │                              │
+└────────────────────────────────────────────────────────────────────────────┘
+                                    ⬇️
+                    Sistema calcula fechas automáticamente
+
+PASO 3: RESULTADO (Según el mes actual)
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│ SI ESTAMOS EN ENE-JUN:                   SI ESTAMOS EN JUL-DIC:           │
+│ ├─ Tipo: Semestre                        ├─ Tipo: Semestre               │
+│ ├─ Inicio: 01/01/2026                    ├─ Inicio: 01/07/2026           │
+│ └─ Fin: 30/06/2026                       └─ Fin: 31/12/2026             │
+│                                                                             │
+│ SI SELECCIONAMOS TRIMESTRE:              SI SELECCIONAMOS CUATRIMESTRE:   │
+│ ├─ Tipo: Trimestre                       ├─ Tipo: Cuatrimestre           │
+│ ├─ Inicio: 01/01/2026 (Q1)               ├─ Inicio: 01/01/2026 (C1)      │
+│ └─ Fin: 31/03/2026                       └─ Fin: 30/04/2026             │
+│                                                                             │
+│ SI SELECCIONAMOS ANUAL:                                                    │
+│ ├─ Tipo: Anual                                                             │
+│ ├─ Inicio: 01/01/2026                                                      │
+│ └─ Fin: 31/12/2026                                                         │
+│                                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+                                    ⬇️
+                    Usuario confirma/edita fechas si es necesario
+
+PASO 4: GUARDAR
+┌────────────────────────────────────────────────────────────────────────────┐
+│ [Cancelar] [Crear/Actualizar]                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+                                    ⬇️
+                    Período guardado en la base de datos ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TIPOS DE PERÍODO Y SUS FECHAS
+
+┌─ SEMESTRE (2 períodos)
+│  ├─ Semestre 1: 01/01 - 30/06
+│  └─ Semestre 2: 01/07 - 31/12
+│
+├─ TRIMESTRE (4 períodos)
+│  ├─ Q1: 01/01 - 31/03
+│  ├─ Q2: 01/04 - 30/06
+│  ├─ Q3: 01/07 - 30/09
+│  └─ Q4: 01/10 - 31/12
+│
+├─ CUATRIMESTRE (3 períodos)
+│  ├─ C1: 01/01 - 30/04
+│  ├─ C2: 01/05 - 31/08
+│  └─ C3: 01/09 - 31/12
+│
+└─ ANUAL (1 período)
+   └─ Anual: 01/01 - 31/12
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+LÓGICA DE DETECCIÓN DEL PERÍODO ACTUAL
+
+┌─────────────┬────────────────┬──────────────┬─────────────────┐
+│ Mes Actual  │ Semestre       │ Trimestre    │ Cuatrimestre    │
+├─────────────┼────────────────┼──────────────┼─────────────────┤
+│ Enero       │ Semestre 1     │ Q1           │ C1              │
+│ Febrero     │ Semestre 1     │ Q1           │ C1              │
+│ Marzo       │ Semestre 1     │ Q1           │ C1              │
+│ Abril       │ Semestre 1     │ Q2           │ C1              │
+│ Mayo        │ Semestre 1     │ Q2           │ C2              │
+│ Junio       │ Semestre 1     │ Q2           │ C2              │
+│ Julio       │ Semestre 2     │ Q3           │ C2              │
+│ Agosto      │ Semestre 2     │ Q3           │ C2              │
+│ Septiembre  │ Semestre 2     │ Q3           │ C3              │
+│ Octubre     │ Semestre 2     │ Q4           │ C3              │
+│ Noviembre   │ Semestre 2     │ Q4           │ C3              │
+│ Diciembre   │ Semestre 2     │ Q4           │ C3              │
+└─────────────┴────────────────┴──────────────┴─────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+COMPONENTES NUEVOS
+
+┌─ Vue (Formulario)
+│  ├─ Campo: input[type=number] para Año
+│  │  └─ @change="updatePeriodoType" ← Detecta cambios
+│  │
+│  └─ Botón: button.btn-suggest
+│     ├─ @click="autoSuggestDates" ← Función principal
+│     ├─ :disabled="!form.tipo || !form.anio" ← Control de acceso
+│     ├─ Icono: 🔄
+│     └─ Mensaje: "✓ Fechas sugeridas automáticamente"
+│
+├─ Script (Lógica)
+│  ├─ Variable: suggestedDates (ref(false))
+│  │  └─ Indica si fueron sugeridas automáticamente
+│  │
+│  ├─ Función: autoSuggestDates()
+│  │  ├─ Valida tipo y año
+│  │  ├─ Calcula fechas según tipo
+│  │  ├─ Detecta período actual
+│  │  ├─ Actualiza form.fechaInicio y form.fechaFin
+│  │  ├─ Muestra toast de éxito
+│  │  └─ Establece suggestedDates = true
+│  │
+│  ├─ Función: updatePeriodoType()
+│  │  ├─ Solo resetea suggestedDates a false
+│  │  └─ No auto-genera fechas
+│  │
+│  └─ Función: closeModal()
+│     └─ Resetea suggestedDates = false
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+ARCHIVOS GENERADOS
+
+📄 GUIA_PERIODOS.md
+   └─ Guía de usuario con instrucciones paso a paso
+
+📄 TUTORIAL_PERIODOS.html
+   └─ Tutorial interactivo (abre en navegador)
+
+📄 CAMBIOS_PERIODOS.md
+   └─ Resumen técnico de cambios realizados
+
+📄 PREGUNTAS_FRECUENTES_PERIODOS.md
+   └─ FAQ de 20 preguntas comunes
+
+📄 VISUAL_PERIODOS.txt (este archivo)
+   └─ Flujo visual y diagrama de componentes
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+VENTAJAS DE ESTA IMPLEMENTACIÓN
+
+✅ Intuitivo      - El botón 🔄 es claro y fácil de entender
+✅ No invasivo    - Solo sugiere, no obliga
+✅ Inteligente    - Detecta el período actual automáticamente
+✅ Flexible       - Permite edición manual de fechas
+✅ Validado       - El botón solo se activa con datos válidos
+✅ Visual         - Muestra confirmación de sugerencias
+✅ Accesible      - Funciona en todos los navegadores
+✅ Sin cambios de BD - Usa la estructura existente
+✅ Rápido         - Cálculos instantáneos
+✅ Documentado    - Incluye guías y tutoriales
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PRUEBA RÁPIDA
+
+1. Ve a: Gestión de Períodos Académicos
+2. Haz clic: "Nuevo Período"
+3. Llena:
+   - Nombre: "Periodo Test"
+   - Año: 2026
+   - Tipo: Semestre
+4. Haz clic: 🔄 (botón de actualizar)
+5. Resultado esperado:
+   - Fecha inicio: 01/01/2026 (si estamos en ene-jun)
+   - Fecha fin: 30/06/2026 (si estamos en ene-jun)
+   - ✓ Fechas sugeridas automáticamente (aparece)
+6. Haz clic: "Crear"
+7. ¡Listo! ✅
+
+═══════════════════════════════════════════════════════════════════════════════

@@ -110,9 +110,11 @@ export default {
             modelo: rawBien.modelo || 'N/A',
             serie: rawBien.serie || 'N/A',
             anioFabricacion: rawBien.anio_fabricacion || (rawBien.fecha_adquisicion ? new Date(rawBien.fecha_adquisicion).getFullYear() : 'N/A'),
-            valorAdquisicion: rawBien.valor_adquisicion || rawBien.valor || 0,
-            valorActual: rawBien.valor_adquisicion || rawBien.valor || 0, // Por ahora igual al valor de adquisición
+            valorAdquisicion: Number(rawBien.valor_adquisicion || rawBien.valor || 0),
+            valorActual: Number(rawBien.valor_adquisicion || rawBien.valor || 0), // Por ahora igual al valor de adquisición
             fecha_adquisicion: rawBien.fecha_adquisicion,
+            created_at: rawBien.created_at,
+            updated_at: rawBien.updated_at,
             descripcion: rawBien.descripcion || '',
             observaciones: rawBien.observaciones || '',
             condicion: 'Bueno', // Placeholder
@@ -136,13 +138,66 @@ export default {
       }
     }
 
+    // Cargar documentos asociados al bien
+    const cargarDocumentosDelBien = async () => {
+      try {
+        const bienId = route.params.id
+        const response = await apiClient.get('/documentos', { params: { bien_id: bienId } })
+        const data = response
+        if (data && data.success) {
+          const docs = (data.data || []).map((d) => ({
+              id: d.id,
+              nombre: d.nombre_archivo || d.nombre || d.nombre_archivo,
+              nombre_archivo: d.nombre_archivo || d.nombre,
+              url: `/api/documentos/${d.id}/download`,
+              tamano: d.tamano,
+              mime_type: d.mime_type,
+              descripcion: d.descripcion
+            }))
+          bien.value.documentos = docs
+        } else {
+          bien.value.documentos = []
+        }
+      } catch (error) {
+        console.error('Error cargando documentos del bien:', error)
+        bien.value.documentos = []
+      }
+    }
+
+    // Cargar historial de responsables
+    const cargarHistorialResponsables = async () => {
+      try {
+        const bienId = route.params.id
+        const response = await apiClient.get(`/bienes/${bienId}/historial-responsables`)
+        if (response.success && response.data) {
+          bien.value.historial = response.data.map((evento) => ({
+            id: evento.id,
+            accion: evento.responsable_anterior && evento.responsable_nuevo 
+              ? `Transferencia: ${evento.responsable_anterior} → ${evento.responsable_nuevo}`
+              : evento.responsable_nuevo
+              ? `Asignado a: ${evento.responsable_nuevo}`
+              : `Removido de: ${evento.responsable_anterior}`,
+            fecha: evento.fecha_cambio ? new Date(evento.fecha_cambio).toLocaleString() : '',
+            usuario: evento.usuario_que_cambio || 'Sistema',
+            responsable_anterior: evento.responsable_anterior,
+            responsable_nuevo: evento.responsable_nuevo
+          }))
+        } else {
+          bien.value.historial = []
+        }
+      } catch (error) {
+        console.error('Error cargando historial de responsables:', error)
+        bien.value.historial = []
+      }
+    }
+
     // Acciones
     const closeQRModal = () => {
       showQRModal.value = false
     }
 
-    const downloadPDF = () => {
-      toast.info('Funcionalidad de descarga PDF próximamente')
+    const goBack = () => {
+      router.push('/bienes')
     }
 
     const deleteBien = async () => {
@@ -161,6 +216,57 @@ export default {
           console.error('Error eliminando bien:', error)
           toast.error('Error al eliminar el bien')
         }
+      }
+    }
+
+    const downloadDocument = async (doc) => {
+      try {
+        toast.info('Iniciando descarga...')
+        // Usar baseURL vacío porque la URL del documento ya es absoluta (empieza con /api)
+        const response = await apiClient.get(doc.url, { 
+          responseType: 'blob',
+          baseURL: '' 
+        })
+        
+        const blob = response
+        if (!(blob instanceof Blob)) {
+           throw new Error('El archivo descargado no es válido')
+        }
+
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', doc.nombre_archivo || doc.nombre || 'documento')
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Error descargando documento:', error)
+        toast.error('Error al descargar: ' + (error.message || 'Error desconocido'))
+      }
+    }
+
+    const viewDocument = async (doc) => {
+      try {
+        toast.info('Abriendo vista previa...')
+        // Usar fetch directamente para evitar transformaciones del cliente axios
+        const token = localStorage.getItem('authToken')
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+        
+        const response = await fetch(`/api/documentos/${doc.id}/view`, {
+          headers
+        })
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        window.open(url, '_blank')
+        // No revocar inmediatamente para evitar pestaña vacía; el navegador controla la liberación
+      } catch (error) {
+        console.error('Error mostrando documento:', error)
+        toast.error('Error al mostrar vista previa: ' + (error.message || 'Error desconocido'))
       }
     }
 
@@ -208,6 +314,8 @@ ${window.location.origin}/bienes/${bien.value.id}`
     // Control de acceso por rol al cargar
     onMounted(async () => {
       await cargarBien()
+      await cargarDocumentosDelBien()
+      await cargarHistorialResponsables()
       // Verificar acceso después de cargar los datos
       if (!isAdmin.value && bien.value.responsable_id !== currentUserId.value) {
         toast.error('Acceso denegado: solo puedes ver tus propios bienes')
@@ -225,9 +333,11 @@ ${window.location.origin}/bienes/${bien.value.id}`
       getEstadoClass,
       cargarBien,
       closeQRModal,
-      downloadPDF,
       goToEdit,
       deleteBien,
+      goBack,
+      downloadDocument,
+      viewDocument,
     }
   },
 }

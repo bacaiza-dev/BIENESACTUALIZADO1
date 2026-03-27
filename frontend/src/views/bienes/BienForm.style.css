@@ -56,32 +56,105 @@
   background: #2563eb !important;
   color: white !important;
 }
-.dark .multiselect__tags {
-  background-color: #374151; /* gray-700 */
-  border-color: #4b5563; /* gray-600 */
-  color: white;
+/* Override VueMultiselect default styles to match Tailwind Blue-600 theme */
+
+/* Light Mode (Default) */
+.multiselect__option--highlight {
+  background: #2563eb !important; /* blue-600 */
+  color: white !important;
+  outline: none;
 }
+
+.multiselect__option--highlight:after {
+  background: #2563eb !important;
+  color: white !important;
+  content: '' !important;
+}
+
+.multiselect__tag {
+  background: #2563eb !important; /* blue-600 */
+}
+
+.multiselect__tag-icon:focus,
+.multiselect__tag-icon:hover {
+  background: #1d4ed8 !important; /* blue-700 */
+}
+
+/* Match input height and border */
+.multiselect {
+  min-height: 44px;
+}
+
+.multiselect__tags {
+  min-height: 44px;
+  border-radius: 0.5rem; /* rounded-lg */
+  border-color: #d1d5db; /* gray-300 */
+  padding-top: 10px;
+  background: white !important;
+  color: #111827 !important;
+}
+
+/* Force dropdown content background and text color - Light Mode */
+.multiselect__single {
+  background: transparent !important;
+  color: #111827 !important; /* gray-900 */
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.multiselect__content-wrapper {
+  background: white !important;
+  color: #111827 !important; /* gray-900 */
+  border: 1px solid #d1d5db;
+}
+
+.multiselect__option {
+  color: #111827 !important; /* gray-900 */
+  background: white !important;
+}
+
+.multiselect__option--selected {
+  background: #f3f4f6 !important; /* gray-100 */
+  color: #111827 !important;
+  font-weight: bold;
+}
+
+/* Dark Mode */
+.dark .multiselect__tags {
+  background-color: #374151 !important; /* gray-700 */
+  border-color: #4b5563 !important; /* gray-600 */
+  color: white !important;
+}
+
 .dark .multiselect__input,
 .dark .multiselect__single {
-  background-color: transparent;
-  color: white;
+  background-color: transparent !important;
+  color: white !important;
 }
+
 .dark .multiselect__content-wrapper {
-  background-color: #374151; /* gray-700 */
-  border-color: #4b5563; /* gray-600 */
-  color: white;
+  background-color: #374151 !important; /* gray-700 */
+  border-color: #4b5563 !important; /* gray-600 */
+  color: white !important;
 }
+
 .dark .multiselect__option {
   color: white !important;
   background-color: #374151 !important;
 }
-.dark .multiselect__input,
-.dark .multiselect__single {
-  background-color: transparent;
-  color: white;
+
+.dark .multiselect__option--selected {
+  background-color: #4b5563 !important; /* gray-600 */
+  color: white !important;
+  font-weight: bold;
 }
-.dark .multiselect__content-wrapper {
-  background-color: #374151; /* gray-700 */
-  border-color: #4b5563; /* gray-600 */
-  color: white;
+
+.dark .multiselect__option--highlight {
+  background: #2563eb !important; /* blue-600 */
+  color: white !important;
+}
+
+.dark .multiselect__option--highlight:after {
+  background: #2563eb !important;
+  color: white !important;
 }

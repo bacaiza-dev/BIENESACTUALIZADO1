@@ -11,21 +11,29 @@ router.get("/", verifyToken, async (req, res) => {
     const { search, activo } = req.query;
     
     // Columnas reales: id_categoria, nombre_categoria, codigo, descripcion, tipo, observaciones, activo
-    let sql = "SELECT * FROM categorias WHERE 1=1";
+    let sql = `
+      SELECT c.*, 
+      (SELECT COUNT(*) FROM bienes b WHERE b.categoria_id = c.id_categoria AND b.estado != 'BAJA') as bienes_count
+      FROM categorias c 
+      WHERE 1=1
+    `;
     const params = [];
 
     if (search) {
-      sql += " AND (nombre_categoria LIKE ? OR descripcion LIKE ? OR codigo LIKE ?)";
+      sql += " AND (c.nombre_categoria LIKE ? OR c.descripcion LIKE ? OR c.codigo LIKE ?)";
       const term = `%${search}%`;
       params.push(term, term, term);
     }
 
     if (activo !== undefined) {
-      sql += " AND activo = ?";
+      sql += " AND c.activo = ?";
       params.push(activo === "true" ? 1 : 0);
+    } else {
+      // Por defecto solo activos
+      sql += " AND c.activo = 1";
     }
 
-    sql += " ORDER BY nombre_categoria";
+    sql += " ORDER BY c.nombre_categoria";
 
     const rows = await query(sql, params);
     res.json({ success: true, data: rows.map(mapCategoriaRow) });
@@ -56,10 +64,27 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { nombre_categoria, nombre, descripcion, codigo, tipo, observaciones, activo } = req.body;
     
-    const nombreFinal = nombre_categoria || nombre;
+    const nombreFinal = (nombre_categoria || nombre || '').toString().trim();
 
     if (!nombreFinal) {
       return res.status(400).json({ success: false, message: "Nombre es requerido" });
+    }
+
+    // Verificar duplicado por nombre (case-insensitive, trim)
+    const dup = await query(
+      'SELECT id_categoria FROM categorias WHERE LOWER(TRIM(nombre_categoria)) = LOWER(TRIM(?)) LIMIT 1',
+      [nombreFinal]
+    );
+    if (dup.length > 0) {
+      return res.status(400).json({ success: false, message: 'Ya existe una categoría con ese nombre' });
+    }
+
+    // Validar código único
+    if (codigo) {
+      const existing = await query("SELECT id_categoria FROM categorias WHERE codigo = ?", [codigo]);
+      if (existing.length) {
+        return res.status(400).json({ success: false, message: "El código ya existe" });
+      }
     }
 
     const result = await query(
@@ -69,6 +94,10 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
 
     res.json({ success: true, message: "Categoría creada", data: { id: result.insertId } });
   } catch (error) {
+    // Manejar conflicto por índice único si existiera
+    if (error && error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ success: false, message: 'Ya existe una categoría con ese nombre', error: error.message });
+    }
     res.status(500).json({ success: false, message: "Error creando categoría", error: error.message });
   }
 });
@@ -79,7 +108,28 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { nombre_categoria, nombre, descripcion, codigo, tipo, observaciones, activo } = req.body;
     
-    const nombreFinal = nombre_categoria || nombre;
+    const nombreFinal = (nombre_categoria || nombre || '').toString().trim();
+
+    if (!nombreFinal) {
+      return res.status(400).json({ success: false, message: 'Nombre es requerido' });
+    }
+
+    // Verificar duplicado por nombre (case-insensitive, trim), excluyendo el registro actual
+    const dup = await query(
+      'SELECT id_categoria FROM categorias WHERE LOWER(TRIM(nombre_categoria)) = LOWER(TRIM(?)) AND id_categoria != ? LIMIT 1',
+      [nombreFinal, id]
+    );
+    if (dup.length > 0) {
+      return res.status(400).json({ success: false, message: 'Ya existe una categoría con ese nombre' });
+    }
+
+    // Validar código único
+    if (codigo) {
+      const existing = await query("SELECT id_categoria FROM categorias WHERE codigo = ? AND id_categoria != ?", [codigo, id]);
+      if (existing.length) {
+        return res.status(400).json({ success: false, message: "El código ya existe" });
+      }
+    }
 
     await query(
       "UPDATE categorias SET nombre_categoria = ?, descripcion = ?, codigo = ?, tipo = ?, observaciones = ?, activo = ? WHERE id_categoria = ?",
@@ -88,27 +138,49 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
 
     res.json({ success: true, message: "Categoría actualizada" });
   } catch (error) {
+    if (error && error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ success: false, message: 'Ya existe una categoría con ese nombre', error: error.message });
+    }
     res.status(500).json({ success: false, message: "Error actualizando categoría", error: error.message });
   }
 });
 
-// DELETE /categorias/:id - Eliminar categoría
+// DELETE /categorias/:id - Eliminar categoría (soft delete). Si ?force=true => eliminación permanente (solo si no hay bienes asociados)
 router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
+    const { force } = req.query;
 
-    const bienes = await query("SELECT COUNT(*) as count FROM bienes WHERE categoria_id = ?", [id]);
+    if (force === 'true') {
+      // Eliminación definitiva: verificar que NO exista ningún bien (cualquier estado)
+      const allBienes = await query("SELECT COUNT(*) as count FROM bienes WHERE categoria_id = ?", [id]);
+      const count = allBienes[0]?.count || 0;
+      if (count > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `No se puede eliminar definitivamente: existen ${count} bien(es) asociados a esta categoría`,
+        });
+      }
+
+      // Eliminar definitivamente
+      await query('DELETE FROM categorias WHERE id_categoria = ?', [id]);
+      return res.json({ success: true, message: 'Categoría eliminada definitivamente' });
+    }
+
+    // Comportamiento por defecto: soft-delete (inactivar) — verificar bienes activos
+    const bienes = await query("SELECT COUNT(*) as count FROM bienes WHERE categoria_id = ? AND estado != 'BAJA'", [id]);
 
     if (bienes[0].count > 0) {
       return res.status(400).json({
         success: false,
-        message: `No se puede eliminar: hay ${bienes[0].count} bienes en esta categoría`,
+        message: `No se puede eliminar categoría en uso: hay ${bienes[0].count} bien(es) asignado(s) a esta categoría`,
       });
     }
 
-    await query("DELETE FROM categorias WHERE id_categoria = ?", [id]);
+    // Soft delete - cambiar a inactivo en lugar de borrar
+    await query("UPDATE categorias SET activo = 0 WHERE id_categoria = ?", [id]);
 
-    res.json({ success: true, message: "Categoría eliminada" });
+    res.json({ success: true, message: "Categoría eliminada correctamente" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error eliminando categoría", error: error.message });
   }

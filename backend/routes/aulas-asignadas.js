@@ -8,11 +8,13 @@ const { verifyToken, requireAdmin } = require("../middleware/auth");
 // GET /aulas-asignadas - Listar asignaciones
 router.get("/", verifyToken, async (req, res) => {
   try {
-    const { periodo_id, usuario_id } = req.query;
+    // GET /aulas-asignadas
+    const { periodo_id, usuario_id, activo } = req.query;
 
     // Columnas reales: us.nombres, us.apellidos (no us.nombre, us.apellido)
     let sql = `
       SELECT aa.id, aa.ubicacion_id, aa.usuario_id, aa.periodo_id, aa.observaciones, aa.activo,
+             aa.created_at, aa.updated_at,
              u.id_ubicacion as 'ubicacion.id', u.tipo as 'ubicacion.tipo', 
              CONCAT(u.tipo, ' - ', COALESCE(u.numero_aula, u.descripcion, '')) as 'ubicacion.nombre',
              u.piso as 'ubicacion.piso', u.sede as 'ubicacion.edificio', u.numero_aula as 'ubicacion.aula',
@@ -25,7 +27,7 @@ router.get("/", verifyToken, async (req, res) => {
       JOIN ubicaciones u ON aa.ubicacion_id = u.id_ubicacion
       JOIN usuarios us ON aa.usuario_id = us.id_usuario
       JOIN periodos_academicos pa ON aa.periodo_id = pa.id_periodo
-      WHERE aa.activo = 1
+      WHERE 1=1
     `;
     const params = [];
 
@@ -37,8 +39,23 @@ router.get("/", verifyToken, async (req, res) => {
       sql += " AND aa.usuario_id = ?";
       params.push(usuario_id);
     }
+    
+    // Filtro de activo dinámico
+    if (activo !== undefined) {
+       if (activo !== 'todos') {
+         sql += " AND aa.activo = ?";
+         params.push(activo === 'true' || activo === '1' ? 1 : 0);
+       }
+    } else {
+       // Por defecto solo activos, a menos que se pida otra cosa
+       // El usuario pidió poder activar/desactivar. Para verlos y desactivarlos, 
+       // el frontend probablemente pedirá todos o se manejará con filtros.
+       // Mantendré por defecto activos para consistencia inicial, pero el frontend enviará 'todos' o 'false'.
+       sql += " AND aa.activo = 1";
+    }
 
     sql += " ORDER BY pa.fecha_inicio DESC, u.tipo, u.numero_aula";
+
 
     const rows = await query(sql, params);
 
@@ -50,6 +67,8 @@ router.get("/", verifyToken, async (req, res) => {
         periodo_id: row.periodo_id,
         observaciones: row.observaciones,
         activo: row.activo === 1,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
         bienes_count: row.bienes_count || 0,
         ubicacion: {},
         custodio: {},
@@ -158,12 +177,24 @@ router.post("/", verifyToken, requireAdmin, async (req, res) => {
 router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { ubicacion_id, usuario_id, periodo_id, observaciones } = req.body;
+    const { ubicacion_id, usuario_id, periodo_id, observaciones, activo } = req.body;
 
-    await query(
-      `UPDATE aulas_asignadas SET ubicacion_id = ?, usuario_id = ?, periodo_id = ?, observaciones = ? WHERE id = ?`,
-      [ubicacion_id, usuario_id, periodo_id, observaciones || null, id]
-    );
+    // Construir query dinámico o fijo
+    // Si viene activo, lo actualizamos. Si no, mantenemos el anterior (pero en UPDATE estándar solemos pasar todo o hacer COALESCE)
+    // Para simplificar, usaremos COALESCE o lógica condicional, pero aquí pasaremos activo si está definido
+    
+    let sql = `UPDATE aulas_asignadas SET ubicacion_id = ?, usuario_id = ?, periodo_id = ?, observaciones = ?`;
+    const params = [ubicacion_id, usuario_id, periodo_id, observaciones || null];
+
+    if (activo !== undefined) {
+      sql += `, activo = ?`;
+      params.push(activo ? 1 : 0);
+    }
+
+    sql += ` WHERE id = ?`;
+    params.push(id);
+
+    await query(sql, params);
 
     res.json({ success: true, message: "Asignación actualizada" });
   } catch (error) {
@@ -175,8 +206,8 @@ router.put("/:id", verifyToken, requireAdmin, async (req, res) => {
 router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await query("UPDATE aulas_asignadas SET activo = 0 WHERE id = ?", [id]);
-    res.json({ success: true, message: "Asignación eliminada" });
+    await query("DELETE FROM aulas_asignadas WHERE id = ?", [id]);
+    res.json({ success: true, message: "Asignación eliminada permanentemente" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error eliminando asignación", error: error.message });
   }

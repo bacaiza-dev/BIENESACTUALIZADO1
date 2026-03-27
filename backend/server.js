@@ -30,15 +30,35 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Importar rutas API
 let apiRoutes;
+let routesLoadError = null;
 try {
   apiRoutes = require("./routes/index.js");
 } catch (e) {
-  console.error("[ERROR] No se pudo cargar rutas:", e);
-  apiRoutes = (req, res) => res.status(501).json({ success: false, message: "API no disponible" });
+  routesLoadError = e;
+  console.error("[ERROR] No se pudo cargar rutas:", e?.message || e);
+  console.error(e?.stack || "stack no disponible");
+  apiRoutes = (req, res) => {
+    const payload = {
+      success: false,
+      message: "API no disponible",
+      error: e?.message || "Error desconocido al cargar rutas",
+    };
+    if (process.env.NODE_ENV !== "production") {
+      payload.details = e?.stack || "stack no disponible";
+    }
+    res.status(501).json(payload);
+  };
 }
 
 // Montar rutas bajo /api
 app.use("/api", apiRoutes);
+
+// Si hubo error al cargar las rutas, detener el proceso para evitar estado inconsistente
+if (routesLoadError) {
+  console.error("[FATAL] No se pudieron cargar las rutas. El servidor se apagará.");
+  console.error(routesLoadError);
+  setTimeout(() => process.exit(1), 100);
+}
 
 // Health check en raíz
 app.get("/health", async (req, res) => {

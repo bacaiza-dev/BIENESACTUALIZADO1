@@ -19,16 +19,37 @@ export default {
 
     const filters = ref({
       search: '',
-      estado: '',
       tipo: '',
     })
 
     const showCreateModal = ref(false)
     const showEditModal = ref(false)
     const showViewModal = ref(false)
+    const showDeleteConfirm = ref(false)
+    const showInactiveModal = ref(false)
+    const inactiveSearch = ref('')
+    const inactivePeriodos = ref([])
+    const inactiveCount = ref(0)
     const selectedPeriodo = ref(null)
+    const deleteErrorMessage = ref('')
+    const periodoToDelete = ref(null)
+    const permanentDeleteMode = ref(false)
     const currentPage = ref(1)
     const itemsPerPage = ref(10)
+    const showBienesModal = ref(false)
+    const selectedBienesPeriodo = ref(null)
+    const bienesList = ref([])
+
+    const loadInactiveCount = async () => {
+      try {
+        const res = await apiClient.get('/periodos-academicos?inactive=1')
+        if (res.success) {
+          inactiveCount.value = (res.data || []).length
+        }
+      } catch (err) {
+        inactiveCount.value = 0
+      }
+    }
 
     const form = ref({
       id: null,
@@ -41,18 +62,17 @@ export default {
       descripcion: '',
       observaciones: '',
     })
+    const suggestedDates = ref(false)
 
     // Filtros y búsqueda
     const filteredPeriodos = computed(() => {
-      let result = periodos.value
+      // Por seguridad, trabajar solo con periodos activos
+      let result = periodos.value.filter(p => p.activo !== false && p.estado !== 'inactivo')
       if (filters.value.search) {
         const search = filters.value.search.toLowerCase()
         result = result.filter(
-          p => p.nombre.toLowerCase().includes(search) || p.anio.toString().includes(search)
+          p => (p.nombre || '').toString().toLowerCase().includes(search) || (p.anio || '').toString().includes(search)
         )
-      }
-      if (filters.value.estado) {
-        result = result.filter(p => p.estado === filters.value.estado)
       }
       if (filters.value.tipo) {
         result = result.filter(p => p.tipo === filters.value.tipo)
@@ -119,6 +139,7 @@ export default {
         if (data.success) {
              const today = new Date()
              periodos.value = (data.data || []).map(p => {
+               // Obtener fechas - pueden venir como fecha_inicio o fechaInicio
                const fechaInicio = p.fechaInicio ?? p.fecha_inicio ?? ''
                const fechaFin = p.fechaFin ?? p.fecha_fin ?? ''
 
@@ -137,11 +158,13 @@ export default {
 
                return {
                  ...p,
+                 id: p.id,
+                 nombre: p.nombre,
                  anio: p.anio ?? '',
                  tipo: p.tipo ?? '',
                  estado: computedEstado,
-                 fechaInicio,
-                 fechaFin,
+                 fechaInicio: fechaInicio ? new Date(fechaInicio).toISOString().split('T')[0] : '',
+                 fechaFin: fechaFin ? new Date(fechaFin).toISOString().split('T')[0] : '',
                  duracion: p.duracion ?? computedDuracion,
                  bienesAsignados: p.bienesAsignados ?? 0,
                  descripcion: p.descripcion ?? '',
@@ -167,47 +190,200 @@ export default {
       showEditModal.value = true
     }
 
+    const updatePeriodoType = () => {
+      // Solo cambiar el tipo, no las fechas automáticamente
+      // El usuario verá el botón de sugerencia de fechas
+      suggestedDates.value = false
+    }
+
+    const autoSuggestDates = () => {
+      // Ahora la lógica asume que el usuario decide la fecha de inicio y se calcula la fecha de fin
+      if (!form.value.tipo || !form.value.fechaInicio) {
+        toast.error('Por favor selecciona el tipo de período y la fecha de inicio')
+        return
+      }
+
+      const start = new Date(form.value.fechaInicio)
+      if (Number.isNaN(start.getTime())) {
+        toast.error('Fecha de inicio inválida')
+        return
+      }
+
+      const monthsToAddMap = {
+        semestre: 6,
+        trimestre: 3,
+        cuatrimestre: 4,
+        anual: 12,
+      }
+
+      const monthsToAdd = monthsToAddMap[form.value.tipo] || 0
+      const end = new Date(start)
+      end.setMonth(end.getMonth() + monthsToAdd)
+      // Restar un día para que el período termine el día anterior al próximo periodo
+      end.setDate(end.getDate() - 1)
+
+      form.value.fechaFin = end.toISOString().split('T')[0]
+
+      suggestedDates.value = true
+      toast.success('Fecha de fin calculada automáticamente')
+    }
+
     const togglePeriodoStatus = async (periodo) => {
       const newStatus = periodo.estado === 'activo' ? 'inactivo' : 'activo'
       try {
         const response = await apiClient.put(`/periodos-academicos/${periodo.id}`, {
             ...periodo,
-            estado: newStatus
+            estado: newStatus,
+            activo: newStatus === 'activo'
         })
         const data = response
         if (data.success) {
-            const index = periodos.value.findIndex(p => p.id === periodo.id)
-            if (index !== -1) {
-                periodos.value[index].estado = newStatus
-                periodos.value[index].activo = newStatus === 'activo'
-            }
             toast.success('Estado actualizado correctamente')
+            await loadPeriodos()
+            await loadInactiveCount()
         }
       } catch (error) {
          toast.error('Error al cambiar estado')
       }
     }
 
-    const deletePeriodo = async (id) => {
-      if (confirm('¿Estás seguro de que quieres eliminar este período?')) {
-        try {
-            const response = await apiClient.delete(`/periodos-academicos/${id}`)
-            if (response.success) {
-                periodos.value = periodos.value.filter(p => p.id !== id)
-                toast.success('Período eliminado')
-            }
-        } catch (error) {
-            toast.error('Error al eliminar período')
+    const deletePeriodo = (id) => {
+      periodoToDelete.value = id
+      deleteErrorMessage.value = ''
+      showDeleteConfirm.value = true
+    }
+
+    const filteredInactivePeriodos = computed(() => {
+      const list = inactivePeriodos.value || []
+      if (!inactiveSearch.value) return list
+      const s = inactiveSearch.value.trim().toLowerCase()
+      return list.filter(p => {
+        const nombre = (p.nombre || '').toString().toLowerCase()
+        const anio = (p.anio || '').toString().toLowerCase()
+        return nombre.includes(s) || anio.includes(s)
+      })
+    })
+
+    const openInactiveModal = async () => {
+      inactiveSearch.value = ''
+      showInactiveModal.value = true
+      try {
+        const res = await apiClient.get('/periodos-academicos?inactive=1')
+        if (res.success) {
+          inactivePeriodos.value = res.data || []
         }
+      } catch (err) {
+        inactivePeriodos.value = []
+        toast.error('Error al cargar períodos inactivos')
       }
+    }
+
+    const openPermanentDeleteConfirm = (id) => {
+      periodoToDelete.value = id
+      deleteErrorMessage.value = ''
+      permanentDeleteMode.value = true
+      showDeleteConfirm.value = true
+    }
+
+    const reactivatePeriodo = async (id) => {
+      try {
+        const response = await apiClient.post(`/periodos-academicos/${id}/reactivate`)
+        if (response.success) {
+          await loadPeriodos()
+          await loadInactiveCount()
+          // si el modal está abierto, recargar su lista
+          if (showInactiveModal.value) {
+            const res = await apiClient.get('/periodos-academicos?inactive=1')
+            if (res.success) inactivePeriodos.value = res.data || []
+          }
+          toast.success('Período reactivado correctamente')
+        } else {
+          toast.error(response.message || 'Error al reactivar periodo')
+        }
+      } catch (error) {
+        const errorMsg = error.response?.data?.message || error.message || 'Error al reactivar periodo'
+        toast.error(errorMsg)
+      }
+    }
+
+    const confirmDelete = async () => {
+      if (!periodoToDelete.value) return
+      
+      try {
+        if (permanentDeleteMode.value) {
+          const response = await apiClient.delete(`/periodos-academicos/${periodoToDelete.value}?permanent=1`)
+          if (response.success) {
+            // recargar lista principal y contador de inactivos
+            await loadPeriodos()
+            await loadInactiveCount()
+            toast.success(permanentDeleteMode.value ? 'Período eliminado definitivamente' : 'Período desactivado correctamente')
+            closeDeleteConfirm()
+          } else {
+            toast.error(response.message || 'Error al eliminar el período')
+            closeDeleteConfirm()
+          }
+        } else {
+          // soft delete -> desactivar
+          const response = await apiClient.delete(`/periodos-academicos/${periodoToDelete.value}`)
+          if (response.success) {
+            const idx = periodos.value.findIndex(p => p.id === periodoToDelete.value)
+            if (idx !== -1) {
+              periodos.value[idx].activo = false
+              periodos.value[idx].estado = 'inactivo'
+            }
+            toast.success('Período desactivado correctamente')
+            closeDeleteConfirm()
+          } else {
+            toast.error(response.message || 'Error al desactivar el período')
+            closeDeleteConfirm()
+          }
+        }
+      } catch (error) {
+        const errorMsg = error.response?.data?.message || error.message || 'Error al eliminar el período'
+        toast.error(errorMsg)
+        closeDeleteConfirm()
+      }
+    }
+
+    const closeDeleteConfirm = () => {
+      showDeleteConfirm.value = false
+      deleteErrorMessage.value = ''
+      periodoToDelete.value = null
+      permanentDeleteMode.value = false
     }
 
     const savePeriodo = async () => {
       try {
+          // Validación cliente: nombre único (case-insensitive)
+          const nombreTrim = (form.value.nombre || '').toString().trim().toLowerCase()
+          if (!nombreTrim) {
+            toast.error('El nombre es obligatorio')
+            return
+          }
+
+          const duplicate = periodos.value.some(p => {
+            const pNombre = (p.nombre || '').toString().trim().toLowerCase()
+            if (showEditModal.value) {
+              return pNombre === nombreTrim && p.id !== form.value.id
+            }
+            return pNombre === nombreTrim
+          })
+
+          if (duplicate) {
+            toast.error('ya existe ese nombre')
+            return
+          }
+
           let response;
           const payload = {
-              ...form.value,
-              duracion: calculateDuration(form.value.fechaInicio, form.value.fechaFin)
+              nombre: form.value.nombre,
+              tipo: form.value.tipo,
+              anio: form.value.anio,
+              fecha_inicio: form.value.fechaInicio || null,
+              fecha_fin: form.value.fechaFin || null,
+              descripcion: form.value.descripcion,
+              estado: form.value.estado,
+              activo: form.value.estado === 'activo'
           }
 
           if (showEditModal.value) {
@@ -226,7 +402,8 @@ export default {
             }
           }
       } catch (error) {
-         toast.error('Error al guardar período')
+         const errorMsg = error.response?.data?.message || 'Error al guardar período'
+         toast.error(errorMsg)
       }
     }
 
@@ -241,6 +418,7 @@ export default {
     const closeModal = () => {
       showCreateModal.value = false
       showEditModal.value = false
+      suggestedDates.value = false
       form.value = {
         id: null,
         nombre: '',
@@ -259,8 +437,52 @@ export default {
       selectedPeriodo.value = null
     }
 
+    const viewBienesPeriodo = async (periodo) => {
+      selectedBienesPeriodo.value = periodo
+      bienesList.value = []
+      showBienesModal.value = true
+      
+      try {
+        // Usar el ID del período para filtrar bienes
+        const periodoId = periodo.id_periodo || periodo.id
+        console.log('Filtrando bienes por periodo_id:', periodoId)
+        
+        const response = await apiClient.get(`/bienes?periodo_id=${periodoId}`)
+        if (response.success) {
+          bienesList.value = response.data || []
+          console.log('Bienes encontrados:', bienesList.value.length)
+        }
+      } catch (error) {
+        console.error('Error cargando bienes:', error)
+        toast.error('Error al cargar bienes del período')
+      }
+    }
+
+    const closeBienesModal = () => {
+      showBienesModal.value = false
+      selectedBienesPeriodo.value = null
+      bienesList.value = []
+    }
+
+    const getEstadoBienClass = (estado) => {
+      const map = {
+        'ACTIVO': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        'INACTIVO': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        'BAJA': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200',
+        'MANTENIMIENTO': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      }
+      return map[estado] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+    }
+
     const formatDate = dateString => {
-      return new Date(dateString).toLocaleDateString('es-ES')
+      if (!dateString) return 'Sin especificar'
+      const date = new Date(dateString)
+      if (Number.isNaN(date.getTime())) return 'Fecha inválida'
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
     }
 
     // Control de acceso por rol al cargar
@@ -272,6 +494,7 @@ export default {
       }
     */
       loadPeriodos()
+      loadInactiveCount()
     })
 
     return {
@@ -287,21 +510,46 @@ export default {
       showCreateModal,
       showEditModal,
       showViewModal,
+      showDeleteConfirm,
       selectedPeriodo,
+      deleteErrorMessage,
+      periodoToDelete,
       form,
+      suggestedDates,
+      showBienesModal,
+      selectedBienesPeriodo,
+      bienesList,
       getTipoClass,
       getEstadoClass,
+      getEstadoBienClass,
+      // Inactivos
+      showInactiveModal,
+      inactiveSearch,
+      inactivePeriodos,
+      filteredInactivePeriodos,
+      openInactiveModal,
+      reactivatePeriodo,
+      openPermanentDeleteConfirm,
+      inactiveCount,
+      loadInactiveCount,
+      // Acciones y utilidades
       clearFilters,
       previousPage,
       nextPage,
       goToPage,
       viewPeriodo,
       editPeriodo,
+      viewBienesPeriodo,
       togglePeriodoStatus,
       deletePeriodo,
+      confirmDelete,
+      closeDeleteConfirm,
+      updatePeriodoType,
+      autoSuggestDates,
       savePeriodo,
       closeModal,
       closeViewModal,
+      closeBienesModal,
       formatDate,
     }
   },

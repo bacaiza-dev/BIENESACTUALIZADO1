@@ -99,6 +99,63 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
+// GET /documentos/:id/view - Ver documento en el navegador (sin auth requerida)
+router.get("/:id/view", async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`[DEBUG] Intentando ver documento ID: ${id}`);
+    
+    const [doc] = await query("SELECT * FROM documentos_bien WHERE id_documento = ?", [id]);
+    
+    if (!doc) {
+      console.error(`[ERROR] Documento ${id} no encontrado en BD`);
+      return res.status(404).json({ success: false, message: "Documento no encontrado" });
+    }
+
+    console.log(`[DEBUG] Documento encontrado:`, { id_documento: doc.id_documento, nombre_archivo: doc.nombre_archivo, url_archivo: doc.url_archivo });
+
+    // Intentar encontrar el archivo
+    let filePath = null;
+    
+    // Primero intenta usar url_archivo si existe
+    if (doc.url_archivo) {
+      if (fs.existsSync(doc.url_archivo)) {
+        filePath = doc.url_archivo;
+        console.log(`[DEBUG] Archivo encontrado en url_archivo: ${filePath}`);
+      } else {
+        console.warn(`[WARN] url_archivo no existe: ${doc.url_archivo}`);
+      }
+    }
+    
+    // Si no encontró, intenta en UPLOAD_DIR
+    if (!filePath && UPLOAD_DIR && doc.nombre_archivo) {
+      const uploadPath = path.join(UPLOAD_DIR, doc.nombre_archivo);
+      if (fs.existsSync(uploadPath)) {
+        filePath = uploadPath;
+        console.log(`[DEBUG] Archivo encontrado en UPLOAD_DIR: ${filePath}`);
+      } else {
+        console.warn(`[WARN] Archivo no existe en UPLOAD_DIR: ${uploadPath}`);
+      }
+    }
+
+    if (!filePath) {
+      console.error(`[ERROR] No se encontró archivo para documento ${id}. UPLOAD_DIR: ${UPLOAD_DIR}`);
+      return res.status(404).json({ success: false, message: "Archivo físico no encontrado" });
+    }
+
+    // Set headers para mostrar en el navegador (inline) en lugar de descargar
+    res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${doc.nombre_archivo}"`);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    
+    console.log(`[DEBUG] Sirviendo archivo: ${filePath}`);
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("[ERROR] GET /documentos/:id/view:", error.message);
+    res.status(500).json({ success: false, message: "Error viendo documento", error: error.message });
+  }
+});
+
 // GET /documentos/:id/download
 router.get("/:id/download", verifyToken, async (req, res) => {
   try {
@@ -144,8 +201,35 @@ router.post("/", verifyToken, uploadDocument.single("file"), async (req, res) =>
   }
 });
 
+// PUT /documentos/:id - Actualizar documento
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { bien_id, tipo, descripcion } = req.body;
+
+    const [doc] = await query("SELECT * FROM documentos_bien WHERE id_documento = ?", [id]);
+
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Documento no encontrado" });
+    }
+
+    // Actualizar solo los campos permitidos (no cambiar archivo)
+    await query(
+      `UPDATE documentos_bien 
+       SET id_bien = ?, tipo_documento = ?, descripcion = ? 
+       WHERE id_documento = ?`,
+      [bien_id || null, tipo || 'otro', descripcion || null, id]
+    );
+
+    res.json({ success: true, message: "Documento actualizado", data: { id } });
+  } catch (error) {
+    console.error("[ERROR] PUT /documentos/:id:", error.message);
+    res.status(500).json({ success: false, message: "Error actualizando documento", error: error.message });
+  }
+});
+
 // DELETE /documentos/:id
-router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
+router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const [doc] = await query("SELECT * FROM documentos_bien WHERE id_documento = ?", [id]);

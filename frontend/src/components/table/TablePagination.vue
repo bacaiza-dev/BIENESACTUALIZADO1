@@ -15,16 +15,12 @@
       <!-- Controles de paginación -->
       <div v-if="totalPages > 1" class="flex items-center space-x-2">
         <!-- Botón anterior -->
-        <button
-          :disabled="currentPage === 1"
-          @click="$emit('page-change', currentPage - 1)"
-          :class="[
-            'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-            currentPage === 1
-              ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          ]"
-        >
+        <button :disabled="currentPage === 1" @click="$emit('page-change', currentPage - 1)" :class="[
+          'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+          currentPage === 1
+            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+        ]">
           <i class="bx bx-chevron-left"></i>
           Anterior
         </button>
@@ -32,16 +28,12 @@
         <!-- Números de página -->
         <div class="flex items-center space-x-1">
           <!-- Primera página -->
-          <button
-            v-if="showFirstPage"
-            @click="$emit('page-change', 1)"
-            :class="[
-              'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-              currentPage === 1
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            ]"
-          >
+          <button v-if="showFirstPage" @click="$emit('page-change', 1)" :class="[
+            'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+            currentPage === 1
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          ]">
             1
           </button>
 
@@ -49,17 +41,12 @@
           <span v-if="showLeftEllipsis" class="px-2 text-gray-500">...</span>
 
           <!-- Páginas centrales -->
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            @click="$emit('page-change', page)"
-            :class="[
-              'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-              currentPage === page
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            ]"
-          >
+          <button v-for="page in visiblePages" :key="page" @click="$emit('page-change', page)" :class="[
+            'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+            currentPage === page
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          ]">
             {{ page }}
           </button>
 
@@ -67,31 +54,23 @@
           <span v-if="showRightEllipsis" class="px-2 text-gray-500">...</span>
 
           <!-- Última página -->
-          <button
-            v-if="showLastPage"
-            @click="$emit('page-change', totalPages)"
-            :class="[
-              'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-              currentPage === totalPages
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            ]"
-          >
+          <button v-if="showLastPage" @click="$emit('page-change', totalPages)" :class="[
+            'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+            currentPage === totalPages
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          ]">
             {{ totalPages }}
           </button>
         </div>
 
         <!-- Botón siguiente -->
-        <button
-          :disabled="currentPage === totalPages"
-          @click="$emit('page-change', currentPage + 1)"
-          :class="[
-            'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
-            currentPage === totalPages
-              ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          ]"
-        >
+        <button :disabled="currentPage === totalPages" @click="$emit('page-change', currentPage + 1)" :class="[
+          'px-3 py-2 text-sm font-medium rounded-lg transition-colors',
+          currentPage === totalPages
+            ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+        ]">
           Siguiente
           <i class="bx bx-chevron-right"></i>
         </button>
@@ -106,10 +85,8 @@
         </span>
         <div class="flex items-center space-x-2">
           <slot name="bulk-actions">
-            <button
-              @click="$emit('bulk-delete')"
-              class="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors"
-            >
+            <button @click="$emit('bulk-delete')"
+              class="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition-colors">
               <i class="bx bx-trash mr-1"></i>
               Eliminar seleccionados
             </button>
@@ -151,25 +128,36 @@ const endIndex = computed(() => {
 // Lógica de páginas visibles
 const visiblePages = computed(() => {
   const pages: number[] = []
+
+  // Si hay pocas páginas, mostrar todas menos 1 y last si están cubiertas
+  // Pero la lógica de templating asume que 1 y Total están fuera de visiblePages a menos que....
+  // Vamos a generar el rango central.
+
   const maxVisible = 5
-  const half = Math.floor(maxVisible / 2)
-  
-  let start = Math.max(1, props.currentPage - half)
-  let end = Math.min(props.totalPages, start + maxVisible - 1)
-  
-  // Ajustar el inicio si estamos cerca del final
-  if (end - start + 1 < maxVisible) {
-    start = Math.max(1, end - maxVisible + 1)
+  // Start y End del rango "ideal" centrado en currentPage
+  let start = Math.max(2, props.currentPage - 2)
+  let end = Math.min(props.totalPages - 1, props.currentPage + 2)
+
+  // Ajustar si estamos cerca de los límites para mantener maxVisible items si es posible
+  if (props.currentPage <= 3) {
+    // Estamos al inicio: 2, 3, 4, 5, 6
+    end = Math.min(props.totalPages - 1, 2 + maxVisible - 1)
   }
-  
-  // No mostrar primera y última página en el rango central
-  if (start === 1) start = 2
-  if (end === props.totalPages) end = props.totalPages - 1
-  
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
+  if (props.currentPage >= props.totalPages - 2) {
+    // Estamos al final
+    start = Math.max(2, props.totalPages - maxVisible)
   }
-  
+
+  // Ensure valid range
+  start = Math.max(2, start)
+  end = Math.min(props.totalPages - 1, end)
+
+  if (start <= end) {
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+  }
+
   return pages
 })
 

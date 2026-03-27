@@ -77,6 +77,8 @@ export interface Category {
   tipo?: string
   estado?: 'activo' | 'inactivo'
   observaciones?: string
+  bienesAsociados?: number
+  fechaCreacion?: string
 }
 
 export interface Location {
@@ -94,11 +96,17 @@ export interface Ubicacion {
   nombre: string
   descripcion: string
   edificio: string
-  piso: number
-  tipo: 'oficina' | 'aula' | 'laboratorio' | 'almacen' | 'biblioteca' | 'taller'
+  piso: number | string
+  tipo: 'oficina' | 'aula' | 'laboratorio' | 'almacen' | 'biblioteca' | 'taller' | string
   capacidad: number
   estado: 'activo' | 'inactivo' | 'mantenimiento'
   bienesAsignados: number
+  numero_aula?: string
+  aula?: string
+  sede?: string
+  area?: string
+  id_campus?: number | null
+  campus_nombre?: string | null
 }
 
 export interface AuthState {

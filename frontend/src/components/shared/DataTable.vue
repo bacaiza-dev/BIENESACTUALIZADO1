@@ -1,17 +1,9 @@
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
     <!-- Header de la tabla -->
-    <TableHeader
-      :title="title"
-      :description="description"
-      :search-term="searchTermLocal"
-      :search-placeholder="searchPlaceholder"
-      :page-size="pageSizeLocal"
-      :page-sizes="pageSizes"
-      @update:search-term="handleSearchUpdate"
-      @update:page-size="handlePageSizeUpdate"
-      @clear-search="clearSearch"
-    >
+    <TableHeader :title="title" :description="description" :search-term="searchTermLocal"
+      :search-placeholder="searchPlaceholder" :page-size="pageSizeLocal" :page-sizes="pageSizes"
+      @update:search-term="handleSearchUpdate" @update:page-size="handlePageSizeUpdate" @clear-search="clearSearch">
       <template #header-actions>
         <slot name="header-actions" />
       </template>
@@ -24,16 +16,9 @@
     <TableLoadingState v-if="loading" :message="loadingMessage" />
 
     <!-- Empty state -->
-    <TableEmptyState
-      v-else-if="paginatedData.length === 0"
-      :title="emptyTitle"
-      :description="emptyDescription"
-      :action-text="emptyActionText"
-      :show-action="showEmptyAction"
-      :show-clear-filters="hasActiveFilters"
-      @create="$emit('create')"
-      @clear-filters="$emit('clear-filters')"
-    >
+    <TableEmptyState v-else-if="paginatedData.length === 0" :title="emptyTitle" :description="emptyDescription"
+      :action-text="emptyActionText" :show-action="showEmptyAction" :show-clear-filters="hasActiveFilters"
+      @create="$emit('create')" @clear-filters="$emit('clear-filters')">
       <template #icon>
         <slot name="empty-icon" />
       </template>
@@ -45,41 +30,21 @@
     <!-- Data views -->
     <template v-else>
       <!-- Vista móvil -->
-      <TableMobileView
-        :items="paginatedData"
-        :columns="columns"
-        :selectable="selectable"
-        :selected-items="selectedItems"
-        :show-q-r="showQR"
-        :has-actions="hasActions"
-        @toggle-select-item="toggleSelectItem"
-        @generate-qr="$emit('generate-qr', $event)"
-        @edit="$emit('edit', $event)"
-        @delete="$emit('delete', $event)"
-      >
+      <TableMobileView :items="paginatedData" :columns="columns" :selectable="selectable"
+        :selected-items="selectedItems" :show-q-r="showQR" :has-actions="hasActions"
+        @toggle-select-item="toggleSelectItem" @generate-qr="$emit('generate-qr', $event)" @edit="$emit('edit', $event)"
+        @delete="$emit('delete', $event)">
         <template v-for="(_, name) in $slots" #[name]="slotData">
           <slot :name="name" v-bind="slotData" />
         </template>
       </TableMobileView>
 
       <!-- Vista desktop -->
-      <TableDesktopView
-        :items="paginatedData"
-        :columns="columns"
-        :selectable="selectable"
-        :selected-items="selectedItems"
-        :show-q-r="showQR"
-        :has-actions="hasActions"
-        :sort-column="sortColumn"
-        :sort-direction="sortDirection"
-        :is-all-selected="isAllSelected"
-        @toggle-select-item="toggleSelectItem"
-        @toggle-select-all="toggleSelectAll"
-        @generate-qr="$emit('generate-qr', $event)"
-        @sort="handleSort"
-        @edit="$emit('edit', $event)"
-        @delete="$emit('delete', $event)"
-      >
+      <TableDesktopView :items="paginatedData" :columns="columns" :selectable="selectable"
+        :selected-items="selectedItems" :show-q-r="showQR" :has-actions="hasActions" :sort-column="sortColumn"
+        :sort-direction="sortDirection" :is-all-selected="isAllSelected" @toggle-select-item="toggleSelectItem"
+        @toggle-select-all="toggleSelectAll" @generate-qr="$emit('generate-qr', $event)" @sort="handleSort"
+        @edit="$emit('edit', $event)" @delete="$emit('delete', $event)">
         <template v-for="(_, name) in $slots" #[name]="slotData">
           <slot :name="name" v-bind="slotData" />
         </template>
@@ -87,17 +52,9 @@
     </template>
 
     <!-- Paginación -->
-    <TablePagination
-      v-if="!loading && paginatedData.length > 0"
-      :current-page="currentPage"
-      :total-pages="totalPages"
-      :page-size="pageSizeLocal"
-      :total="total"
-      :filtered-total="filteredTotal"
-      :selected-count="selectedItems.length"
-      @page-change="handlePageChange"
-      @bulk-delete="$emit('bulk-delete', selectedItems)"
-    >
+    <TablePagination v-if="!loading && paginatedData.length > 0" :current-page="currentPage" :total-pages="totalPages"
+      :page-size="pageSizeLocal" :total="total" :filtered-total="filteredTotal" :selected-count="selectedItems.length"
+      @page-change="handlePageChange" @bulk-delete="$emit('bulk-delete', selectedItems)">
       <template #bulk-actions>
         <slot name="bulk-actions" :selected-items="selectedItems" />
       </template>
@@ -128,38 +85,38 @@ interface Props {
   // Data
   data: any[]
   columns: Column[]
-  
+
   // Display options
   title: string
   description?: string
-  
+
   // Search and filtering
   searchTerm?: string
   searchPlaceholder?: string
-  
+
   // Pagination
   pageSize?: number
   pageSizes?: number[]
   serverSide?: boolean
   total?: number
   currentPage?: number
-  
+
   // Selection
   selectable?: boolean
   selectedItems?: any[]
-  
+
   // Features
   showQR?: boolean
   hasActions?: boolean
-  
+
   // Sorting
   sortColumn?: string
   sortDirection?: 'asc' | 'desc'
-  
+
   // States
   loading?: boolean
   loadingMessage?: string
-  
+
   // Empty state
   emptyTitle?: string
   emptyDescription?: string
@@ -197,7 +154,7 @@ const emit = defineEmits<{
   'update:selectedItems': [value: any[]]
   'update:sortColumn': [value: string]
   'update:sortDirection': [value: 'asc' | 'desc']
-  
+
   // Action events
   edit: [item: any]
   delete: [item: any]
@@ -205,7 +162,7 @@ const emit = defineEmits<{
   create: []
   'clear-filters': []
   'bulk-delete': [items: any[]]
-  
+
   // Data loading (for server-side)
   'load-data': [params: any]
 }>()
@@ -221,9 +178,9 @@ const sortDirectionLocal = ref(props.sortDirection)
 // Computed data processing
 const filteredData = computed(() => {
   if (props.serverSide) return props.data
-  
+
   let filtered = [...props.data]
-  
+
   // Apply search filter
   if (searchTermLocal.value.trim()) {
     const searchTerm = searchTermLocal.value.toLowerCase()
@@ -234,30 +191,30 @@ const filteredData = computed(() => {
       })
     )
   }
-  
+
   return filtered
 })
 
 const sortedData = computed(() => {
   if (props.serverSide || !sortColumnLocal.value) return filteredData.value
-  
+
   const sorted = [...filteredData.value]
   sorted.sort((a, b) => {
     const aValue = getNestedValue(a, sortColumnLocal.value!)
     const bValue = getNestedValue(b, sortColumnLocal.value!)
-    
+
     if (aValue === bValue) return 0
-    
+
     const result = aValue < bValue ? -1 : 1
     return sortDirectionLocal.value === 'desc' ? -result : result
   })
-  
+
   return sorted
 })
 
 const paginatedData = computed(() => {
   if (props.serverSide) return props.data
-  
+
   const start = (currentPageLocal.value - 1) * pageSizeLocal.value
   const end = start + pageSizeLocal.value
   return sortedData.value.slice(start, end)
@@ -272,8 +229,8 @@ const totalPages = computed(() => {
 })
 
 const isAllSelected = computed(() => {
-  return paginatedData.value.length > 0 && 
-    paginatedData.value.every((item: any) => 
+  return paginatedData.value.length > 0 &&
+    paginatedData.value.every((item: any) =>
       selectedItemsLocal.value.includes(getItemId(item))
     )
 })
@@ -281,6 +238,10 @@ const isAllSelected = computed(() => {
 // Watchers for prop sync
 watch(() => props.searchTerm, (newVal: string) => {
   searchTermLocal.value = newVal
+})
+
+watch(() => props.pageSize, (newVal: number) => {
+  pageSizeLocal.value = newVal
 })
 
 watch(() => props.currentPage, (newVal: number) => {
@@ -296,7 +257,7 @@ const debouncedSearch = debounce(() => {
   emit('update:searchTerm', searchTermLocal.value)
   currentPageLocal.value = 1
   emit('update:currentPage', 1)
-  
+
   if (props.serverSide) {
     emitLoadData()
   }
@@ -312,7 +273,7 @@ const handlePageSizeUpdate = (value: number) => {
   currentPageLocal.value = 1
   emit('update:pageSize', value)
   emit('update:currentPage', 1)
-  
+
   if (props.serverSide) {
     emitLoadData()
   }
@@ -321,7 +282,7 @@ const handlePageSizeUpdate = (value: number) => {
 const handlePageChange = (page: number) => {
   currentPageLocal.value = page
   emit('update:currentPage', page)
-  
+
   if (props.serverSide) {
     emitLoadData()
   }
@@ -334,10 +295,10 @@ const handleSort = (column: string) => {
     sortColumnLocal.value = column
     sortDirectionLocal.value = 'asc'
   }
-  
+
   emit('update:sortColumn', sortColumnLocal.value)
   emit('update:sortDirection', sortDirectionLocal.value)
-  
+
   if (props.serverSide) {
     emitLoadData()
   }
@@ -380,7 +341,7 @@ const clearSearch = () => {
   emit('update:searchTerm', '')
   currentPageLocal.value = 1
   emit('update:currentPage', 1)
-  
+
   if (props.serverSide) {
     emitLoadData()
   }

@@ -60,7 +60,8 @@ router.get("/:tabla", verifyToken, async (req, res) => {
         FROM bienes b
         LEFT JOIN categorias c ON b.categoria_id = c.id_categoria
         LEFT JOIN ubicaciones u ON b.ubicacion_id = u.id_ubicacion
-        LEFT JOIN usuarios us ON b.responsable_id = us.id_usuario
+        LEFT JOIN asignaciones_bien ab ON b.id_bien = ab.id_bien AND ab.activo = 1
+        LEFT JOIN usuarios us ON ab.id_usuario = us.id_usuario
       `,
       usuarios: `
         SELECT id_usuario, nombres, apellidos, email, cedula, telefono, activo, 
@@ -102,8 +103,47 @@ router.get("/:tabla", verifyToken, async (req, res) => {
 
     const rows = await query(sql, params);
 
-    // Crear workbook de Excel
+const PDFDocument = require("pdfkit-table");
+
+// ... inside the export endpoint ...
+
+    if (formato === "pdf") {
+      const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename=export_${tabla}_${Date.now()}.pdf`);
+
+      doc.pipe(res);
+
+      doc.fontSize(16).text(tabla.charAt(0).toUpperCase() + tabla.slice(1).replace(/_/g, ' '), { align: "center" });
+      doc.moveDown();
+
+      const headers = Object.keys(rows[0]);
+      
+      const table = {
+        title: "",
+        headers: headers.map(h => h.toUpperCase().replace(/_/g, " ")),
+        rows: rows.map(r => Object.values(r))
+      };
+
+      await doc.table(table, {
+          prepareHeader: () => doc.font("Helvetica-Bold").fontSize(8),
+          prepareRow: (row, i, isHeader, rectRow, rectCell) => {
+              doc.font("Helvetica").fontSize(8);
+              // striped rows
+              if(i % 2 === 0 && !isHeader){ 
+                  doc.addBackground(rectRow, 'blue', 0.15);
+              }
+          },
+      });
+
+      doc.end();
+      return; 
+    }
+
+    // Existing Excel/CSV logic...
     const workbook = new ExcelJS.Workbook();
+
     workbook.creator = 'Sistema de Gestión de Bienes';
     workbook.created = new Date();
     

@@ -10,14 +10,37 @@
               Administra usuarios del sistema institucional
             </p>
           </div>
-          <button v-if="isAdmin" @click="showCreateModal = true"
-            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Nuevo Usuario
+          <div class="flex gap-3">
+            <button @click="showInactiveModal = true"
+              class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
+              <i class="bx bx-user-x mr-2"></i>
+              Ver Inactivos
+            </button>
+            <button v-if="isAdmin" @click="showCreateModal = true"
+              class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Nuevo Usuario
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Selector de módulo: Activos / Inactivos -->
+    <div v-show="false" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="inline-flex rounded-lg bg-gray-100 dark:bg-gray-800 p-1">
+          <button :class="['px-4 py-2 rounded-lg text-sm font-medium', !showInactive ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300']" @click="() => { showInactive = false; filters.value.estado = ''; loadUsers() }">
+            Activos
+          </button>
+          <button :class="['px-4 py-2 rounded-lg text-sm font-medium', showInactive ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300']" @click="() => { showInactive = true; filters.value.estado = 'inactivo'; loadUsers() }">
+            Inactivos
           </button>
         </div>
+
+        <div class="text-sm text-gray-600 dark:text-gray-400">Mostrar: <strong>{{ showInactive ? 'Inactivos' : 'Activos' }}</strong></div>
       </div>
     </div>
 
@@ -38,21 +61,13 @@
               </option>
             </select>
           </div>
+          <!-- Estado filter removed as requested -->
           <div>
-            <select v-model="filters.estado"
+            <select v-model="filters.area"
               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-              <option value="">Todos los estados</option>
-              <option value="activo">Activo</option>
-              <option value="inactivo">Inactivo</option>
-              <option value="pendiente">Pendiente</option>
-            </select>
-          </div>
-          <div>
-            <select v-model="filters.departamento"
-              class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-              <option value="">Todos los departamentos</option>
-              <option v-for="departamento in departamentos" :key="departamento.id" :value="departamento.nombre">
-                {{ departamento.nombre }}
+              <option value="">Todas las áreas</option>
+              <option v-for="area in areas" :key="area.id" :value="area.nombre">
+                {{ area.nombre }}
               </option>
             </select>
           </div>
@@ -86,7 +101,7 @@
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Departamento
+                Área
               </th>
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -150,7 +165,7 @@
                 {{ user.telefono || '-' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                {{ user.departamento }}
+                {{ user.area }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full" :class="getRolClass(user.rol)">
@@ -163,7 +178,7 @@
                   {{ user.estado }}
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2">
                   <button @click="viewUser(user)"
                     class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
@@ -175,18 +190,15 @@
                     title="Editar usuario">
                     <i class="bx bx-edit text-lg"></i>
                   </button>
-                  <button v-if="isAdmin" @click="toggleUserStatus(user)" :class="[
+                  <button v-if="isAdmin" @click="toggleUserStatus(user)" :disabled="!canToggleUserStatus(user)" :class="[
                     'p-2 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation',
-                    user.estado === 'activo'
+                    !canToggleUserStatus(user)
+                      ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-600'
+                      : user.estado === 'activo'
                       ? 'text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900'
                       : 'text-green-600 hover:text-green-900 hover:bg-green-50 dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900'
-                  ]" :title="user.estado === 'activo' ? 'Desactivar usuario' : 'Activar usuario'">
+                  ]" :title="getToggleUserButtonTitle(user)">
                     <i :class="user.estado === 'activo' ? 'bx bx-user-x' : 'bx bx-user-check'" class="text-lg"></i>
-                  </button>
-                  <button v-if="isAdmin" @click="deleteUser(user.id)"
-                    class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900 rounded-lg transition-colors min-h-[44px] min-w-[44px] touch-manipulation"
-                    title="Eliminar usuario">
-                    <i class="bx bx-trash text-lg"></i>
                   </button>
                 </div>
               </td>
@@ -242,13 +254,17 @@
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email *</label>
-              <input v-model="form.email" type="email" required
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+              <input v-model="form.email" type="email"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
+
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cédula *</label>
-              <input v-model="form.documento" type="text" required
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Cédula *
+                <span class="text-xs font-normal text-gray-500">(10 dígitos)</span>
+              </label>
+              <input v-model="form.documento" type="text"
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
@@ -258,12 +274,12 @@
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Departamento *</label>
-              <select v-model="form.departamento_id" required
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Área *</label>
+              <select v-model="form.area_id" required
                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                <option value="">Seleccionar departamento</option>
-                <option v-for="dep in departamentos" :key="dep.id_departamento || dep.id" :value="dep.id_departamento">
-                  {{ dep.nombre }}
+                <option value="">Seleccionar Área</option>
+                <option v-for="area in areas" :key="area.id_area || area.id" :value="area.id_area || area.id">
+                  {{ area.nombre }}
                 </option>
               </select>
             </div>
@@ -302,57 +318,310 @@
     <!-- Modal de detalles -->
     <div v-if="showViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50"
       @click.self="closeViewModal">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-lg">
-        <h2 class="text-xl font-bold mb-4 text-gray-900 dark:text-white">Detalles del Usuario</h2>
-        <div v-if="selectedUser" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-2xl">
+        <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Detalles del Usuario</h2>
+        <div v-if="selectedUser" class="space-y-6">
+          <!-- Primera fila: Nombre y Área -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
-              <p class="mt-1 text-sm text-gray-900 dark:text-white">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre Completo</label>
+              <p class="text-base text-gray-900 dark:text-white font-medium">
                 {{ selectedUser.nombre }} {{ selectedUser.apellido }}
               </p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departamento</label>
-              <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ selectedUser.departamento || 'No asignado' }}
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Área</label>
+              <p class="text-base text-gray-900 dark:text-white font-medium">
+                {{ selectedUser.area || 'No asignado' }}
               </p>
             </div>
+          </div>
+
+          <!-- Segunda fila: Email y Cédula -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-              <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedUser.email }}</p>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email</label>
+              <p class="text-sm text-gray-900 dark:text-white break-all">{{ selectedUser.email }}</p>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Cédula</label>
-              <p class="mt-1 text-sm text-gray-900 dark:text-white">{{ selectedUser.documento }}</p>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Cédula</label>
+              <p class="text-base text-gray-900 dark:text-white font-medium">{{ selectedUser.documento }}</p>
             </div>
+          </div>
+
+          <!-- Tercera fila: Rol y Estado -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Departamento</label>
-              <p class="mt-1 text-sm text-gray-900 dark:text-white">
-                {{ selectedUser.departamento }}
-              </p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol</label>
-              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rol</label>
+              <span class="inline-flex px-3 py-1.5 text-sm font-semibold rounded-lg"
                 :class="getRolClass(selectedUser.rol)">
                 {{ selectedUser.rol }}
               </span>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
-              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1"
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Estado</label>
+              <span class="inline-flex px-3 py-1.5 text-sm font-semibold rounded-lg"
                 :class="getEstadoClass(selectedUser.estado)">
                 {{ selectedUser.estado }}
               </span>
             </div>
           </div>
-          <div class="flex justify-end pt-4">
-            <button @click="closeViewModal"
-              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white">
-              Cerrar
+
+          <!-- Separador visual -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <!-- Botones de acción -->
+            <div class="flex justify-between gap-3">
+              <button @click="showUserAssignmentsModal = true; loadUserAssignments(selectedUser?.id)"
+                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center justify-center gap-2 transition-colors">
+                <span>Ver Bienes Asignados</span>
+                <span v-if="userAssignments.length > 0" class="bg-blue-800 rounded-full px-2 py-0.5 text-xs font-bold">
+                  {{ userAssignments.length }}
+                </span>
+              </button>
+              <button @click="closeViewModal"
+                class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white transition-colors">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Usuarios Inactivos -->
+    <div v-if="showInactiveModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <!-- Header del Modal -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Usuarios Inactivos</h2>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <input v-model="searchInactiveUsers" type="text" placeholder="Buscar por nombre, email o cédula..."
+            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" />
+        </div>
+
+        <!-- Tabla de Usuarios Inactivos -->
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">NOMBRE</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">EMAIL</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">CÉDULA</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">ROL</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-if="filteredInactiveUsers.length === 0">
+                <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  No hay usuarios inactivos
+                </td>
+              </tr>
+              <tr v-for="user in filteredInactiveUsers" :key="user.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                  {{ user.nombre }} {{ user.apellido }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  {{ user.email }}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                  {{ user.documento }}
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <span class="px-2 py-1 text-xs font-semibold rounded-full" :class="getRolClass(user.rol)">
+                    {{ user.rol }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <div class="flex gap-2">
+                    <button @click="activateUser(user.id || user.id_usuario)" :disabled="!canToggleUserStatus(user)"
+                      :class="['px-3 py-1 text-white text-xs font-semibold rounded transition-colors', 
+                        !canToggleUserStatus(user) 
+                          ? 'opacity-50 cursor-not-allowed bg-gray-500' 
+                          : 'bg-green-600 hover:bg-green-700']"
+                      :title="getToggleUserButtonTitle(user)">
+                      Activar
+                    </button>
+                    <button v-if="isAdmin" @click="permanentlyDeleteUser(user.id || user.id_usuario)" :disabled="!canToggleUserStatus(user)"
+                      :class="['px-3 py-1 text-white text-xs font-semibold rounded transition-colors',
+                        !canToggleUserStatus(user)
+                          ? 'opacity-50 cursor-not-allowed bg-gray-500'
+                          : 'bg-red-600 hover:bg-red-700']"
+                      :title="!canToggleUserStatus(user) ? (userRestrictions.get(user.id)?.reasons?.[0] || 'No se puede eliminar') : 'Eliminar usuario'">
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Footer del Modal -->
+        <div class="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-6 py-4 flex justify-end">
+          <button @click="showInactiveModal = false"
+            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-white font-medium rounded-lg transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Bienes Asignados a Usuario -->
+    <div v-if="showUserAssignmentsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <!-- Header del Modal -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Bienes Asignados</h2>
+            <p v-if="selectedUser" class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {{ selectedUser.nombre }} {{ selectedUser.apellido }}
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button @click="showAuditMode = !showAuditMode"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center">
+              <span>Constatación</span>
+              <span v-if="selectedUser" class="ml-2 bg-blue-900 text-white text-xs font-bold rounded-full px-2 py-0.5 flex items-center">
+                {{ selectedAssignments.length }}/{{ userAssignments.length }}
+              </span>
+            </button>
+            <button v-if="showAuditMode" @click="enviarBienesAuditoria" :disabled="selectedAssignments.length === 0"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
+              Enviar a Auditoría
+            </button>
+            <button @click="closeAssignmentsModal"
+              class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl">
+              &times;
             </button>
           </div>
+        </div>
+
+        <!-- Contenido del Modal -->
+        <input ref="fileInput" type="file" class="hidden" accept="application/pdf,image/*,.doc,.docx" @change="handleDocumentFileChange" />
+        <div class="p-6">
+          <!-- Loading State -->
+          <div v-if="loadingAssignments" class="flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="mb-4">
+                <i class="bx bx-loader-alt text-4xl animate-spin text-blue-600"></i>
+              </div>
+              <p class="text-gray-600 dark:text-gray-400">Cargando bienes asignados...</p>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="userAssignments.length === 0" class="text-center py-12">
+            <i class="bx bx-inbox text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
+            <p class="text-gray-600 dark:text-gray-400 font-medium">No hay bienes asignados</p>
+            <p class="text-gray-500 dark:text-gray-500 text-sm mt-1">Este usuario no tiene bienes en su asignación</p>
+          </div>
+
+          <!-- Tabla de Bienes -->
+          <div v-else class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th v-if="showAuditMode" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Seleccionar</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Código</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Nombre del Bien</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Código Senecyt</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Fecha Asignación</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Estado</th>
+                  <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Ubicaciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <tr v-for="assignment in userAssignments" :key="assignment.id" 
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                  <td v-if="showAuditMode" class="px-6 py-4 text-sm">
+                    <input
+                      type="checkbox"
+                      :checked="selectedAssignments.includes(Number(assignment.bien?.id || assignment.bien?.id_bien || assignment.id))"
+                      @change="handleCheckboxChange(assignment, $event)"
+                      class="rounded"
+                    />
+                  </td>
+                  <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    {{ assignment.bien?.codigo || assignment.bien?.codigo_institucional || 'N/A' }}
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                    {{ assignment.bien?.nombre || 'Sin nombre' }}
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                    {{ assignment.bien?.codigo_senescyt || 'Sin código' }}
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                    {{ formatDate(assignment.fecha_asignacion) }}
+                  </td>
+                  <td class="px-6 py-4 text-sm">
+                    <span v-if="assignment.activo" 
+                      class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                      Activa
+                    </span>
+                    <span v-else 
+                      class="inline-flex px-3 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
+                      Devuelta
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                    {{
+                      (() => {
+                        const bienUbicacion = assignment.bien?.ubicacion;
+                        if (bienUbicacion && bienUbicacion.nombre) {
+                          return bienUbicacion.nombre;
+                        }
+                        const id = assignment.bien?.ubicacion_id;
+                        const found = ubicaciones.find((u: any) => u.id === id || u.id_ubicacion === id);
+                        return found ? found.nombre : 'Sin ubicación';
+                      })()
+                    }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Resumen de estadísticas -->
+            <div class="mt-6 grid grid-cols-3 gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div class="text-center">
+                <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {{ (userAssignments as any[]).filter((a: any) => a.activo).length }}
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Bienes Activos</p>
+              </div>
+              <div class="text-center">
+              <!-- Botón para enviar a auditoría ya no va aquí, está en el header -->
+              <!-- Botón para enviar a auditoría -->
+              <div v-if="showAuditMode" class="flex justify-end mt-4">
+                <button @click="enviarBienesAuditoria" :disabled="selectedAssignments.length === 0"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
+                  Enviar a Auditoría
+                </button>
+              </div>
+                <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+                  {{ (userAssignments as any[]).filter((a: any) => !a.activo).length }}
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Bienes Devueltos</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold text-gray-600 dark:text-gray-400">
+                  {{ userAssignments.length }}
+                </p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Total Asignaciones</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer del Modal -->
+        <div class="bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-6 py-4 flex justify-end">
+          <button @click="closeAssignmentsModal"
+            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-white font-medium rounded-lg transition-colors">
+            Cerrar
+          </button>
         </div>
       </div>
     </div>
@@ -360,20 +629,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { getUbicacionNombre } from '@/utils/ubicaciones'
 import { useAuthStore } from '@/stores/auth'
+import { useAuditoriaStore } from '@/stores/auditoria'
 import { useToast } from 'vue-toastification'
+import { confirm } from '@/composables/useConfirm'
 import apiClient from '@/api/client'
 import BaseInput from '@/components/shared/BaseInput.vue'
 import type { User, Role } from '@/types'
 
 interface ExtendedUser extends User {
-  departamento_id?: number | string;
+  area?: string;
+  area_id?: number | string;
+  id_usuario?: number;
+  rol_id?: number | string;
 }
 
 // Stores
 const authStore = useAuthStore()
 const toast = useToast()
+const auditoriaStore = useAuditoriaStore()
 
 // Control de acceso por rol
 const isAdmin = computed(() => authStore.hasRole('Administrador'))
@@ -381,35 +657,62 @@ const isAdmin = computed(() => authStore.hasRole('Administrador'))
 // Estado del componente
 const users = ref<ExtendedUser[]>([])
 const roles = ref<Role[]>([])
-const departamentos = ref<any[]>([])
+const areas = ref<any[]>([])
+const ubicaciones = ref<any[]>([])
+// Cargar ubicaciones
+const loadUbicaciones = async () => {
+  try {
+    const response = await apiClient.get('/ubicaciones')
+    const data = response
+    if (data.success) {
+      ubicaciones.value = data.data || []
+    }
+  } catch (error) {
+    console.error('Error al cargar ubicaciones:', error)
+  }
+}
 const loading = ref(false)
+const userRestrictions = ref<Map<number, any>>(new Map()) // Rastrear restricciones por usuario ID
 
 const filters = ref({
   search: '',
   rol: '',
   estado: '',
-  departamento: '',
+  area: '',
 })
 
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showViewModal = ref(false)
+const showInactiveModal = ref(false)
+const showUserAssignmentsModal = ref(false)
+const inactiveUsers = ref<ExtendedUser[]>([])
+const searchInactiveUsers = ref('')
 const selectedUser = ref<User | null>(null)
+const userAssignments = ref<any[]>([])
+const loadingAssignments = ref(false)
+const assignmentDocuments = ref<Record<number, any[]>>({})
+const currentDocumentBienId = ref<number | null>(null)
+const showAuditMode = ref(false)
+const selectedAssignments = ref<number[]>([])
+const fileInput = ref<HTMLInputElement | null>(null)
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const showInactive = ref(false) // controla el módulo: activos / inactivos
 
 const form = ref({
   id: null as number | null,
   nombre: '',
   apellido: '',
   email: '',
-  documento: '',
-  departamento: '',
-  departamento_id: '',
+  area: '',
+  area_id: '',
   rol: '',
   password: '',
   confirmPassword: '',
   telefono: '',
+  documento: '',
+  pais: 'EC', // Ecuador solo
 })
 
 // Filtros y búsqueda
@@ -431,8 +734,8 @@ const filteredUsers = computed(() => {
   if (filters.value.estado) {
     result = result.filter((u: User) => u.estado === filters.value.estado)
   }
-  if (filters.value.departamento) {
-    result = result.filter((u: User) => u.departamento === filters.value.departamento)
+  if (filters.value.area) {
+    result = result.filter((u: ExtendedUser) => u.area === filters.value.area)
   }
   return result
 })
@@ -449,6 +752,18 @@ const visiblePages = computed(() => {
   const end = Math.min(totalPages.value, currentPage.value + 2)
   for (let i = start; i <= end; i++) pages.push(i)
   return pages
+})
+
+// Filtrar usuarios inactivos
+const filteredInactiveUsers = computed(() => {
+  if (!searchInactiveUsers.value) return inactiveUsers.value
+  const search = searchInactiveUsers.value.toLowerCase()
+  return inactiveUsers.value.filter((u: ExtendedUser) =>
+    (u.nombre?.toLowerCase().includes(search)) ||
+    (u.apellido?.toLowerCase().includes(search)) ||
+    (u.email?.toLowerCase().includes(search)) ||
+    (u.documento?.toLowerCase().includes(search))
+  )
 })
 
 // Clases para badges
@@ -477,11 +792,20 @@ const getEstadoClass = (estado: string): string => {
 const loadUsers = async () => {
   loading.value = true
   try {
-    const response = await apiClient.get('/usuarios')
+    const activoParam = showInactive.value ? 'false' : 'true'
+    const response = await apiClient.get(`/usuarios?activo=${activoParam}`)
     const data = response
 
     if (data.success) {
       users.value = data.data || []
+      // sincronizar filtro de estado para UI cuando cambiamos de módulo
+      filters.value.estado = showInactive.value ? 'inactivo' : ''
+      currentPage.value = 1
+      
+      // Cargar restricciones para cada usuario
+      users.value.forEach((user: ExtendedUser) => {
+        checkUserRestrictions(user.id)
+      })
     } else {
       throw new Error(data.message || 'Error al cargar usuarios')
     }
@@ -493,6 +817,11 @@ const loadUsers = async () => {
     loading.value = false
   }
 }
+
+// Recargar cuando se cambia de módulo (activos/inactivos)
+watch(showInactive, async () => {
+  await loadUsers()
+})
 
 const loadRoles = async () => {
   try {
@@ -508,23 +837,273 @@ const loadRoles = async () => {
   }
 }
 
-const loadDepartamentos = async () => {
+const loadAreas = async () => {
   try {
-    const response = await apiClient.get('/departamentos')
+    const response = await apiClient.get('/areas')
     const data = response
     if (data.success) {
-      departamentos.value = data.data
+      areas.value = data.data
     } else {
-      console.error('Error en respuesta de departamentos:', data)
+      console.error('Error en respuesta de áreas:', data)
     }
   } catch (error) {
-    console.error('Error al cargar departamentos:', error)
+    console.error('Error al cargar áreas:', error)
   }
+}
+
+// Cargar usuarios inactivos
+const loadInactiveUsers = async () => {
+  try {
+    const response = await apiClient.get('/usuarios?activo=false')
+    const data = response
+    if (data.success) {
+      inactiveUsers.value = data.data || []
+      
+      // Cargar restricciones para cada usuario inactivo
+      inactiveUsers.value.forEach((user: ExtendedUser) => {
+        checkUserRestrictions(user.id)
+      })
+    }
+  } catch (error) {
+    console.error('Error al cargar usuarios inactivos:', error)
+    inactiveUsers.value = []
+    toast.error('Error al cargar usuarios inactivos')
+  }
+}
+
+// Actualizar usuarios inactivos cuando el modal se abre
+watch(showInactiveModal, async (newVal: boolean) => {
+  if (newVal) {
+    await loadInactiveUsers()
+  }
+})
+
+// Cargar bienes asignados a un usuario
+const loadUserAssignments = async (userId: number | undefined) => {
+  if (!userId) {
+    toast.error('Usuario no seleccionado')
+    return
+  }
+
+  loadingAssignments.value = true
+  try {
+    console.log(`[DEBUG] Cargando asignaciones para usuario ID: ${userId}`)
+    const response = await apiClient.get(`/asignaciones?usuario_id=${userId}`)
+    const data = response
+
+    console.log(`[DEBUG] Respuesta del servidor para usuario ${userId}:`, data)
+
+    if (data.success) {
+      userAssignments.value = data.data || []
+      console.log(`[DEBUG] Asignaciones cargadas: ${userAssignments.value.length}`)
+
+      // Cargar selecciones de auditoría desde la API
+      await loadAuditoriaSelecciones(userId)
+
+      // Cargar documentos asociados para las asignaciones listadas
+      const bienIds = userAssignments.value
+        .map((assignment: any) => assignment.bien?.id || assignment.bien?.id_bien || assignment.id)
+        .filter((v: number) => v)
+
+      const docsByBien: Record<number, any[]> = {}
+      for (const bienId of bienIds) {
+        const docs = await loadAssignmentDocuments(bienId)
+        docsByBien[bienId] = docs
+      }
+      assignmentDocuments.value = docsByBien
+    } else {
+      throw new Error(data.message || 'Error al cargar asignaciones')
+    }
+  } catch (error) {
+    console.error('Error loading user assignments:', error)
+    userAssignments.value = []
+    toast.error('Error al cargar los bienes asignados')
+  } finally {
+    loadingAssignments.value = false
+  }
+}
+
+// Cargar los documentos relacionados a un bien
+const loadAssignmentDocuments = async (bienId: number) => {
+  try {
+    const response = await apiClient.get(`/documentos?bien_id=${bienId}`)
+    if (response.success) {
+      return response.data || []
+    }
+    return []
+  } catch (error) {
+    console.error('Error loading assignment documents:', error)
+    return []
+  }
+}
+
+// Cargar selecciones de auditoría desde la API
+const loadAuditoriaSelecciones = async (userId: number) => {
+  try {
+    const response = await apiClient.get(`/auditoria/selecciones/${userId}`)
+    if (response.success) {
+      // La API puede devolver array de IDs o array de objetos { id_bien }
+      const ids: number[] = (response.data || []).map((item: any) => {
+        if (typeof item === 'number') return item
+        if (typeof item === 'object' && item !== null) {
+          const candidate = item.id_bien || item.id
+          return candidate != null ? Number(candidate) : NaN
+        }
+        return NaN
+      }).filter((id: number) => !isNaN(id) && id !== null)
+
+      selectedAssignments.value = ids
+
+      // Sincronizar con store global para contador
+      auditoriaStore.limpiarSeleccionUsuario(userId.toString())
+      ids.forEach((bienId: number) => {
+        auditoriaStore.seleccionarBien(userId.toString(), bienId)
+      })
+    } else {
+      selectedAssignments.value = []
+      auditoriaStore.limpiarSeleccionUsuario(userId.toString())
+    }
+  } catch (error) {
+    console.error('Error loading auditoria selecciones:', error)
+    selectedAssignments.value = []
+    auditoriaStore.limpiarSeleccionUsuario(userId.toString())
+  }
+}
+
+// Función para manejar cambios en checkboxes de auditoría
+const handleCheckboxChange = (assignment: any, event: Event) => {
+  const target = event.target as HTMLInputElement
+  const bienId = assignment.bien?.id || assignment.bien?.id_bien || assignment.id
+  
+  // Verificar que bienId sea un número válido
+  if (!bienId || typeof bienId !== 'number' || isNaN(bienId)) {
+    console.error('ID de bien inválido:', bienId)
+    toast.error('Error: ID de bien no válido')
+    return
+  }
+  
+  const isChecked = target.checked
+  toggleBienAuditoria(bienId, isChecked)
+}
+
+// Función para manejar carga de documento de evidencia de constatación
+const handleDocumentFileChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  if (!input.files || input.files.length === 0 || !currentDocumentBienId.value) {
+    return
+  }
+
+  const file = input.files[0]
+  const bienId = currentDocumentBienId.value
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('id_bien', String(bienId))
+  formData.append('tipo_documento', 'constatacion_fisica')
+  formData.append('descripcion', 'Informe de constatación física')
+
+  try {
+    const response = await apiClient.post('/documentos', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    if (response.success) {
+      toast.success('Documento de constatación subido correctamente')
+      // recargar documentos de este bien
+      const docs = await loadAssignmentDocuments(bienId)
+      assignmentDocuments.value = { ...assignmentDocuments.value, [bienId]: docs }
+    } else {
+      toast.error(response.message || 'Error subiendo documento')
+    }
+  } catch (error) {
+    console.error('Error subiendo documento de constatación:', error)
+    toast.error('Error subiendo documento')
+  } finally {
+    if (input) input.value = ''
+    currentDocumentBienId.value = null
+  }
+}
+
+const triggerDocumentUpload = (bienId: number) => {
+  currentDocumentBienId.value = bienId
+  fileInput.value?.click()
+}
+
+const viewDocument = (document: any) => {
+  if (!document || !document.id) {
+    toast.error('Documento inválido')
+    return
+  }
+  const url = document.url || `/api/documentos/${document.id}/view`
+  window.open(url, '_blank')
+}
+
+// Función para alternar selección de bien en auditoría
+const toggleBienAuditoria = async (bienId: number, isChecked: boolean) => {
+  if (!selectedUser.value?.id) {
+    toast.error('Usuario no seleccionado')
+    return
+  }
+
+  try {
+    const userId = selectedUser.value.id
+    const payload = { id_usuario: userId, id_bien: bienId }
+
+    if (isChecked) {
+      // Seleccionar bien
+      const response = await apiClient.post('/auditoria/seleccionar', payload)
+      if (response.success) {
+        // Agregar a selectedAssignments si no está
+        if (!selectedAssignments.value.includes(bienId)) {
+          selectedAssignments.value.push(bienId)
+        }
+        auditoriaStore.seleccionarBien(userId.toString(), bienId)
+        toast.success('Bien marcado como encontrado')
+      } else {
+        throw new Error(response.message || 'Error al seleccionar bien')
+      }
+    } else {
+      // Deseleccionar bien
+      const response = await apiClient.delete('/auditoria/deseleccionar', { data: payload })
+      if (response.success) {
+        // Remover de selectedAssignments
+        selectedAssignments.value = selectedAssignments.value.filter((item: number) => item !== bienId)
+        auditoriaStore.deseleccionarBien(userId.toString(), bienId)
+        toast.success('Bien desmarcado')
+      } else {
+        throw new Error(response.message || 'Error al deseleccionar bien')
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling bien auditoria:', error)
+    toast.error('Error al actualizar selección de bien')
+  }
+}
+
+// Función para enviar bienes seleccionados a auditoría
+const enviarBienesAuditoria = () => {
+  if (selectedUser.value?.id) {
+    toast.success('Bienes enviados a Auditoría')
+    // Opcional: cerrar modal al enviar y restablecer modo
+    showAuditMode.value = false
+    showUserAssignmentsModal.value = false
+  }
+}
+
+// Función para cerrar modal de Bienes Asignados
+const closeAssignmentsModal = () => {
+  showUserAssignmentsModal.value = false
+  showAuditMode.value = false
+  selectedAssignments.value = []
+  if (selectedUser.value?.id) {
+    auditoriaStore.limpiarSeleccionUsuario(selectedUser.value.id.toString())
+  }
+  selectedUser.value = null
+  userAssignments.value = []
 }
 
 // Acciones
 const clearFilters = () => {
-  filters.value = { search: '', rol: '', estado: '', departamento: '' }
+  filters.value = { search: '', rol: '', estado: '', area: '' }
   currentPage.value = 1
 }
 
@@ -538,20 +1117,27 @@ const goToPage = (page: number) => {
   currentPage.value = page
 }
 
-const viewUser = (user: User) => {
+const viewUser = async (user: User) => {
+  console.log(`[DEBUG] viewUser llamado con usuario:`, user);
+  console.log(`[DEBUG] Usuario ID: ${user.id} (tipo: ${typeof user.id})`);
   selectedUser.value = user
   showViewModal.value = true
+  // Limpiar datos anteriores
+  userAssignments.value = []
+  loadingAssignments.value = true
+  // Cargar bienes asignados de forma anticipada
+  await loadUserAssignments(user.id)
 }
 
-const editUser = (user: User) => {
+const editUser = (user: ExtendedUser) => {
   form.value = {
     id: user.id,
     nombre: user.nombre,
     apellido: user.apellido || '',
     email: user.email,
     documento: user.documento || '',
-    departamento: user.departamento || '',
-    departamento_id: (user as any).departamento_id || '',
+    area: user.area || '',
+    area_id: (user as any).area_id || '',
     rol: user.rol || '',
     password: '',
     confirmPassword: '',
@@ -560,50 +1146,252 @@ const editUser = (user: User) => {
   showEditModal.value = true
 }
 
-const toggleUserStatus = async (user: User) => {
+// Verificar restricciones del usuario
+const checkUserRestrictions = async (userId: number) => {
   try {
-    const newStatus = user.estado === 'activo' ? 'inactivo' : 'activo'
-    const departamentoId = (user as any).departamento_id || ''
-    const response = await apiClient.put(`/usuarios/${user.id}`, {
-      nombre: user.nombre,
-      apellido: user.apellido,
-      email: user.email,
-      documento: user.documento,
-      telefono: user.telefono,
-      departamento_id: departamentoId,
-      rol: user.rol,
-      activo: newStatus === 'activo'
-    })
-
+    const response = await apiClient.get(`/usuarios/${userId}/check-restrictions`)
     const data = response
     if (data.success) {
-      const index = users.value.findIndex((u: User) => u.id === user.id)
-      if (index !== -1) {
-        users.value[index].estado = newStatus
+      userRestrictions.value.set(userId, data.data)
+      return data.data
+    }
+  } catch (error) {
+    console.error('Error checking user restrictions:', error)
+  }
+  return { canDelete: true, canToggleStatus: true, reasons: [] }
+}
+
+// Determinar si se puede cambiar el estado del usuario
+const canToggleUserStatus = (user: ExtendedUser): boolean => {
+  const restrictions = userRestrictions.value.get(user.id)
+  if (!restrictions) return true
+  return restrictions.canToggleStatus !== false
+}
+
+// Obtener el título del botón de toggle
+const getToggleUserButtonTitle = (user: ExtendedUser): string => {
+  const restrictions = userRestrictions.value.get(user.id)
+  
+  if (!restrictions) {
+    return user.estado === 'activo' ? 'Desactivar usuario' : 'Activar usuario'
+  }
+  
+  if (!restrictions.canToggleStatus) {
+    return restrictions.reasons && restrictions.reasons.length > 0
+      ? restrictions.reasons[0]
+      : 'No se puede cambiar el estado de este usuario'
+  }
+  
+  return user.estado === 'activo' ? 'Desactivar usuario' : 'Activar usuario'
+}
+
+const toggleUserStatus = async (user: User) => {
+  try {
+    // Verificar restricciones
+    const restrictions = await checkUserRestrictions(user.id)
+    if (!restrictions.canToggleStatus) {
+      toast.error(restrictions.reasons?.[0] || 'No se puede cambiar el estado de este usuario')
+      return
+    }
+
+    const newStatus = user.estado === 'activo' ? 'inactivo' : 'activo'
+    const areaId = (user as any).area_id || ''
+    const payload = {
+      nombres: user.nombre,
+      apellidos: user.apellido,
+      email: user.email,
+      cedula: user.documento,
+      telefono: user.telefono,
+      area_id: areaId,
+      rol_id: (user as any).rol_id || user.rol,
+      activo: newStatus === 'activo'
+    }
+
+    const response = await apiClient.put(`/usuarios/${user.id}`, payload)
+    const data = response
+    if (data.success) {
+      // Si cambiamos a inactivo: quitar de lista activa y añadir a inactivos
+      if (newStatus === 'inactivo') {
+        users.value = users.value.filter((u: User) => u.id !== user.id)
+        const inactiveObj: ExtendedUser = {
+          ...user as ExtendedUser,
+          area_id: (user as any).area_id || '',
+          rol_id: (user as any).rol_id || (user as any).rol || '',
+          id: (user as any).id,
+        }
+        // evitar duplicados
+        if (!inactiveUsers.value.find((u: ExtendedUser) => u.id === user.id)) {
+          inactiveUsers.value.unshift(inactiveObj)
+        }
+      } else {
+        // newStatus === 'activo': asegurar que esté en la lista principal y marcado activo
+        const index = users.value.findIndex((u: User) => u?.id === user?.id)
+        if (index >= 0 && users.value[index]) {
+          users.value[index].estado = newStatus
+          ;(users.value[index] as any).activo = true
+        } else {
+          // agregar al inicio
+          const newUser = {
+            ...(user as any),
+            estado: 'activo',
+            activo: true,
+          } as unknown as User
+          users.value.unshift(newUser)
+        }
+        // remover de inactivos si existe
+        inactiveUsers.value = inactiveUsers.value.filter((u: ExtendedUser) => u.id !== user.id)
       }
+
       toast.success(`Usuario ${newStatus === 'activo' ? 'activado' : 'desactivado'} correctamente`)
     } else {
       throw new Error(data.message || 'Error al cambiar estado')
     }
   } catch (error) {
+    console.error('Error toggleUserStatus:', error)
     toast.error('Error al cambiar el estado del usuario')
   }
 }
 
+// Eliminación condicional: soft-delete en vista activos, eliminación definitiva en inactivos
 const deleteUser = async (id: number) => {
-  if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-    try {
-      const response = await apiClient.delete(`/usuarios/${id}`)
-      const data = response
-      if (data.success) {
-        users.value = users.value.filter((u: User) => u.id !== id)
-        toast.success('Usuario eliminado correctamente')
-      } else {
-        throw new Error(data.message || 'Error al eliminar usuario')
-      }
-    } catch (error) {
-      toast.error('Error al eliminar el usuario')
+  if (showInactive.value) {
+    // Si estamos en Inactivos, usar eliminación definitiva
+    await permanentlyDeleteUser(id)
+    return
+  }
+
+  const confirmed = await confirm({
+    title: 'Eliminar usuario',
+    message: '¿Estás seguro de que quieres mover este usuario a Inactivos?',
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    destructive: true,
+  })
+  if (!confirmed) return
+
+  try {
+    // Hacemos soft-delete mediante update (activo: false)
+    const response = await apiClient.put(`/usuarios/${id}`, { activo: false })
+    const data = response
+    if (data.success) {
+      users.value = users.value.filter((u: User) => u.id !== id)
+      toast.success('Usuario movido a inactivos')
+    } else {
+      throw new Error(data.message || 'Error al eliminar usuario')
     }
+  } catch (error) {
+    console.error('Error deleting user:', error)
+    toast.error('Error al eliminar el usuario')
+  }
+}
+
+const permanentlyDeleteUser = async (id: number) => {
+  // Verificar restricciones
+  const restrictions = await checkUserRestrictions(id)
+  if (!restrictions.canDelete) {
+    toast.error(restrictions.reasons?.[0] || 'No se puede eliminar este usuario')
+    return
+  }
+
+  const confirmed = await confirm({
+    title: 'Eliminar usuario',
+    message: 'Eliminar DEFINITIVAMENTE este usuario. Esta acción no se puede deshacer. ¿Continuar?',
+    confirmText: 'Eliminar',
+    cancelText: 'Cancelar',
+    destructive: true,
+  })
+  if (!confirmed) return
+  try {
+    // Intentar eliminar del API
+    let response
+    try {
+      response = await apiClient.delete(`/usuarios/${id}/permanent`)
+    } catch (err) {
+      // Fallback a DELETE estándar si el endpoint especial no existe
+      response = await apiClient.delete(`/usuarios/${id}`)
+    }
+    
+    if (response && response.success) {
+      // Eliminar del array de inactivos
+      inactiveUsers.value = inactiveUsers.value.filter(
+        (u: ExtendedUser) => u.id !== id
+      )
+      // También del array de usuarios activos
+      users.value = users.value.filter((u: User) => u.id !== id)
+      
+      toast.success('Usuario eliminado definitivamente')
+    } else {
+      const msg = response?.message || 'Error al eliminar definitivamente'
+      throw new Error(msg)
+    }
+  } catch (error: any) {
+    console.error('Error al eliminar usuario:', error)
+    const msg = error?.message || error?.response?.data?.message || 'Error al eliminar el usuario'
+    toast.error(msg)
+  }
+}
+
+// Activar usuario inactivo (modal de inactivos)
+const activateUser = async (id: number) => {
+  // Verificar restricciones
+  const restrictions = await checkUserRestrictions(id)
+  if (!restrictions.canToggleStatus) {
+    toast.error(restrictions.reasons?.[0] || 'No se puede activar este usuario')
+    return
+  }
+
+  const confirmed = await confirm({
+    title: 'Activar usuario',
+    message: '¿Estás seguro de que quieres activar este usuario?',
+    confirmText: 'Activar',
+    cancelText: 'Cancelar',
+  })
+  if (!confirmed) return
+
+  try {
+    // Encontrar el usuario en la lista por id
+    const user = inactiveUsers.value.find((u: ExtendedUser) => u.id === id)
+    if (!user) {
+      toast.error('Usuario no encontrado')
+      return
+    }
+
+    // Enviar payload completo como en toggleUserStatus
+    const payload = {
+      nombres: user.nombre,
+      apellidos: user.apellido || '',
+      email: user.email,
+      cedula: user.documento || '',
+      telefono: user.telefono || '',
+      area_id: (user as any).area_id || '',
+      rol_id: (user as any).rol_id || user.rol || '',
+      activo: true
+    }
+
+    const response = await apiClient.put(`/usuarios/${id}`, payload)
+    const data = response
+    if (data.success) {
+      // Actualizar arrays locales para reflejar el cambio en tiempo real
+      inactiveUsers.value = inactiveUsers.value.filter((u: ExtendedUser) => u.id !== id)
+      // marcar usuario como activo y agregar a la lista principal si no existe
+      user.activo = true as any
+      user.estado = 'activo' as any
+      const exists = users.value.find((u: User) => u.id === id)
+      if (!exists) {
+        users.value.unshift(user as unknown as User)
+      } else {
+        // si existe, actualizar estado
+        exists.estado = 'activo'
+        ;(exists as any).activo = true
+      }
+
+      toast.success('Usuario activado correctamente')
+    } else {
+      throw new Error(data.message || 'Error al activar usuario')
+    }
+  } catch (error) {
+    console.error('Error activating user:', error)
+    toast.error('Error al activar el usuario')
   }
 }
 
@@ -614,21 +1402,62 @@ const saveUser = async () => {
       return
     }
 
+    // Validaciones locales: cédula ecuatoriana y teléfono
+    const cedulaVal = String(form.value.documento || '').trim()
+    const telefonoVal = String(form.value.telefono || '').trim()
+
+    // Validación de cédula ecuatoriana
+    const validateEcuadorianCedula = (cedula: string): { valid: boolean; error?: string } => {
+      if (!cedula) return { valid: true } // Opcional
+
+      if (!/^\d{10}$/.test(cedula)) return { valid: false, error: 'Cédula debe tener exactamente 10 dígitos' }
+      const province = parseInt(cedula.substring(0, 2), 10)
+      if (province < 1 || province > 24) return { valid: false, error: 'Provincia inválida' }
+      const third = parseInt(cedula.charAt(2), 10)
+      if (third >= 6) return { valid: false, error: 'Tipo de cédula inválido' }
+
+      const coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+      let sum = 0
+      for (let i = 0; i < 9; i++) {
+        let val = parseInt(cedula.charAt(i), 10) * coefficients[i]
+        if (val > 9) val -= 9
+        sum += val
+      }
+      const verifier = (10 - (sum % 10)) % 10
+      if (verifier !== parseInt(cedula.charAt(9), 10)) {
+        return { valid: false, error: 'Cédula inválida (checksum incorrecto)' }
+      }
+      return { valid: true }
+    }
+
+    const validateEcuadorianPhone = (phone: string) => {
+      if (!phone) return true
+      return /^09\d{8}$/.test(phone)
+    }
+
+    const cedValidation = validateEcuadorianCedula(cedulaVal)
+    if (!cedValidation.valid) {
+      toast.error(`Cédula inválida: ${cedValidation.error}`)
+      return
+    }
+
+    if (telefonoVal && !validateEcuadorianPhone(telefonoVal)) {
+      toast.error('Teléfono inválido. Debe tener 10 dígitos y comenzar con 09.')
+      return
+    }
+
     const payload = {
       nombres: form.value.nombre,
       apellidos: form.value.apellido,
       email: form.value.email,
       cedula: form.value.documento,
       telefono: form.value.telefono,
-      departamento_id: form.value.departamento_id,
-      rol_id: roles.value.find((r: Role) => r.nombre === form.value.rol)?.id || form.value.rol, // Intentar obtener ID si está seleccionado por nombre
+      area_id: form.value.area_id,
+      rol_id: roles.value.find((r: Role) => r.nombre === form.value.rol)?.id || form.value.rol,
       password: form.value.password,
       activo: true
     }
 
-    // Si el rol es numérico (ID), usarlo directamente. Si es string, ya tratamos de buscarlo.
-    // Hack: El select actualmente bindea 'rol.nombre'. Lo ideal sería bindear ID, pero para minimizar cambios visuales
-    // vamos a buscar el ID basado en el nombre seleccionado.
     const selectedRole = roles.value.find((r: Role) => r.nombre === form.value.rol)
     if (selectedRole) {
       payload.rol_id = selectedRole.id
@@ -636,7 +1465,6 @@ const saveUser = async () => {
 
     let response
     if (showEditModal.value && form.value.id) {
-      // Para update, usamos los mismos nombres de campos
       response = await apiClient.put(`/usuarios/${form.value.id}`, payload)
     } else {
       response = await apiClient.post('/usuarios', payload)
@@ -644,7 +1472,6 @@ const saveUser = async () => {
 
     const data = response
     if (data.success) {
-      // Recargar datos para obtener información actualizada
       await loadUsers()
       toast.success(showEditModal.value ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente')
       closeModal()
@@ -653,8 +1480,14 @@ const saveUser = async () => {
     }
   } catch (error: any) {
     console.error('Error saving user:', error)
-    const msg = error.response?.data?.message || error.message || 'Error al guardar el usuario'
-    toast.error(msg)
+    // Intentar obtener el mensaje específico del backend
+    let errorMsg = 'Error al guardar el usuario'
+    if (error.response?.data?.message) {
+      errorMsg = error.response.data.message
+    } else if (error.message) {
+      errorMsg = error.message
+    }
+    toast.error(errorMsg)
   }
 }
 
@@ -667,18 +1500,21 @@ const closeModal = () => {
     apellido: '',
     email: '',
     documento: '',
-    departamento: '',
-    departamento_id: '',
+    area: '',
+    area_id: '',
     rol: '',
     password: '',
     confirmPassword: '',
     telefono: '',
+    pais: 'EC',
   }
 }
 
 const closeViewModal = () => {
   showViewModal.value = false
   selectedUser.value = null
+  userAssignments.value = []
+  loadingAssignments.value = false
 }
 
 const formatDate = (dateString: string) => {
@@ -693,13 +1529,14 @@ const formatDate = (dateString: string) => {
   })
 }
 
+
+
 // Control de acceso por rol al cargar
 onMounted(async () => {
   if (!isAdmin.value) {
     toast.error('Acceso denegado: solo administradores pueden gestionar usuarios')
     return
   }
-
-  await Promise.all([loadUsers(), loadRoles(), loadDepartamentos()])
+  await Promise.all([loadUsers(), loadRoles(), loadAreas(), loadUbicaciones()])
 })
 </script>

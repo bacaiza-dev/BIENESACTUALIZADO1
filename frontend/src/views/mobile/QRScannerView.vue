@@ -2,19 +2,12 @@
   <div class="qr-scanner-view">
     <!-- Header solo para móviles -->
     <div class="mobile-header">
-      <button 
-        @click="$router.back()"
-        class="back-button"
-      >
+      <button @click="$router.back()" class="back-button">
         <i class="bx bx-arrow-back text-xl"></i>
       </button>
       <h1 class="title">Scanner QR</h1>
       <div class="header-actions">
-        <button 
-          @click="toggleFlash"
-          :class="['flash-button', { active: flashEnabled }]"
-          :disabled="!flashAvailable"
-        >
+        <button @click="toggleFlash" :class="['flash-button', { active: flashEnabled }]" :disabled="!flashAvailable">
           <i class="bx bx-flash"></i>
         </button>
       </div>
@@ -28,10 +21,7 @@
         <p class="text-gray-600 dark:text-gray-400 text-center">
           El scanner QR solo funciona en dispositivos móviles Android e iOS
         </p>
-        <button 
-          @click="$router.push('/bienes')"
-          class="btn-primary mt-4"
-        >
+        <button @click="$router.push('/bienes')" class="btn-primary mt-4">
           Volver a Bienes
         </button>
       </div>
@@ -42,14 +32,8 @@
       <!-- Área de la cámara -->
       <div class="camera-area" ref="cameraArea">
         <!-- Video para web -->
-        <video 
-          v-if="!isNative"
-          ref="video"
-          class="camera-video"
-          :class="{ 'flash-on': flashEnabled }"
-          autoplay
-          playsinline
-        ></video>
+        <video v-if="!isNative" ref="video" class="camera-video" :class="{ 'flash-on': flashEnabled }" autoplay
+          playsinline></video>
 
         <!-- Overlay del scanner -->
         <div class="scanner-overlay">
@@ -58,11 +42,11 @@
             <div class="corner top-right"></div>
             <div class="corner bottom-left"></div>
             <div class="corner bottom-right"></div>
-            
+
             <!-- Línea de escaneo animada -->
             <div class="scan-line" :class="{ active: isScanning }"></div>
           </div>
-          
+
           <div class="scanner-instructions">
             <p>Coloca el código QR dentro del marco</p>
             <div v-if="isScanning" class="scanning-indicator">
@@ -85,21 +69,12 @@
 
       <!-- Controles principales -->
       <div class="scanner-controls">
-        <button
-          v-if="!isScanning"
-          @click="startScanning"
-          class="scan-button"
-          :disabled="!cameraAvailable"
-        >
+        <button v-if="!isScanning" @click="startScanning" class="scan-button" :disabled="!cameraAvailable">
           <i class="bx bx-qr-scan text-2xl"></i>
           <span>Iniciar Escaneo</span>
         </button>
-        
-        <button
-          v-else
-          @click="stopScanning"
-          class="stop-button"
-        >
+
+        <button v-else @click="stopScanning" class="stop-button">
           <i class="bx bx-stop text-2xl"></i>
           <span>Detener</span>
         </button>
@@ -115,10 +90,10 @@
               <i class="bx bx-x"></i>
             </button>
           </div>
-          
+
           <div class="result-content">
             <div class="qr-code">{{ lastResult.code }}</div>
-            
+
             <div v-if="lastResult.bien" class="bien-info">
               <h4 class="bien-name">{{ lastResult.bien.nombre || lastResult.bien.clase_de_bien }}</h4>
               <div class="bien-details">
@@ -146,36 +121,23 @@
                 </div>
                 <div class="detail-item">
                   <span class="label">Responsable:</span>
-                  <span class="value">
-                    {{
-                      lastResult.bien.responsable
-                        ? `${lastResult.bien.responsable.nombre || ''} ${lastResult.bien.responsable.apellido || ''}`.trim()
-                        : lastResult.bien.responsable_completo || 'Sin asignar'
-                    }}
-                  </span>
+                  <span class="value">{{ lastResult.bien.responsable ? `${lastResult.bien.responsable.nombre || ''} ${lastResult.bien.responsable.apellido || ''}`.trim() : lastResult.bien.responsable_completo || 'Sin asignar' }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div v-else class="no-bien-found">
               <i class="bx bx-error text-yellow-500"></i>
               <span>Bien no encontrado en la base de datos</span>
             </div>
           </div>
-          
+
           <div class="result-actions">
-            <button 
-              v-if="lastResult.bien"
-              @click="viewBien(lastResult.bien)"
-              class="btn-secondary"
-            >
+            <button v-if="lastResult.bien" @click="viewBien(lastResult.bien)" class="btn-secondary">
               <i class="bx bx-show"></i>
               Ver Detalles
             </button>
-            <button 
-              @click="startScanning"
-              class="btn-primary"
-            >
+            <button @click="startScanning" class="btn-primary">
               <i class="bx bx-qr-scan"></i>
               Escanear Otro
             </button>
@@ -257,7 +219,7 @@ const initializeScanner = async () => {
 // Start scanning based on platform
 const startScanning = async () => {
   isScanning.value = true
-  
+
   if (isNative.value) {
     await startNativeScanning()
   } else {
@@ -269,16 +231,16 @@ const startScanning = async () => {
 const startNativeScanning = async () => {
   try {
     const status = await BarcodeScanner.checkPermission({ force: true });
-    
+
     if (status.granted) {
       await BarcodeScanner.hideBackground()
       document.body.classList.add('qr-scanner-active')
-      
+
       const result = await BarcodeScanner.startScan()
-      
+
       document.body.classList.remove('qr-scanner-active')
       await BarcodeScanner.showBackground()
-      
+
       if (result.hasContent) {
         await handleQRResult(result.content)
       }
@@ -296,7 +258,7 @@ const startNativeScanning = async () => {
 const startWebScanning = async () => {
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { 
+      video: {
         facingMode: 'environment',
         width: { ideal: 1280 },
         height: { ideal: 720 }
@@ -306,7 +268,7 @@ const startWebScanning = async () => {
     if (video.value) {
       video.value.srcObject = mediaStream
       await video.value.play()
-      
+
       // Iniciar detección de QR
       startQRDetection()
     }
@@ -326,11 +288,11 @@ const startQRDetection = () => {
     if (video.value && video.value.videoWidth && video.value.videoHeight) {
       canvas.width = video.value.videoWidth
       canvas.height = video.value.videoHeight
-      
+
       ctx?.drawImage(video.value, 0, 0)
-      
+
       const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height)
-      
+
       if (imageData) {
         const qrCode = await detectQRCode(imageData)
         if (qrCode) {
@@ -355,7 +317,7 @@ const detectQRCode = async (imageData: ImageData) => {
 const handleQRResult = async (qrCode: string) => {
   try {
     stopScanning()
-    
+
     // Vibrar en dispositivos nativos
     if (isNative.value) {
       try {
@@ -369,7 +331,7 @@ const handleQRResult = async (qrCode: string) => {
     // Buscar bien en la base de datos
     const identifier = extractBienIdentifier(qrCode)
     const bien = await searchBien(qrCode, identifier)
-    
+
     const result = {
       code: identifier.codigo || (identifier.id ? `BIEN-${identifier.id}` : qrCode),
       raw: qrCode,
@@ -379,10 +341,10 @@ const handleQRResult = async (qrCode: string) => {
     }
 
     lastResult.value = result
-    
+
     // Guardar en localStorage para persistencia
     localStorage.setItem('last_qr_scan', JSON.stringify(result))
-    
+
     toast.success(`QR escaneado: ${(result.code || '').substring(0, 30)}...`)
   } catch (error) {
     console.error('Error handling QR result:', error)
@@ -437,7 +399,7 @@ const searchBien = async (qrCode: string, identifier?: { id?: number; codigo?: s
       if (bienesCache) {
         const bienes = JSON.parse(bienesCache)
         const codigo = identifier?.codigo || ''
-        return bienes.find((bien: any) => 
+        return bienes.find((bien: any) =>
           (codigo && (bien.codigo_institucional === codigo || bien.codigo_senescyt === codigo)) ||
           qrCode.includes(bien.codigo_institucional)
         )
@@ -465,12 +427,12 @@ const searchBien = async (qrCode: string, identifier?: { id?: number; codigo?: s
 
 const stopScanning = () => {
   isScanning.value = false
-  
+
   if (mediaStream) {
     mediaStream.getTracks().forEach((track: MediaStreamTrack) => track.stop())
     mediaStream = null
   }
-  
+
   if (scanInterval) {
     clearInterval(scanInterval)
     scanInterval = null
@@ -479,12 +441,12 @@ const stopScanning = () => {
 
 const toggleFlash = async () => {
   if (!flashAvailable.value) return
-  
+
   try {
     if (isNative.value && mediaStream) {
       const track = mediaStream.getVideoTracks()[0]
       const capabilities = track.getCapabilities() as any
-      
+
       if (capabilities.torch) {
         flashEnabled.value = !flashEnabled.value
         await track.applyConstraints({
@@ -509,7 +471,7 @@ const viewBien = (bien: any) => {
 // Lifecycle
 onMounted(async () => {
   await initializeScanner()
-  
+
   // Restaurar último resultado si existe
   const savedResult = localStorage.getItem('last_qr_scan')
   if (savedResult) {
@@ -519,7 +481,7 @@ onMounted(async () => {
       console.error('Error loading saved result:', error)
     }
   }
-  
+
   // Listener para cambios de conectividad
   window.addEventListener('online', () => { isOnline.value = true })
   window.addEventListener('offline', () => { isOnline.value = false })
